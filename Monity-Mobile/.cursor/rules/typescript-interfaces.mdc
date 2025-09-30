@@ -1,0 +1,130 @@
+---
+globs: frontend/Monity/app/src/**/*.ts,backend/**/*.ts
+description: TypeScript interfaces and type definitions for Monity
+---
+
+# TypeScript Interfaces Reference
+
+## User Interface
+
+```typescript
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  cpf?: string;
+  createdAt: string;
+}
+```
+
+## Transaction Interface
+
+```typescript
+interface Transaction {
+  id: string;
+  title: string;
+  amount: number;
+  date: string;
+  time?: string;
+  type: "income" | "expense";
+  categoryId?: string;
+  category?: {
+    id: string;
+    name: string;
+    color: string;
+    icon: string;
+  };
+  paymentMethod?: string;
+  description?: string;
+  isRecurring?: boolean;
+}
+```
+
+## Category Interface
+
+```typescript
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  type: "income" | "expense";
+  totalSpent?: number;
+  transactionCount?: number;
+  percentage?: number;
+}
+```
+
+## Budget Interface
+
+```typescript
+interface Budget {
+  id: string;
+  categoryId: string;
+  category?: Category;
+  budgetAmount: number;
+  spentAmount: number;
+  transactions?: number;
+  month: number;
+  year: number;
+}
+```
+
+## Balance Interface
+
+```typescript
+interface Balance {
+  total: number;
+  income: number;
+  expenses: number;
+  change: number;
+  changePercentage: number;
+}
+```
+
+## API Response Interface
+
+```typescript
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+}
+```
+
+## Authentication Context
+
+```typescript
+type AuthUser = User | null;
+
+type AuthContextValue = {
+  user: AuthUser;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name?: string) => Promise<void>;
+  logout: () => Promise<void>;
+  updateProfile: (profileData: Partial<User>) => Promise<void>;
+};
+```
+
+## Request/Response Types
+
+- All API requests should use proper TypeScript interfaces
+- Response types are defined in [apiService.ts](mdc:frontend/Monity/app/src/services/apiService.ts)
+- Use generic types for API responses: `ApiResponse<T>`
+
+## Database Models
+
+- Backend models are defined in [backend/models/](mdc:backend/models/)
+- Use proper typing for database operations
+- Match frontend interfaces with backend models
+
+## Type Safety Guidelines
+
+- Always use proper TypeScript interfaces
+- Avoid `any` types
+- Use union types for specific values (e.g., `"income" | "expense"`)
+- Use optional properties with `?` when appropriate
+- Use generic types for reusable patterns

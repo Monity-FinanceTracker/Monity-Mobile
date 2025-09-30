@@ -1,0 +1,94 @@
+---
+alwaysApply: false
+description: Development workflow and best practices for Monity project
+---
+
+# Development Workflow
+
+## Getting Started
+
+1. **Backend Setup**:
+
+   ```bash
+   cd backend
+   npm install
+   cp .env.example .env  # Configure environment variables
+   npm run dev
+   ```
+
+2. **Frontend Setup**:
+   ```bash
+   cd frontend/Monity
+   npm install
+   npm start
+   ```
+
+## Environment Configuration
+
+- **Backend**: Configure [backend/.env](mdc:backend/.env) with Supabase credentials
+- **Frontend**: Update API URL in [app.json](mdc:frontend/Monity/app.json) if needed
+
+## Development Process
+
+1. **Feature Development**:
+
+   - Create feature branch from `main`
+   - Implement backend API endpoints first
+   - Implement frontend integration
+   - Test thoroughly before merging
+
+2. **API Development**:
+
+   - Define routes in [backend/routes/](mdc:backend/routes/)
+   - Implement controllers in [backend/controllers/](mdc:backend/controllers/)
+   - Add proper error handling and validation
+   - Update frontend [apiService.ts](mdc:frontend/Monity/app/src/services/apiService.ts)
+
+3. **Frontend Development**:
+   - Create components in appropriate directories
+   - Use existing patterns from [AuthContext.tsx](mdc:frontend/Monity/app/src/context/AuthContext.tsx)
+   - Follow styling conventions with NativeWind
+   - Implement proper error handling
+
+## Testing
+
+- Test API endpoints with tools like Postman or curl
+- Test frontend components in Expo development environment
+- Verify authentication flow works correctly
+- Test error scenarios and edge cases
+
+## Code Quality
+
+- Use TypeScript strict mode
+- Follow existing code patterns and conventions
+- Add proper error handling and logging
+- Use meaningful variable and function names
+- Add comments for complex logic
+
+## Git Workflow
+
+- Use descriptive commit messages
+- Keep commits focused and atomic
+- Use feature branches for new development
+- Test before pushing to main branch
+
+## Debugging
+
+- Use console.log for frontend debugging
+- Use backend logger for server-side debugging
+- Check network requests in browser dev tools
+- Verify environment variables are loaded correctly
+
+## Common Issues
+
+- **Authentication errors**: Check token validity and Supabase configuration
+- **API connection issues**: Verify backend is running and URL is correct
+- **TypeScript errors**: Ensure all interfaces are properly defined
+- **Build errors**: Check dependencies and configuration files
+
+## Deployment
+
+- Backend: Deploy to your preferred hosting service
+- Frontend: Build and deploy using Expo/EAS
+- Update environment variables for production
+- Test thoroughly in production environment

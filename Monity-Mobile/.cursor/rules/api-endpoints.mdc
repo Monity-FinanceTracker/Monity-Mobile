@@ -1,0 +1,121 @@
+---
+alwaysApply: true
+description: Complete API endpoints reference for Monity project
+---
+
+# Monity API Endpoints Reference
+
+## Base URL
+
+- **Development**: `http://192.168.18.41:3000/api/v1`
+- **Production**: Configured via environment variables
+
+## Authentication Endpoints
+
+All auth endpoints are under `/auth` prefix:
+
+### Public Endpoints (No Authentication Required)
+
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
+
+### Protected Endpoints (Authentication Required)
+
+- `GET /auth/profile` - Get user profile
+- `GET /auth/financial-health` - Get user's financial health metrics
+
+## Transaction Endpoints
+
+All transaction endpoints are under `/transactions` prefix and require authentication:
+
+### CRUD Operations
+
+- `GET /transactions` - Get all transactions (with optional filters)
+- `GET /transactions/recent` - Get recent transactions
+- `GET /transactions/:id` - Get transaction by ID
+- `POST /transactions` - Create new transaction
+- `PUT /transactions/:id` - Update transaction
+- `DELETE /transactions/:id` - Delete transaction
+
+### Legacy Endpoints (for frontend compatibility)
+
+- `POST /transactions/add-expense` - Add expense (automatically sets typeId=1)
+- `POST /transactions/add-income` - Add income (automatically sets typeId=2)
+
+## Category Endpoints
+
+All category endpoints are under `/categories` prefix and require authentication:
+
+- `GET /categories` - Get all categories
+- `POST /categories` - Create new category
+- `PUT /categories/:id` - Update category
+- `DELETE /categories/:id` - Delete category
+
+## Budget Endpoints
+
+All budget endpoints are under `/budgets` prefix and require authentication:
+
+- `GET /budgets` - Get all budgets
+- `POST /budgets` - Create new budget
+- `PUT /budgets/:id` - Update budget
+- `DELETE /budgets/:id` - Delete budget
+
+## Balance Endpoints
+
+All balance endpoints are under `/balance` prefix and require authentication:
+
+- `GET /balance/all` - Get overall balance
+- `GET /balance/savings-overview` - Get savings overview
+- `GET /balance/:month/:year` - Get monthly balance
+- `GET /balance/history` - Get balance history
+
+## AI Endpoints
+
+All AI endpoints are under `/ai` prefix and require authentication:
+
+- `POST /ai/suggest-category` - Get AI category suggestion for transaction
+- `POST /ai/feedback` - Record AI feedback
+- `GET /ai/projections` - Get projected expenses
+- `GET /ai/stats` - Get AI statistics
+
+## User Endpoints
+
+All user endpoints are under `/users` prefix and require authentication:
+
+- `GET /users/search` - Search users
+
+## Additional Endpoints
+
+- `GET /months` - Get available months (requires authentication)
+- `GET /savings-goals` - Savings goals management (requires authentication)
+- `GET /groups` - Group management (requires authentication)
+- `GET /invitations` - Invitation management (requires authentication)
+- `GET /subscription-tier` - Subscription management (requires authentication)
+- `GET /financial-projections` - Financial projections (requires authentication)
+
+## Admin Endpoints
+
+All admin endpoints are under `/admin` prefix and require admin role:
+
+- Various admin management endpoints (see [admin.ts](mdc:backend/routes/admin.ts))
+
+## Authentication
+
+- All protected endpoints require `Authorization: Bearer <token>` header
+- Tokens are obtained from `/auth/login` or `/auth/register` endpoints
+- Token is stored in AsyncStorage with key `auth_token`
+
+## Rate Limiting
+
+- General API routes: Standard rate limiting
+- Auth routes: Stricter rate limiting for security
+- Applied via middleware in [index.ts](mdc:backend/routes/index.ts)
+
+## Frontend Integration
+
+The frontend uses [apiService.ts](mdc:frontend/Monity/app/src/services/apiService.ts) which provides:
+
+- Automatic token management
+- Request/response logging
+- Error handling
+- TypeScript interfaces for all data types

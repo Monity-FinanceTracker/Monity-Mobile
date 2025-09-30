@@ -1,0 +1,62 @@
+---
+globs: frontend/Monity/app/src/**/*.tsx,frontend/Monity/app/src/**/*.ts
+description: Frontend development patterns and conventions for Monity
+---
+
+# Frontend Development Patterns
+
+## Component Structure
+
+- Use functional components with hooks
+- Follow the atomic design pattern: atoms → molecules → organisms → pages
+- Components are located in [app/src/components/](mdc:frontend/Monity/app/src/components/)
+
+## State Management
+
+- Use React Context for global state (see [AuthContext.tsx](mdc:frontend/Monity/app/src/context/AuthContext.tsx))
+- Use local state with `useState` for component-specific state
+- Use `useCallback` and `useMemo` for performance optimization
+
+## API Integration
+
+- All API calls go through [apiService.ts](mdc:frontend/Monity/app/src/services/apiService.ts)
+- Use the `useAuth` hook for authentication-related operations
+- Handle loading states and errors consistently
+
+## Styling Conventions
+
+- Use NativeWind (Tailwind CSS) for styling
+- Apply styles using `className` prop
+- Use responsive design patterns for different screen sizes
+
+## Navigation
+
+- Use Expo Router for navigation (file-based routing)
+- Pages are located in [app/src/pages/](mdc:frontend/Monity/app/src/pages/)
+- Use `useNavigation` hook for programmatic navigation
+
+## Error Handling
+
+- Use [ErrorBoundary.tsx](mdc:frontend/Monity/app/src/components/ErrorBoundary.tsx) for error boundaries
+- Display user-friendly error messages
+- Log errors to console for debugging
+
+## TypeScript Conventions
+
+- Define interfaces for all data types in [apiService.ts](mdc:frontend/Monity/app/src/services/apiService.ts)
+- Use strict TypeScript configuration
+- Avoid `any` types, use proper typing
+
+## Authentication Flow
+
+1. Check authentication status on app startup
+2. Redirect to login if not authenticated
+3. Store tokens in AsyncStorage
+4. Include tokens in API requests automatically
+
+## Form Handling
+
+- Use controlled components for form inputs
+- Implement proper validation
+- Show loading states during submission
+- Handle success/error states appropriately

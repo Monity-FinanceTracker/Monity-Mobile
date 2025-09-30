@@ -1,0 +1,91 @@
+---
+alwaysApply: true
+description: Monity project structure and architecture guide
+---
+
+# Monity Project Structure
+
+## Project Overview
+
+Monity is a personal finance management mobile application built with React Native (Expo) and a Node.js backend.
+
+## Directory Structure
+
+```
+MonityMobile/
+├── backend/                 # Node.js/Express backend
+│   ├── controllers/         # Route controllers
+│   ├── routes/             # API route definitions
+│   ├── middleware/         # Authentication & rate limiting
+│   ├── models/             # Database models
+│   ├── services/           # Business logic services
+│   ├── config/             # Configuration files
+│   └── utils/              # Utility functions
+├── frontend/Monity/        # React Native (Expo) frontend
+│   ├── app/                # Expo Router app directory
+│   │   ├── src/
+│   │   │   ├── components/ # Reusable UI components
+│   │   │   ├── pages/      # Screen components
+│   │   │   ├── context/    # React Context providers
+│   │   │   ├── services/   # API service layer
+│   │   │   └── utils/      # Frontend utilities
+│   │   └── index.tsx       # App entry point
+│   ├── assets/             # Images, fonts, etc.
+│   └── app.json            # Expo configuration
+└── .cursor/rules/          # Cursor AI rules
+```
+
+## Backend Architecture
+
+- **Framework**: Express.js with TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth with JWT tokens
+- **API Version**: v1 (`/api/v1`)
+
+### Key Backend Files
+
+- [server.ts](mdc:backend/server.ts) - Main server entry point
+- [routes/index.ts](mdc:backend/routes/index.ts) - Main router configuration
+- [middleware/auth.ts](mdc:backend/middleware/auth.ts) - Authentication middleware
+- [config/supabase.ts](mdc:backend/config/supabase.ts) - Database configuration
+
+## Frontend Architecture
+
+- **Framework**: React Native with Expo
+- **Navigation**: Expo Router (file-based routing)
+- **State Management**: React Context API
+- **Styling**: NativeWind (Tailwind CSS for React Native)
+- **Storage**: AsyncStorage for local data
+
+### Key Frontend Files
+
+- [app/index.tsx](mdc:frontend/Monity/app/index.tsx) - App entry point
+- [app/src/context/AuthContext.tsx](mdc:frontend/Monity/app/src/context/AuthContext.tsx) - Authentication context
+- [app/src/services/apiService.ts](mdc:frontend/Monity/app/src/services/apiService.ts) - API service layer
+- [app.json](mdc:frontend/Monity/app.json) - Expo configuration
+
+## Data Flow
+
+1. **Authentication**: User logs in → Token stored in AsyncStorage → Token sent with API requests
+2. **API Calls**: Frontend calls apiService → apiService makes HTTP requests → Backend processes → Response returned
+3. **State Management**: Context providers manage global state → Components consume context → UI updates
+
+## Environment Configuration
+
+- **Backend**: [backend/.env](mdc:backend/.env) - Database and server configuration
+- **Frontend**: [app.json](mdc:frontend/Monity/app.json) - API URLs and Supabase configuration
+
+## Development Setup
+
+- **Backend**: `cd backend && npm run dev` (runs on port 3000)
+- **Frontend**: `cd frontend/Monity && npm start` (Expo development server)
+
+## Key Features
+
+- User authentication and profile management
+- Transaction tracking (income/expenses)
+- Category management
+- Budget planning
+- AI-powered category suggestions
+- Financial analytics and projections
+- Balance tracking and history

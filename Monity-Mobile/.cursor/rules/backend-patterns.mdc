@@ -1,0 +1,80 @@
+---
+globs: backend/**/*.ts
+description: Backend development patterns and conventions for Monity
+---
+
+# Backend Development Patterns
+
+## Architecture
+
+- Follow MVC pattern: Controllers → Services → Models
+- Use Express.js with TypeScript
+- Implement proper error handling and logging
+
+## Route Structure
+
+- Routes are defined in [backend/routes/](mdc:backend/routes/)
+- Main router configuration in [index.ts](mdc:backend/routes/index.ts)
+- Each feature has its own route file
+
+## Controller Pattern
+
+- Controllers handle HTTP requests/responses
+- Controllers are located in [backend/controllers/](mdc:backend/controllers/)
+- Use proper error handling and status codes
+- Return consistent response format
+
+## Authentication Middleware
+
+- Use [auth.ts](mdc:backend/middleware/auth.ts) for authentication
+- All protected routes require valid JWT token
+- Extract user information from token in `req.user`
+
+## Database Integration
+
+- Use Supabase client for database operations
+- Configuration in [config/supabase.ts](mdc:backend/config/supabase.ts)
+- Use both regular and admin clients as needed
+
+## Error Handling
+
+- Use proper HTTP status codes
+- Return consistent error response format
+- Log errors for debugging
+- Handle database errors gracefully
+
+## Rate Limiting
+
+- Apply rate limiting to all routes
+- Stricter limits for authentication endpoints
+- Configure in middleware
+
+## Response Format
+
+```typescript
+// Success response
+{
+  success: true,
+  data: T,
+  message?: string
+}
+
+// Error response
+{
+  success: false,
+  error: string,
+  message?: string
+}
+```
+
+## Environment Configuration
+
+- Use environment variables for configuration
+- Store sensitive data in [.env](mdc:backend/.env) file
+- Validate required environment variables on startup
+
+## Logging
+
+- Use structured logging with [logger.ts](mdc:backend/utils/logger.ts)
+- Log important operations and errors
+- Include relevant context in log messages
