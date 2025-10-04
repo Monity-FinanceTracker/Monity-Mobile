@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   Alert,
   Switch,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -23,22 +24,36 @@ import {
   Settings,
   Camera,
   Edit3,
+  LogOut,
 } from "lucide-react-native";
 
 export default function Profile() {
   const navigation = useNavigation();
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, logout, changePassword, deleteAccount } =
+    useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
   const [biometric, setBiometric] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: user?.name || "João Silva",
-    email: user?.email || "joao.silva@email.com",
+    name: "",
+    email: "",
   });
 
+  // Initialize profile data from user
+  useEffect(() => {
+    if (user) {
+      console.log("User data:", user);
+      setProfileData({
+        name: user.name || "",
+        email: user.email || "",
+      });
+    }
+  }, [user]);
+
   const refreshProfileData = async () => {
-    // Refresh user profile data
+    // Refresh user profile data - this will be handled by AuthContext
     console.log("Refreshing profile data...");
   };
 
@@ -47,6 +62,7 @@ export default function Profile() {
   });
 
   const getInitials = (name: string) => {
+    if (!name) return "U";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -55,14 +71,61 @@ export default function Profile() {
       .slice(0, 2);
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    // Handle YYYY-MM-DD format dates correctly
+    let date: Date;
+    if (dateString.includes('-') && !dateString.includes('T')) {
+      // Date is in YYYY-MM-DD format, parse as local date
+      const [year, month, day] = dateString.split('-').map(Number);
+      date = new Date(year, month - 1, day);
+    } else {
+      // Fallback for other date formats
+      date = new Date(dateString);
+    }
+    return date.toLocaleDateString("pt-BR", {
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const handleSave = async () => {
+    if (!profileData.name.trim() || !profileData.email.trim()) {
+      Alert.alert("Erro", "Nome e email são obrigatórios");
+      return;
+    }
+
     try {
+      setIsLoading(true);
       await updateProfile(profileData);
       Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
       setIsEditing(false);
     } catch (error) {
       Alert.alert("Erro", "Falha ao atualizar perfil");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert("Sair", "Tem certeza que deseja sair da sua conta?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Sair",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setIsLoading(true);
+            await logout();
+            // Navigation will be handled by AuthContext
+          } catch (error) {
+            Alert.alert("Erro", "Falha ao fazer logout");
+          } finally {
+            setIsLoading(false);
+          }
+        },
+      },
+    ]);
   };
 
   const handleExportData = () => {
@@ -70,20 +133,107 @@ export default function Profile() {
   };
 
   const handleChangePassword = () => {
-    Alert.alert("Alterar Senha", "Funcionalidade será implementada em breve");
+    Alert.prompt(
+      "Alterar Senha",
+      "Digite sua senha atual:",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Continuar",
+          onPress: (currentPassword?: string) => {
+            if (!currentPassword) {
+              Alert.alert("Erro", "Senha atual é obrigatória");
+              return;
+            }
+
+            Alert.prompt(
+              "Nova Senha",
+              "Digite sua nova senha:",
+              [
+                { text: "Cancelar", style: "cancel" },
+                {
+                  text: "Alterar",
+                  onPress: async (newPassword?: string) => {
+                    if (!newPassword || newPassword.length < 6) {
+                      Alert.alert(
+                        "Erro",
+                        "Nova senha deve ter pelo menos 6 caracteres"
+                      );
+                      return;
+                    }
+
+                    try {
+                      setIsLoading(true);
+                      await changePassword(currentPassword, newPassword);
+                      Alert.alert("Sucesso", "Senha alterada com sucesso!");
+                    } catch (error) {
+                      Alert.alert(
+                        "Erro",
+                        "Falha ao alterar senha. Verifique sua senha atual."
+                      );
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  },
+                },
+              ],
+              "secure-text"
+            );
+          },
+        },
+      ],
+      "secure-text"
+    );
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
       "Excluir Conta",
-      "Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.",
+      "Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão perdidos permanentemente.",
       [
         { text: "Cancelar", style: "cancel" },
         {
           text: "Excluir",
           style: "destructive",
           onPress: () => {
-            Alert.alert("Conta Excluída", "Sua conta foi excluída com sucesso");
+            Alert.prompt(
+              "Confirmar Exclusão",
+              "Digite sua senha para confirmar a exclusão da conta:",
+              [
+                { text: "Cancelar", style: "cancel" },
+                {
+                  text: "Excluir Conta",
+                  style: "destructive",
+                  onPress: async (password?: string) => {
+                    if (!password) {
+                      Alert.alert(
+                        "Erro",
+                        "Senha é obrigatória para excluir a conta"
+                      );
+                      return;
+                    }
+
+                    try {
+                      setIsLoading(true);
+                      await deleteAccount(password);
+                      Alert.alert(
+                        "Conta Excluída",
+                        "Sua conta foi excluída com sucesso"
+                      );
+                      // Navigation will be handled by AuthContext
+                    } catch (error) {
+                      Alert.alert(
+                        "Erro",
+                        "Falha ao excluir conta. Verifique sua senha."
+                      );
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  },
+                },
+              ],
+              "secure-text"
+            );
           },
         },
       ]
@@ -93,6 +243,20 @@ export default function Profile() {
   const handleUpdateProfile = (field: string, value: string) => {
     setProfileData({ ...profileData, [field]: value });
   };
+
+  if (!user) {
+    return (
+      <SafeAreaView
+        className="flex-1 bg-[#191E29]"
+        edges={["top", "bottom", "left", "right"]}
+      >
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#01C38D" />
+          <Text className="text-white mt-4">Carregando perfil...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -125,18 +289,23 @@ export default function Profile() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-white text-xl font-bold">
-                    {profileData.name}
+                    {profileData.name || user?.name || "Usuário"}
                   </Text>
                   <Text className="text-gray-400">{profileData.email}</Text>
                   <Text className="text-sm text-gray-400">
-                    Membro desde Jan 2024
+                    Membro desde {formatDate(user.createdAt)}
                   </Text>
                 </View>
                 <Pressable
                   onPress={isEditing ? handleSave : () => setIsEditing(true)}
+                  disabled={isLoading}
                   className="bg-[#31344d] border border-[#4B5563] px-4 py-2 rounded-lg flex-row items-center gap-2"
                 >
-                  <Edit3 size={16} color="#9CA3AF" />
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#9CA3AF" />
+                  ) : (
+                    <Edit3 size={16} color="#9CA3AF" />
+                  )}
                   <Text className="text-gray-300 text-sm">
                     {isEditing ? "Salvar" : "Editar"}
                   </Text>
@@ -166,6 +335,8 @@ export default function Profile() {
                     className={`bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4 py-3 ${
                       !isEditing ? "opacity-50" : ""
                     }`}
+                    placeholder="Digite seu nome completo"
+                    placeholderTextColor="#6B7280"
                   />
                 </View>
                 <View>
@@ -177,6 +348,10 @@ export default function Profile() {
                     className={`bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4 py-3 ${
                       !isEditing ? "opacity-50" : ""
                     }`}
+                    placeholder="Digite seu email"
+                    placeholderTextColor="#6B7280"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                   />
                 </View>
               </View>
@@ -272,13 +447,23 @@ export default function Profile() {
                 </Pressable>
                 <Pressable
                   onPress={handleChangePassword}
+                  disabled={isLoading}
                   className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <Shield size={20} color="#9CA3AF" />
                   <Text className="text-gray-300 ml-3">Alterar Senha</Text>
                 </Pressable>
                 <Pressable
+                  onPress={handleLogout}
+                  disabled={isLoading}
+                  className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
+                >
+                  <LogOut size={20} color="#9CA3AF" />
+                  <Text className="text-gray-300 ml-3">Sair da Conta</Text>
+                </Pressable>
+                <Pressable
                   onPress={handleDeleteAccount}
+                  disabled={isLoading}
                   className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <Trash2 size={20} color="#EF4444" />

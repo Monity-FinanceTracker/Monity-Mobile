@@ -2,16 +2,16 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { Home, Receipt, Plus, PieChart, Tag } from "lucide-react-native";
+import { Home, Receipt, Plus, MessageCircle, Tag } from "lucide-react-native";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import LoginScreen from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Transactions from "../pages/transactions/Transactions";
 import AddExpense from "../pages/expenses/AddExpense";
-import Budgets from "../pages/budgets/Budgets";
 import Categories from "../pages/categories/Categories";
 import Profile from "../pages/profile/Profile";
+import Chat from "../pages/chat/Chat";
 import { View, Text } from "react-native";
 
 export type RootStackParamList = {
@@ -82,11 +82,13 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Budgets"
-        component={Budgets}
+        name="Chat"
+        component={Chat}
         options={{
-          tabBarIcon: ({ color, size }) => <PieChart size={20} color={color} />,
-          tabBarLabel: "Orçamentos",
+          tabBarIcon: ({ color, size }) => (
+            <MessageCircle size={20} color={color} />
+          ),
+          tabBarLabel: "IA Chat",
         }}
       />
       <Tab.Screen

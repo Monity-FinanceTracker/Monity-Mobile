@@ -338,13 +338,13 @@ export default function Categories() {
       <Card key={category.id} className="mb-3">
         <View className="p-4">
           <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-3">
+            <View className="flex-row items-center gap-3 flex-1">
               <View
                 className={`w-12 h-12 rounded-lg items-center justify-center ${getBackgroundColorClass(category.color)}`}
               >
                 <Icon size={20} color={getColorClass(category.color)} />
               </View>
-              <View>
+              <View className="flex-1">
                 <View className="flex-row items-center gap-2 mb-1">
                   <Text className="font-medium text-white text-base">
                     {category.name}
@@ -373,29 +373,25 @@ export default function Categories() {
                 </Text>
               </View>
             </View>
-            <View className="flex-row items-center gap-2">
-              <View className="items-end mr-3">
-                <Text
-                  className={`text-lg font-semibold ${
-                    category.type === "income"
-                      ? "text-green-400"
-                      : "text-red-400"
-                  }`}
-                >
-                  {formatCurrency(category.totalSpent || 0)}
-                </Text>
-              </View>
+            <View className="flex-row items-center gap-1">
+              <Text
+                className={`text-lg font-semibold mr-2 ${
+                  category.type === "income" ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {formatCurrency(category.totalSpent || 0)}
+              </Text>
               <Pressable
                 onPress={() => handleEditCategory(category)}
-                className="p-2 h-8 w-8 items-center justify-center"
+                className="bg-[#31344d] rounded-lg p-1.5 h-7 w-7 items-center justify-center"
               >
-                <Edit size={14} color="#9CA3AF" />
+                <Edit size={12} color="#9CA3AF" />
               </Pressable>
               <Pressable
                 onPress={() => handleDeleteCategory(parseInt(category.id))}
-                className="p-2 h-8 w-8 items-center justify-center"
+                className="bg-[#31344d] rounded-lg p-1.5 h-7 w-7 items-center justify-center"
               >
-                <Trash2 size={14} color="#EF4444" />
+                <Trash2 size={12} color="#EF4444" />
               </Pressable>
             </View>
           </View>

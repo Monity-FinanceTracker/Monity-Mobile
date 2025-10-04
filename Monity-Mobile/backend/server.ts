@@ -33,6 +33,9 @@ const createServer = (supabaseClient?: SupabaseClient): Express => {
       const allowedOrigins = [
         "http://localhost:5173",
         "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:19000",
+        "http://localhost:19001",
         "https://firstmonity.vercel.app",
         process.env.CLIENT_URL,
       ].filter(Boolean) as string[];
@@ -68,7 +71,7 @@ const createServer = (supabaseClient?: SupabaseClient): Express => {
 };
 
 const app: Express = createServer();
-const PORT: number | string = process.env.PORT || 3000;
+const PORT: number | string = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);

@@ -14,6 +14,8 @@ export interface User {
   phone?: string;
   cpf?: string;
   createdAt: string;
+  subscriptionTier?: string;
+  updatedAt?: string;
 }
 
 export interface Transaction {
@@ -45,17 +47,6 @@ export interface Category {
   totalSpent?: number;
   transactionCount?: number;
   percentage?: number;
-}
-
-export interface Budget {
-  id: string;
-  categoryId: string;
-  category?: Category;
-  budgetAmount: number;
-  spentAmount: number;
-  transactions?: number;
-  month: number;
-  year: number;
 }
 
 export interface Balance {
@@ -219,9 +210,26 @@ class ApiService {
   }
 
   async updateProfile(profileData: Partial<User>): Promise<ApiResponse<User>> {
-    return this.request<User>("/users/profile", {
+    return this.request<User>("/auth/profile", {
       method: "PUT",
       body: JSON.stringify(profileData),
+    });
+  }
+
+  async changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Promise<ApiResponse<void>> {
+    return this.request<void>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  }
+
+  async deleteAccount(password: string): Promise<ApiResponse<void>> {
+    return this.request<void>("/auth/delete-account", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
     });
   }
 
@@ -335,34 +343,6 @@ class ApiService {
 
   async deleteCategory(id: string): Promise<ApiResponse<void>> {
     return this.request<void>(`/categories/${id}`, {
-      method: "DELETE",
-    });
-  }
-
-  // Budget methods
-  async getBudgets(): Promise<ApiResponse<Budget[]>> {
-    return this.request<Budget[]>("/budgets");
-  }
-
-  async createBudget(budget: Omit<Budget, "id">): Promise<ApiResponse<Budget>> {
-    return this.request<Budget>("/budgets", {
-      method: "POST",
-      body: JSON.stringify(budget),
-    });
-  }
-
-  async updateBudget(
-    id: string,
-    budget: Partial<Budget>
-  ): Promise<ApiResponse<Budget>> {
-    return this.request<Budget>(`/budgets/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(budget),
-    });
-  }
-
-  async deleteBudget(id: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/budgets/${id}`, {
       method: "DELETE",
     });
   }

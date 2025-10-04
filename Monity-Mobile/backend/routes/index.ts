@@ -11,7 +11,6 @@ import aiRoutes from "./ai";
 import subscriptionRoutes from "./subscription";
 import balanceRoutes from "./balance";
 import invitationRoutes from "./invitations";
-import budgetRoutes from "./budgets";
 import financialProjectionsRoutes from "./financialProjections";
 import userRoutes from "./users";
 import billingRoutes from "./billing";
@@ -71,11 +70,6 @@ export default (controllers: any, middleware: any) => {
     "/invitations",
     middleware.auth.authenticate,
     invitationRoutes(controllers)
-  );
-  v1Router.use(
-    "/budgets",
-    middleware.auth.authenticate,
-    budgetRoutes(controllers)
   );
   v1Router.use(
     "/financial-projections",

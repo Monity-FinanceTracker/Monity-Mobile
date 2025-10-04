@@ -99,14 +99,41 @@ export default function Dashboard() {
   };
 
   const formatTransactionDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Handle YYYY-MM-DD format dates correctly
+    let date: Date;
+    if (dateString.includes("-") && !dateString.includes("T")) {
+      // Date is in YYYY-MM-DD format, parse as local date
+      const [year, month, day] = dateString.split("-").map(Number);
+      date = new Date(year, month - 1, day);
+    } else {
+      // Fallback for other date formats
+      date = new Date(dateString);
+    }
+
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
+    // Reset time parts to compare only dates
+    const compareDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+    const compareToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const compareYesterday = new Date(
+      yesterday.getFullYear(),
+      yesterday.getMonth(),
+      yesterday.getDate()
+    );
+
+    if (compareDate.getTime() === compareToday.getTime()) {
       return "Hoje";
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (compareDate.getTime() === compareYesterday.getTime()) {
       return "Ontem";
     } else {
       return date.toLocaleDateString("pt-BR", {

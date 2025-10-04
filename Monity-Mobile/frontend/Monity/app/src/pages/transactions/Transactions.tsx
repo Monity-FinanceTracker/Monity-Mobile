@@ -97,25 +97,58 @@ export default function Transactions() {
     const categoryName =
       transaction.category?.name || transaction.category || "";
     const transactionType =
-      transaction.type || (transaction.typeId === 1 ? "expense" : "income");
+      transaction.type ||
+      (transaction.categoryId === "1" ? "expense" : "income");
 
     const matchesSearch =
       title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      categoryName.toLowerCase().includes(searchTerm.toLowerCase());
+      (typeof categoryName === "string"
+        ? categoryName
+        : categoryName.name || ""
+      )
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
     const matchesFilter =
       selectedFilter === "all" || transactionType === selectedFilter;
     return matchesSearch && matchesFilter;
   });
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Handle YYYY-MM-DD format dates correctly
+    let date: Date;
+    if (dateString.includes("-") && !dateString.includes("T")) {
+      // Date is in YYYY-MM-DD format, parse as local date
+      const [year, month, day] = dateString.split("-").map(Number);
+      date = new Date(year, month - 1, day);
+    } else {
+      // Fallback for other date formats
+      date = new Date(dateString);
+    }
+
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
+    // Reset time parts to compare only dates
+    const compareDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+    const compareToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const compareYesterday = new Date(
+      yesterday.getFullYear(),
+      yesterday.getMonth(),
+      yesterday.getDate()
+    );
+
+    if (compareDate.getTime() === compareToday.getTime()) {
       return "Hoje";
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (compareDate.getTime() === compareYesterday.getTime()) {
       return "Ontem";
     } else {
       return date.toLocaleDateString("pt-BR", {
@@ -127,14 +160,16 @@ export default function Transactions() {
 
   const totalIncome = transactions
     .filter((t) => {
-      const transactionType = t.type || (t.typeId === 1 ? "expense" : "income");
+      const transactionType =
+        t.type || (t.categoryId === "1" ? "expense" : "income");
       return transactionType === "income";
     })
     .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
 
   const totalExpenses = transactions
     .filter((t) => {
-      const transactionType = t.type || (t.typeId === 1 ? "expense" : "income");
+      const transactionType =
+        t.type || (t.categoryId === "1" ? "expense" : "income");
       return transactionType === "expense";
     })
     .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
@@ -145,10 +180,10 @@ export default function Transactions() {
     const categoryName =
       item.category?.name || item.category || "Sem categoria";
     const transactionType =
-      item.type || (item.typeId === 1 ? "expense" : "income");
+      item.type || (item.categoryId === "1" ? "expense" : "income");
     const amount = item.amount || 0;
 
-    const Icon = getTransactionIcon(categoryName);
+    const Icon = getTransactionIcon(categoryName as string);
     return (
       <Card className="mb-3">
         <View className="flex-row items-center justify-between">
@@ -169,7 +204,9 @@ export default function Transactions() {
               <Text className="font-medium text-white text-base">{title}</Text>
               <View className="flex-row items-center gap-2 mt-1">
                 <View className="bg-[#31344d] px-2 py-1 rounded-md">
-                  <Text className="text-xs text-gray-300">{categoryName}</Text>
+                  <Text className="text-xs text-gray-300">
+                    {categoryName as string}
+                  </Text>
                 </View>
                 <Text className="text-xs text-gray-400">
                   {item.paymentMethod || "N/A"}
@@ -249,11 +286,6 @@ export default function Transactions() {
 
           {/* Search Bar */}
           <View className="relative mb-4">
-            <Search
-              size={20}
-              color="#9CA3AF"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10"
-            />
             <TextInput
               placeholder="Buscar transações..."
               placeholderTextColor="#9CA3AF"

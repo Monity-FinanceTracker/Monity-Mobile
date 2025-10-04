@@ -8,7 +8,6 @@ import SubscriptionController from "./subscriptionController";
 import AdminController from "./adminController";
 import AiController from "./aiController";
 import InvitationController from "./invitationController";
-import BudgetController from "./budgetController";
 import FinancialProjectionsController from "./financialProjectionsController";
 import UserController from "./userController";
 
@@ -24,7 +23,6 @@ const initializeControllers = (supabase: any) => {
     adminController: new AdminController(supabase),
     aiController: new AiController(supabase),
     invitationController: new InvitationController(supabase),
-    budgetController: new BudgetController(supabase),
     financialProjectionsController: new FinancialProjectionsController(
       supabase
     ),

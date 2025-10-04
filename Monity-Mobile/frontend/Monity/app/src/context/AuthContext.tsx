@@ -17,6 +17,11 @@ type AuthContextValue = {
   signup: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<User>) => Promise<void>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -59,7 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       const response = await apiService.login(email, password);
       if (response.success && response.data) {
-        setUser(response.data.user);
+        // After successful login, fetch the user profile
+        const profileResponse = await apiService.getProfile();
+        if (profileResponse.success && profileResponse.data) {
+          setUser(profileResponse.data);
+        } else {
+          throw new Error("Failed to fetch user profile");
+        }
       } else {
         throw new Error(response.error || "Login failed");
       }
@@ -77,7 +88,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
         const response = await apiService.register(email, password, name);
         if (response.success && response.data) {
-          setUser(response.data.user);
+          // After successful registration, fetch the user profile
+          const profileResponse = await apiService.getProfile();
+          if (profileResponse.success && profileResponse.data) {
+            setUser(profileResponse.data);
+          } else {
+            throw new Error("Failed to fetch user profile");
+          }
         } else {
           throw new Error(response.error || "Signup failed");
         }
@@ -114,9 +131,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      try {
+        const response = await apiService.changePassword(
+          currentPassword,
+          newPassword
+        );
+        if (!response.success) {
+          throw new Error(response.error || "Password change failed");
+        }
+      } catch (error) {
+        console.error("Password change error:", error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  const deleteAccount = useCallback(async (password: string) => {
+    try {
+      const response = await apiService.deleteAccount(password);
+      if (response.success) {
+        setUser(null);
+        await apiService.clearToken();
+      } else {
+        throw new Error(response.error || "Account deletion failed");
+      }
+    } catch (error) {
+      console.error("Account deletion error:", error);
+      throw error;
+    }
+  }, []);
+
   const value = useMemo(
-    () => ({ user, isLoading, login, signup, logout, updateProfile }),
-    [user, isLoading, login, signup, logout, updateProfile]
+    () => ({
+      user,
+      isLoading,
+      login,
+      signup,
+      logout,
+      updateProfile,
+      changePassword,
+      deleteAccount,
+    }),
+    [
+      user,
+      isLoading,
+      login,
+      signup,
+      logout,
+      updateProfile,
+      changePassword,
+      deleteAccount,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

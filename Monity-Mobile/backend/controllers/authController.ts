@@ -1,6 +1,7 @@
 import User from "../models/User";
 import { logger } from "../utils/logger";
 import FinancialHealthService from "../services/financialHealthService";
+import { supabaseAdmin } from "../config/supabase";
 import type { Request, Response, NextFunction } from "express";
 
 interface AuthenticatedRequest extends Request {
@@ -97,28 +98,26 @@ class AuthController {
     const userId = req.user.id;
 
     try {
-      // Fetch real user data from Supabase
-      const { data, error } = await this.supabase
+      // Get user profile from profiles table using admin client to bypass RLS
+      const { data: profile, error } = await supabaseAdmin
         .from("profiles")
-        .select("id, name, email, subscription_tier, created_at, updated_at")
+        .select("*")
         .eq("id", userId)
         .single();
 
       if (error) {
-        logger.error("Failed to get user profile from database", {
-          userId,
-          error: error.message,
-        });
-
-        // If user doesn't exist in profiles table, create a basic profile
+        // If profile doesn't exist, create one with basic info
         if (error.code === "PGRST116") {
-          const { data: newProfile, error: createError } = await this.supabase
+          const { data: newProfile, error: createError } = await supabaseAdmin
             .from("profiles")
             .insert({
               id: userId,
-              name: req.user.user_metadata?.name || "User",
               email: req.user.email,
-              subscription_tier: "free",
+              name: req.user.user_metadata?.name || "User",
+              phone: req.user.user_metadata?.phone || null,
+              cpf: req.user.user_metadata?.cpf || null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             })
             .select()
             .single();
@@ -128,24 +127,32 @@ class AuthController {
               userId,
               error: createError.message,
             });
-            return res
-              .status(500)
-              .json({ error: "Failed to create user profile." });
+            return res.status(500).json({ error: "Failed to create profile" });
           }
 
-          logger.info("Created new user profile", { userId });
-          return res.json(newProfile);
+          const userData = {
+            ...newProfile,
+            subscriptionTier: "free",
+          };
+
+          logger.info("Profile created successfully", { userId });
+          return res.json({ success: true, data: userData });
         }
 
-        return res.status(500).json({ error: "Failed to fetch user profile." });
+        logger.error("Failed to fetch user profile", {
+          userId,
+          error: error.message,
+        });
+        return res.status(500).json({ error: "Failed to fetch profile" });
       }
 
-      if (!data) {
-        return res.status(404).json({ error: "User not found." });
-      }
+      const userData = {
+        ...profile,
+        subscriptionTier: "free",
+      };
 
       logger.info("Profile request successful", { userId });
-      res.json(data);
+      res.json({ success: true, data: userData });
     } catch (error) {
       logger.error("An unexpected error occurred while fetching profile", {
         userId,
@@ -289,6 +296,162 @@ class AuthController {
         { userId, error: error as Error["message"] }
       );
       res.status(500).json({ error: "Failed to calculate financial health" });
+    }
+  }
+
+  async updateProfile(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user.id;
+    const { name, email } = req.body;
+
+    try {
+      // Update profile in Supabase profiles table using admin client to bypass RLS
+      const { data, error } = await supabaseAdmin
+        .from("profiles")
+        .update({
+          name: name,
+          email: email,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error("Failed to update user profile", {
+          userId,
+          error: error.message,
+        });
+        return res.status(500).json({ error: "Failed to update profile" });
+      }
+
+      logger.info("Profile updated successfully", { userId });
+      res.json({ success: true, data });
+    } catch (error) {
+      logger.error("An unexpected error occurred while updating profile", {
+        userId,
+        error: error as Error["message"],
+      });
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  async changePassword(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ error: "Current password and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ error: "New password must be at least 6 characters long" });
+    }
+
+    try {
+      // First verify the current password by attempting to sign in
+      const { data: userData, error: signInError } =
+        await this.supabase.auth.signInWithPassword({
+          email: req.user.email,
+          password: currentPassword,
+        });
+
+      if (signInError) {
+        logger.warn("Password change failed - invalid current password", {
+          userId,
+          error: signInError.message,
+        });
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+
+      // Update the password
+      const { error: updateError } = await this.supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        logger.error("Failed to update password", {
+          userId,
+          error: updateError.message,
+        });
+        return res.status(500).json({ error: "Failed to update password" });
+      }
+
+      logger.info("Password updated successfully", { userId });
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      logger.error("An unexpected error occurred while changing password", {
+        userId,
+        error: error as Error["message"],
+      });
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  async deleteAccount(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user.id;
+    const { password } = req.body;
+
+    if (!password) {
+      return res
+        .status(400)
+        .json({ error: "Password is required to delete account" });
+    }
+
+    try {
+      // First verify the password by attempting to sign in
+      const { data: userData, error: signInError } =
+        await this.supabase.auth.signInWithPassword({
+          email: req.user.email,
+          password: password,
+        });
+
+      if (signInError) {
+        logger.warn("Account deletion failed - invalid password", {
+          userId,
+          error: signInError.message,
+        });
+        return res.status(400).json({ error: "Password is incorrect" });
+      }
+
+      // Delete user data from profiles table first
+      const { error: profileError } = await this.supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+
+      if (profileError) {
+        logger.error("Failed to delete user profile", {
+          userId,
+          error: profileError.message,
+        });
+        return res.status(500).json({ error: "Failed to delete account data" });
+      }
+
+      // Delete user from auth (this will cascade delete related data)
+      const { error: authError } = await this.supabase.auth.admin.deleteUser(
+        userId
+      );
+
+      if (authError) {
+        logger.error("Failed to delete user from auth", {
+          userId,
+          error: authError.message,
+        });
+        return res.status(500).json({ error: "Failed to delete account" });
+      }
+
+      logger.info("Account deleted successfully", { userId });
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      logger.error("An unexpected error occurred while deleting account", {
+        userId,
+        error: error as Error["message"],
+      });
+      res.status(500).json({ error: "Internal Server Error" });
     }
   }
 }
