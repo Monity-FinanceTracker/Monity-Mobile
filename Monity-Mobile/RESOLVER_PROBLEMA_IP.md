@@ -133,13 +133,22 @@ const API_URL =
 - Funciona imediatamente
 - URL temporária (muda a cada restart)
 
-### 2. **Para Produção**: Railway/Render
+### 2. **Para Produção**: Railway ⭐ RECOMENDADO
 
-- URL permanente
-- Deploy automático do GitHub
-- Escalável
+- ✅ **Perfeito para Node.js backend**
+- ✅ **Deploy automático do GitHub**
+- ✅ **Supabase integrado** (seu banco atual)
+- ✅ **URL permanente e estável**
+- ✅ **Configuração super simples**
+- ✅ **Ideal para APIs mobile**
 
-### 3. **Para Flexibilidade Total**: VPS
+### 3. **Alternativa**: Render (segunda opção)
+
+- Semelhante ao Railway
+- Free tier diferente
+- Funciona bem também
+
+### 4. **Para Flexibilidade Total**: VPS
 
 - Controle completo
 - Domínio próprio
