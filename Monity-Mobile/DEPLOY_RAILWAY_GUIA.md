@@ -226,6 +226,40 @@ npx eas build --platform android --profile production
 
 ## 🔧 Troubleshooting
 
+### ❌ Problema: "Cannot use import statement outside a module"
+
+**Causa:** Node.js está tentando executar arquivo TypeScript em vez do JavaScript compilado
+
+**Solução:** Corrigir script `start` no package.json
+
+**package.json corrigido:**
+
+```json
+{
+  "scripts": {
+    "dev": "ts-node server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js" // ← Executa arquivo compilado
+  }
+}
+```
+
+**Dockerfile otimizado (multi-stage):**
+
+```dockerfile
+# Stage 1: Build
+FROM node:18-alpine AS builder
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Stage 2: Production
+FROM node:18-alpine AS production
+RUN npm ci --only=production
+COPY --from=builder /app/dist ./dist
+CMD ["npm", "start"]
+```
+
 ### ❌ Problema: "tsc: not found" ou "Build failed"
 
 **Causa:** TypeScript não está instalado porque está nas devDependencies

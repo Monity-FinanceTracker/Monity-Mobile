@@ -1,5 +1,5 @@
-# Use Node.js 18 LTS como base
-FROM node:18-alpine
+# Multi-stage build para otimizar tamanho da imagem
+FROM node:18-alpine AS builder
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -7,7 +7,7 @@ WORKDIR /app
 # Copiar package.json e package-lock.json
 COPY package*.json ./
 
-# Instalar TODAS as dependências (incluindo devDependencies para build)
+# Instalar TODAS as dependências (incluindo devDependencies)
 RUN npm ci
 
 # Copiar código fonte
@@ -16,8 +16,20 @@ COPY . .
 # Compilar TypeScript
 RUN npm run build
 
-# Remover devDependencies após build (otimização)
-RUN npm prune --production
+# Stage de produção
+FROM node:18-alpine AS production
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Copiar package.json e package-lock.json
+COPY package*.json ./
+
+# Instalar apenas dependências de produção
+RUN npm ci --only=production && npm cache clean --force
+
+# Copiar código compilado do stage anterior
+COPY --from=builder /app/dist ./dist
 
 # Expor porta
 EXPOSE 3001
