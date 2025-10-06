@@ -66,7 +66,16 @@ CLIENT_URL=https://firstmonity.vercel.app
 ### Passo 6: Testar o Backend
 
 1. **Acesse:** `https://seu-app.railway.app/api/v1`
-2. **Deve retornar:** `{"message": "API v1 is running"}`
+2. **Deve retornar:**
+
+```json
+{
+  "message": "Monity API v1 is running",
+  "version": "1.0.0",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "status": "healthy"
+}
+```
 
 ---
 
@@ -225,6 +234,28 @@ npx eas build --platform android --profile production
 ---
 
 ## 🔧 Troubleshooting
+
+### ❌ Problema: "Cannot GET /api/v1"
+
+**Causa:** Rota raiz `/api/v1` não estava definida
+
+**Solução:** Adicionada rota de health check na raiz da API
+
+**Código adicionado em `backend/routes/index.ts`:**
+
+```typescript
+// Root API route for health check
+v1Router.get("/", (req: any, res: any) => {
+  res.json({
+    message: "Monity API v1 is running",
+    version: "1.0.0",
+    timestamp: new Date().toISOString(),
+    status: "healthy",
+  });
+});
+```
+
+**Teste:** Acesse `https://seu-app.railway.app/api/v1` - deve retornar JSON com status
 
 ### ❌ Problema: "Cannot use import statement outside a module"
 

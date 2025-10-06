@@ -22,6 +22,16 @@ export default (controllers: any, middleware: any) => {
   // Apply general rate limiting to all v1 routes
   v1Router.use(middleware.rateLimiter.apiLimiter);
 
+  // Root API route for health check
+  v1Router.get("/", (req: any, res: any) => {
+    res.json({
+      message: "Monity API v1 is running",
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
+      status: "healthy",
+    });
+  });
+
   // Auth routes have a stricter rate limit
   v1Router.use(
     "/auth",
