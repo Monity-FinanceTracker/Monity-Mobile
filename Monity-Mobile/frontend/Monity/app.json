@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.Monity"
     },
     "web": {
       "bundler": "metro",
@@ -46,10 +47,14 @@
       "reactCompiler": true
     },
     "extra": {
-      "apiUrl": "http://192.168.0.7:3000/api/v1",
+      "apiUrl": "https://monity.onrender.com",
       "supabaseUrl": "https://eeubnmpetzhjcludrjwz.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTI4MzQsImV4cCI6MjA2ODA4ODgzNH0.QZc4eJ4tLW10WIwhsu_p7TvldzodQrwJRnJ8LlzXkdM",
-      "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps"
+      "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps",
+      "router": {},
+      "eas": {
+        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
+      }
     }
   }
 }

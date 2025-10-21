@@ -12,7 +12,8 @@ import AddExpense from "../pages/expenses/AddExpense";
 import Categories from "../pages/categories/Categories";
 import Profile from "../pages/profile/Profile";
 import Chat from "../pages/chat/Chat";
-import { View, Text } from "react-native";
+import { Platform, View, Text } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -25,17 +26,25 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: "#23263a",
           borderTopColor: "#31344d",
           borderTopWidth: 1,
-          paddingBottom: 8,
+          // Add extra bottom padding for Android gesture nav / soft keys
+          paddingBottom: Math.max(8, insets.bottom),
           paddingTop: 8,
-          height: 70,
+          // Increase height slightly on Android when there is a bottom inset
+          height:
+            Platform.OS === "android"
+              ? 62 + Math.max(0, insets.bottom - 8)
+              : 70,
         },
         tabBarActiveTintColor: "#01C38D",
         tabBarInactiveTintColor: "#9ca3af",
