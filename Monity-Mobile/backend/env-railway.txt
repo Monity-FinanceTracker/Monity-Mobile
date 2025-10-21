@@ -1,0 +1,51 @@
+# ===========================================
+# MONITY BACKEND - VARIÁVEIS DE AMBIENTE
+# ===========================================
+
+# Ambiente de execução
+NODE_ENV=production
+
+# Porta do servidor (Railway define automaticamente)
+PORT=3001
+
+# URL do cliente para CORS
+CLIENT_URL=https://firstmonity.vercel.app
+
+# ===========================================
+# SUPABASE CONFIGURAÇÃO (OBRIGATÓRIO)
+# ===========================================
+
+# URL do projeto Supabase
+SUPABASE_URL=https://eeubnmpetzhjcludrjwz.supabase.co
+
+# Chave anônima do Supabase (para operações públicas)
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTI4MzQsImV4cCI6MjA2ODA4ODgzNH0.QZc4eJ4tLW10WIwhsu_p7TvldzodQrwJRnJ8LlzXkdM
+
+# Chave de serviço do Supabase (para operações administrativas)
+# IMPORTANTE: Obtenha esta chave em https://supabase.com/dashboard > Settings > API > service_role
+SUPABASE_KEY=sua_supabase_service_key_aqui
+
+# ===========================================
+# CHAVE DE CRIPTOGRAFIA (OBRIGATÓRIO)
+# ===========================================
+
+# Chave para criptografia de dados sensíveis (32 caracteres)
+# Gere com: openssl rand -hex 16
+ENCRYPTION_KEY=sua_chave_de_criptografia_de_32_caracteres
+
+# ===========================================
+# REDIS (OPCIONAL - para cache)
+# ===========================================
+
+# URL do Redis para cache (opcional)
+REDIS_URL=redis://localhost:6379
+
+# ===========================================
+# INSTRUÇÕES PARA RAILWAY
+# ===========================================
+
+# 1. Copie este arquivo para .env (localmente)
+# 2. Configure as variáveis no Railway Dashboard:
+#    - Vá em Variables
+#    - Adicione cada variável com seu valor real
+# 3. Nunca commite o arquivo .env com valores reais!

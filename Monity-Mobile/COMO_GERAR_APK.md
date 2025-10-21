@@ -91,7 +91,7 @@ cd android
 
 ### **Método 2: WhatsApp Web/Telegram**
 
-1. Envie o APL diretamente pelo WhatsApp Web ou Telegram
+1. Envie o APK diretamente pelo WhatsApp Web ou Telegram
 2. Recipientes podem baixar diretamente
 
 ### **Método 3: GitHub Release**
@@ -225,6 +225,95 @@ npm start -- --clear
 ```
 EXPO_PUBLIC_API_URL=https://seu-servidor.com/api/v1
 ```
+
+---
+
+## 🔐 Variáveis de Ambiente (evitar erro de criptografia)
+
+Quando você rodar o app com backend protegido por criptografia, é obrigatório configurar as variáveis do backend. Sem isso, o backend lança erro de criptografia e o app falha nas requisições.
+
+### O que o backend exige (obrigatórias)
+
+- `ENCRYPTION_KEY`: chave hex de 64 caracteres (AES-256-GCM). Se faltar ou for inválida, o backend encerra com erro.
+- `SUPABASE_URL`: URL do seu projeto Supabase
+- `SUPABASE_ANON_KEY`: chave anônima pública do Supabase
+- `SUPABASE_KEY`: chave de serviço (admin) do Supabase
+- `PORT` (opcional, default 3001)
+
+### Como gerar a ENCRYPTION_KEY (64 chars)
+
+```bash
+openssl rand -hex 32
+```
+
+Copie o valor retornado (ex.: 64 caracteres hex) e use em `ENCRYPTION_KEY`.
+
+### Backend: criando `.env`
+
+Crie o arquivo `backend/.env` com conteúdo semelhante:
+
+```bash
+NODE_ENV=production
+PORT=3000
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_ANON_KEY=seu_anon_key
+SUPABASE_KEY=seu_service_role_key
+ENCRYPTION_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Inicie o backend carregando o `.env` normalmente (o projeto já usa `dotenv`):
+
+```bash
+cd backend
+npm run dev
+# ou
+npm start
+```
+
+Se estiver fazendo deploy (Railway/Render), configure essas variáveis no painel do provedor.
+
+### Frontend (Expo): configurando API URL via env
+
+Para builds do Expo, prefira variáveis `EXPO_PUBLIC_...` para serem injetadas no app em tempo de build:
+
+1) Crie `frontend/Monity/.env`:
+
+```bash
+EXPO_PUBLIC_API_URL=https://seu-backend-publico.com/api/v1
+# opcionais, se quiser mover do app.json para env públicos
+EXPO_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=seu_anon_key
+EXPO_PUBLIC_GEMINI_API_KEY=xxxxx
+```
+
+2) Garanta que o código leia de `Constants.expoConfig?.extra?.apiUrl` ou de `process.env.EXPO_PUBLIC_API_URL` (o serviço já usa `extra.apiUrl`; se usar env, ajuste o `app.json` para ler de env ou migre a leitura no código). Em builds EAS, você também pode definir secrets/vars pelo CLI/painel:
+
+```bash
+cd frontend/Monity
+npx eas secret:create --name EXPO_PUBLIC_API_URL --value https://seu-backend-publico.com/api/v1
+```
+
+3) Se você mantiver `app.json` com `extra.apiUrl`, atualize para a URL pública antes do build.
+
+### Fluxo recomendado para evitar erro de criptografia
+
+1. Configure `backend/.env` com `ENCRYPTION_KEY` válido e credenciais do Supabase.
+2. Suba o backend local ou em um host público (Railway/Render/ngrok).
+3. No frontend, aponte `EXPO_PUBLIC_API_URL` (ou `extra.apiUrl`) para a URL acessível publicamente.
+4. Só então gere o APK (veja Opção 1 ou 3).
+
+---
+
+## 🧪 Teste rápido antes do build
+
+Antes de rodar o build, valide que o app consegue autenticar e listar dados com o backend já configurado:
+
+```bash
+cd frontend/Monity
+npx expo start
+```
+
+No dispositivo (ou emulador), faça login e navegue até Transações/Categorias. Se as requisições funcionarem, o build APK também funcionará.
 
 ---
 
