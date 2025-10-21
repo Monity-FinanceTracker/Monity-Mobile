@@ -1,0 +1,56 @@
+# ===========================================
+# MONITY BACKEND - VARIÁVEIS DE AMBIENTE
+# ===========================================
+
+# Ambiente de execução
+NODE_ENV=development
+
+# Porta do servidor (padrão: 3001)
+PORT=3001
+
+# URL do cliente para CORS (opcional)
+CLIENT_URL=http://localhost:19000
+
+# ===========================================
+# SUPABASE CONFIGURAÇÃO (OBRIGATÓRIO)
+# ===========================================
+
+# URL do projeto Supabase
+SUPABASE_URL=https://eeubnmpetzhjcludrjwz.supabase.co
+
+# Chave anônima do Supabase (para operações públicas)
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTI4MzQsImV4cCI6MjA2ODA4ODgzNH0.QZc4eJ4tLW10WIwhsu_p7TvldzodQrwJRnJ8LlzXkdM
+
+# Chave de serviço do Supabase (para operações administrativas)
+SUPABASE_KEY=sua_supabase_service_key_aqui
+
+# ===========================================
+# CHAVE DE CRIPTOGRAFIA (OBRIGATÓRIO)
+# ===========================================
+
+# Chave para criptografia de dados sensíveis (32 caracteres)
+ENCRYPTION_KEY=sua_chave_de_criptografia_de_32_caracteres
+
+# ===========================================
+# REDIS (OPCIONAL - para cache)
+# ===========================================
+
+# URL do Redis para cache (opcional)
+REDIS_URL=redis://localhost:6379
+
+# ===========================================
+# NOTAS IMPORTANTES
+# ===========================================
+
+# 1. SUPABASE_KEY: Você precisa obter a service key do seu projeto Supabase
+#    - Acesse: https://supabase.com/dashboard
+#    - Vá em Settings > API
+#    - Copie a "service_role" key (não a anon key)
+
+# 2. ENCRYPTION_KEY: Gere uma chave de 32 caracteres aleatórios
+#    - Pode usar: openssl rand -hex 16
+#    - Ou qualquer string de 32 caracteres
+
+# 3. Nunca commite este arquivo com valores reais!
+#    - Use .env.example como template
+#    - Mantenha .env no .gitignore

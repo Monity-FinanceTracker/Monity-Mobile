@@ -34,7 +34,10 @@ class AuthController {
 
       if (error) {
         logger.error("User registration failed", { error: error.message });
-        return res.status(400).json({ error: error.message });
+        return res.status(400).json({ 
+          success: false, 
+          error: error.message 
+        });
       }
 
       if (data.user) {
@@ -47,13 +50,20 @@ class AuthController {
         );
       }
 
-      res.status(201).json({ user: data.user, session: data.session });
+      res.status(201).json({ 
+        success: true, 
+        data: { 
+          user: data.user, 
+          session: data.session 
+        } 
+      });
     } catch (error) {
       logger.error("An unexpected error occurred during registration", {
         error: error as Error["message"],
         stack: (error as Error).stack,
       });
       res.status(500).json({
+        success: false,
         error: "Internal Server Error",
         details: (error as Error).message,
       });
@@ -66,7 +76,10 @@ class AuthController {
     if (!email || !password) {
       return res
         .status(400)
-        .json({ error: "Email and password are required." });
+        .json({ 
+          success: false, 
+          error: "Email and password are required." 
+        });
     }
 
     try {
@@ -80,16 +93,28 @@ class AuthController {
           email: email,
           error: error as Error["message"],
         });
-        return res.status(400).json({ error: "Invalid credentials" });
+        return res.status(400).json({ 
+          success: false, 
+          error: "Invalid credentials" 
+        });
       }
 
-      res.json({ user: data.user, session: data.session });
+      res.json({ 
+        success: true, 
+        data: { 
+          user: data.user, 
+          session: data.session 
+        } 
+      });
     } catch (error) {
       logger.error("An unexpected error occurred during login", {
         email: email,
         error: error as Error["message"],
       });
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({ 
+        success: false, 
+        error: "Internal Server Error" 
+      });
     }
   }
 
