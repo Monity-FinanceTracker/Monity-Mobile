@@ -2,15 +2,18 @@ import crypto from "crypto";
 import { config } from "../config";
 import { logger } from "../utils/logger";
 
-if (!config.ENCRYPTION_KEY || config.ENCRYPTION_KEY.length !== 64) {
-  console.warn("ENCRYPTION_KEY not properly configured. Using fallback mode.");
-  // Use a fallback key for development/testing
-  const fallbackKey = "567b0eafc511a7817c518993c6f5883f0949e89b4df9d82fb5e48dd7a541b05d";
-  config.ENCRYPTION_KEY = fallbackKey;
-}
+// Get encryption key with fallback
+const getEncryptionKey = () => {
+  if (!config.ENCRYPTION_KEY || config.ENCRYPTION_KEY.length !== 64) {
+    console.warn("ENCRYPTION_KEY not properly configured. Using fallback mode.");
+    // Use a fallback key for development/testing
+    return "567b0eafc511a7817c518993c6f5883f0949e89b4df9d82fb5e48dd7a541b05d";
+  }
+  return config.ENCRYPTION_KEY;
+};
 
 const ALGORITHM = "aes-256-gcm";
-const KEY = Buffer.from(config.ENCRYPTION_KEY!, "hex");
+const KEY = Buffer.from(getEncryptionKey(), "hex");
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 
