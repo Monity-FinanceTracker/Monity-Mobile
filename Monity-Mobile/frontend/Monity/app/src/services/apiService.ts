@@ -4,6 +4,8 @@ import Constants from "expo-constants";
 // Base API configuration
 const API_BASE_URL =
   Constants.expoConfig?.extra?.apiUrl || "http://localhost:3000/api/v1";
+
+console.log("🌐 API_BASE_URL:", API_BASE_URL);
 const AUTH_TOKEN_KEY = "auth_token";
 
 // Types
@@ -98,9 +100,9 @@ class ApiService {
       const url = `${this.baseURL}${endpoint}`;
       const headers = await this.getAuthHeaders();
 
-      console.log(`Making API request to: ${url}`);
-      console.log("Request headers:", headers);
-      console.log("Request options:", options);
+      console.log(`🌐 Making API request to: ${url}`);
+      console.log("📋 Request headers:", headers);
+      console.log("📋 Request options:", options);
 
       const response = await fetch(url, {
         ...options,
@@ -110,25 +112,41 @@ class ApiService {
         },
       });
 
-      console.log(`Response status: ${response.status}`);
+      console.log(`📊 Response status: ${response.status}`);
+      console.log(`📊 Response ok: ${response.ok}`);
 
-      const data = await response.json();
-      console.log("Response data:", data);
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      console.log("📊 Content-Type:", contentType);
+      
+      let data;
+      try {
+        data = await response.json();
+        console.log("📊 Response data:", data);
+      } catch (jsonError) {
+        console.error("❌ JSON Parse Error:", jsonError);
+        // Try to get text response for debugging
+        const textResponse = await response.text();
+        console.error("❌ Raw response:", textResponse.substring(0, 500));
+        throw new Error(`JSON Parse error: ${jsonError.message}. Response: ${textResponse.substring(0, 200)}`);
+      }
 
       if (!response.ok) {
+        console.error(`❌ HTTP error! status: ${response.status}`);
         throw new Error(
           data.message || `HTTP error! status: ${response.status}`
         );
       }
 
+      console.log("✅ Request successful");
       return {
         success: true,
         data: data.data || data,
         message: data.message,
       };
     } catch (error) {
-      console.error("API request failed:", error);
-      console.error("Error details:", {
+      console.error("❌ API request failed:", error);
+      console.error("❌ Error details:", {
         endpoint,
         baseURL: this.baseURL,
         fullURL: `${this.baseURL}${endpoint}`,
@@ -148,6 +166,8 @@ class ApiService {
     email: string,
     password: string
   ): Promise<ApiResponse<{ user: User; session: any }>> {
+    console.log("🔐 ApiService.login called with:", { email, password: "***" });
+    
     const response = await this.request<{ user: User; session: any }>(
       "/auth/login",
       {
@@ -156,12 +176,21 @@ class ApiService {
       }
     );
 
+    console.log("📡 ApiService.login response:", response);
+
     if (response.success && response.data) {
       const token = response.data.session?.access_token;
+      console.log("🔑 Token extracted:", token ? "Present" : "Missing");
+      
       if (token) {
         this.token = token;
         await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+        console.log("💾 Token saved to AsyncStorage");
+      } else {
+        console.error("❌ No access_token in session");
       }
+    } else {
+      console.error("❌ Login request failed:", response.error);
     }
 
     return response;
@@ -206,7 +235,14 @@ class ApiService {
   }
 
   async getProfile(): Promise<ApiResponse<User>> {
-    return this.request<User>("/auth/profile");
+    console.log("👤 ApiService.getProfile called");
+    const token = await this.getToken();
+    console.log("🔑 Current token:", token ? "Present" : "Missing");
+    
+    const response = await this.request<User>("/auth/profile");
+    console.log("📡 ApiService.getProfile response:", response);
+    
+    return response;
   }
 
   async updateProfile(profileData: Partial<User>): Promise<ApiResponse<User>> {

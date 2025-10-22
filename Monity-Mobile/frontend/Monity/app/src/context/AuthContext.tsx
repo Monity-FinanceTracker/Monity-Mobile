@@ -33,26 +33,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const bootstrap = async () => {
       try {
+        console.log("🚀 Starting auth bootstrap...");
         const isAuthenticated = await apiService.isAuthenticated();
+        console.log("🔍 Is authenticated:", isAuthenticated);
+        
         if (isAuthenticated) {
+          console.log("📡 Token exists, fetching profile...");
           // Token is valid, get user profile
           const response = await apiService.getProfile();
+          console.log("📡 Bootstrap profile response:", response);
+          
           if (response.success && response.data) {
+            console.log("✅ Bootstrap successful, user set:", response.data);
             setUser(response.data);
           } else {
+            console.error("❌ Bootstrap profile fetch failed:", response.error);
             // Profile fetch failed, clear auth state
             setUser(null);
             await apiService.clearToken();
           }
         } else {
+          console.log("❌ No token found, user not authenticated");
           setUser(null);
         }
       } catch (error) {
-        console.error("Auth bootstrap error:", error);
+        console.error("❌ Auth bootstrap error:", error);
+        console.error("❌ Bootstrap error details:", {
+          message: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : undefined
+        });
         setUser(null);
         // Clear any invalid token
         await apiService.clearToken();
       } finally {
+        console.log("🏁 Bootstrap finished");
         setIsLoading(false);
       }
     };
@@ -61,23 +75,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
+      console.log("🔐 Starting login process for:", email);
       setIsLoading(true);
+      
+      console.log("📡 Calling apiService.login...");
       const response = await apiService.login(email, password);
+      console.log("📡 Login response:", response);
+      
       if (response.success && response.data) {
+        console.log("✅ Login successful, fetching profile...");
         // After successful login, fetch the user profile
         const profileResponse = await apiService.getProfile();
+        console.log("📡 Profile response:", profileResponse);
+        
         if (profileResponse.success && profileResponse.data) {
+          console.log("✅ Profile fetched successfully:", profileResponse.data);
           setUser(profileResponse.data);
         } else {
-          throw new Error("Failed to fetch user profile");
+          console.error("❌ Failed to fetch user profile:", profileResponse.error);
+          throw new Error("Failed to fetch user profile: " + profileResponse.error);
         }
       } else {
+        console.error("❌ Login failed:", response.error);
         throw new Error(response.error || "Login failed");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("❌ Login error:", error);
+      console.error("❌ Error details:", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined
+      });
       throw error;
     } finally {
+      console.log("🏁 Login process finished");
       setIsLoading(false);
     }
   }, []);
