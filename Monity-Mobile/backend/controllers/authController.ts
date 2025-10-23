@@ -157,7 +157,7 @@ class AuthController {
 
           const userData = {
             ...newProfile,
-            subscriptionTier: "free",
+            subscriptionTier: newProfile.subscription_tier || "free",
           };
 
           logger.info("Profile created successfully", { userId });
@@ -173,7 +173,7 @@ class AuthController {
 
       const userData = {
         ...profile,
-        subscriptionTier: "free",
+        subscriptionTier: profile.subscription_tier || "free",
       };
 
       logger.info("Profile request successful", { userId });

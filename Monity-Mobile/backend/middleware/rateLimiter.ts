@@ -34,4 +34,25 @@ const authLimiter = rateLimit({
   },
 });
 
-export { apiLimiter, authLimiter };
+// Rate limiting específico para pagamentos (mais restritivo)
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === "development" ? 20 : 5, // Apenas 5 tentativas por IP em produção
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many payment attempts from this IP, please try again after 15 minutes.",
+  },
+  // Skip rate limiting para localhost em desenvolvimento
+  skip: (req: Request) => {
+    return (
+      process.env.NODE_ENV === "development" &&
+      (req.ip === "127.0.0.1" ||
+        req.ip === "::1" ||
+        req.ip === "::ffff:127.0.0.1")
+    );
+  },
+});
+
+export { apiLimiter, authLimiter, paymentLimiter };

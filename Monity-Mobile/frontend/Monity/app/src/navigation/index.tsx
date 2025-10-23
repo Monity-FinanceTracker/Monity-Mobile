@@ -12,6 +12,7 @@ import AddExpense from "../pages/expenses/AddExpense";
 import Categories from "../pages/categories/Categories";
 import Profile from "../pages/profile/Profile";
 import Chat from "../pages/chat/Chat";
+import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
 import { Platform, View, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   Signup: undefined;
   Main: undefined;
   Profile: undefined;
+  SubscriptionPlans: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -38,13 +40,18 @@ function MainTabs() {
           borderTopColor: "#31344d",
           borderTopWidth: 1,
           // Add extra bottom padding for Android gesture nav / soft keys
-          paddingBottom: Math.max(8, insets.bottom),
+          paddingBottom: Platform.OS === "android" ? Math.max(16, insets.bottom + 8) : Math.max(8, insets.bottom),
           paddingTop: 8,
           // Increase height slightly on Android when there is a bottom inset
           height:
             Platform.OS === "android"
-              ? 62 + Math.max(0, insets.bottom - 8)
+              ? 70 + Math.max(0, insets.bottom)
               : 70,
+          // Ensure tab bar is above system navigation
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarActiveTintColor: "#01C38D",
         tabBarInactiveTintColor: "#9ca3af",
@@ -129,6 +136,7 @@ function Gate() {
         <>
           <RootStack.Screen name="Main" component={MainTabs} />
           <RootStack.Screen name="Profile" component={Profile} />
+          <RootStack.Screen name="SubscriptionPlans" component={SubscriptionPlans} />
         </>
       ) : (
         <>

@@ -272,16 +272,21 @@ export default function AddExpense() {
   return (
     <SafeAreaView
       className="flex-1 bg-[#191E29]"
-      edges={["top", "bottom", "left", "right"]}
+      edges={["top", "left", "right"]}
     >
-      <ScrollView className="flex-1" refreshControl={refreshControl}>
+      <ScrollView 
+        className="flex-1" 
+        refreshControl={refreshControl}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
           <View className="flex-row items-center gap-4 mb-6">
             <Pressable onPress={() => navigation.goBack()} className="p-2">
               <ArrowLeft size={20} color="#9CA3AF" />
             </Pressable>
-            <Text className="text-white text-2xl font-bold">
+            <Text className="text-white text-xl font-bold">
               Adicionar Transação
             </Text>
           </View>
@@ -337,11 +342,11 @@ export default function AddExpense() {
           {/* Amount Input */}
           <Card className="mb-4">
             <View className="p-4">
-              <Text className="text-white text-lg font-semibold mb-4">
+              <Text className="text-white text-base font-semibold mb-4">
                 Valor
               </Text>
               <View className="relative">
-                <Text className="absolute left-3 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-400">
+                <Text className="absolute left-3 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">
                   R$
                 </Text>
                 <TextInput
@@ -349,7 +354,7 @@ export default function AddExpense() {
                   onChangeText={handleAmountChange}
                   placeholder="0,00"
                   placeholderTextColor="#9CA3AF"
-                  className="pl-12 text-2xl font-bold h-14 bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4"
+                  className="pl-12 text-xl font-bold h-12 bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4"
                   keyboardType="numeric"
                 />
               </View>
@@ -359,7 +364,7 @@ export default function AddExpense() {
           {/* Description */}
           <Card className="mb-4">
             <View className="p-4">
-              <Text className="text-white text-lg font-semibold mb-4">
+              <Text className="text-white text-base font-semibold mb-4">
                 Descrição
               </Text>
               <TextInput
@@ -381,7 +386,7 @@ export default function AddExpense() {
           {/* Category Selection */}
           <Card className="mb-4">
             <View className="p-4">
-              <Text className="text-white text-lg font-semibold mb-4">
+              <Text className="text-white text-base font-semibold mb-4">
                 Categoria
               </Text>
               {isLoading ? (
@@ -447,7 +452,7 @@ export default function AddExpense() {
           {/* Payment Method */}
           <Card className="mb-4">
             <View className="p-4">
-              <Text className="text-white text-lg font-semibold mb-4">
+              <Text className="text-white text-base font-semibold mb-4">
                 Método de Pagamento
               </Text>
               <View className="gap-2">
@@ -494,7 +499,7 @@ export default function AddExpense() {
           {/* Date and Options */}
           <Card className="mb-6">
             <View className="p-4">
-              <Text className="text-white text-lg font-semibold mb-4">
+              <Text className="text-white text-base font-semibold mb-4">
                 Data e Opções
               </Text>
               <View className="gap-4">

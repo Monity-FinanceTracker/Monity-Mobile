@@ -157,16 +157,16 @@ export default function Chat() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#191E29]">
+    <SafeAreaView className="flex-1 bg-[#191E29]" edges={["top", "left", "right"]}>
       {/* Header */}
       <View className="bg-[#23263a] px-6 py-4 border-b border-[#31344d]">
         <View className="flex-row items-center">
           <MessageCircle size={24} color="#01C38D" className="mr-3" />
           <View>
-            <Text className="text-white text-lg font-semibold">
+            <Text className="text-white text-base font-semibold">
               Chat com IA
             </Text>
-            <Text className="text-gray-400 text-sm">
+            <Text className="text-gray-400 text-xs">
               Seu assistente financeiro inteligente
             </Text>
           </View>
@@ -176,6 +176,7 @@ export default function Chat() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         {/* Messages */}
         <ScrollView
@@ -184,6 +185,7 @@ export default function Chat() {
           refreshing={refreshing}
           onRefresh={onRefresh}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
         >
           {messages.map(renderMessage)}
 
@@ -192,7 +194,7 @@ export default function Chat() {
               <View className="bg-[#23263a] rounded-2xl rounded-bl-md p-3">
                 <View className="flex-row items-center">
                   <Bot size={16} color="#01C38D" className="mr-2" />
-                  <Text className="text-white text-sm font-medium mr-2">
+                  <Text className="text-white text-xs font-medium mr-2">
                     IA Assistente está digitando
                   </Text>
                   <Loader size={14} color="#01C38D" className="animate-spin" />
@@ -223,7 +225,7 @@ export default function Chat() {
         </ScrollView>
 
         {/* Input */}
-        <View className="bg-[#23263a] px-6 py-4 border-t border-[#31344d]">
+        <View className="bg-[#23263a] px-6 py-4 border-t border-[#31344d]" style={{ paddingBottom: Platform.OS === "android" ? 90 : 20 }}>
           <View className="flex-row items-end space-x-3">
             <View className="flex-1 bg-[#31344d] rounded-2xl px-4 py-3">
               <TextInput

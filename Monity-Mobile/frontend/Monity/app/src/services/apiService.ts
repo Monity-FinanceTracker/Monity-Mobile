@@ -17,7 +17,25 @@ export interface User {
   cpf?: string;
   createdAt: string;
   subscriptionTier?: string;
+  subscriptionExpiresAt?: string;
   updatedAt?: string;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  interval: string;
+  features: string[];
+  limitations?: string[];
+  popular?: boolean;
+}
+
+export interface SubscriptionInfo {
+  subscription_tier: string;
+  subscription_expires_at?: string;
+  is_premium: boolean;
 }
 
 export interface Transaction {
@@ -418,6 +436,28 @@ class ApiService {
 
   async getFinancialProjections(): Promise<ApiResponse<any>> {
     return this.request<any>("/ai/projections");
+  }
+
+  // Subscription methods
+  async getSubscriptionInfo(): Promise<ApiResponse<SubscriptionInfo>> {
+    return this.request<SubscriptionInfo>("/subscription-tier");
+  }
+
+  async getSubscriptionPlans(): Promise<ApiResponse<SubscriptionPlan[]>> {
+    return this.request<SubscriptionPlan[]>("/subscription-tier/plans");
+  }
+
+  async createSubscription(planId: string, paymentMethodId?: string): Promise<ApiResponse<any>> {
+    return this.request<any>("/subscription-tier/create", {
+      method: "POST",
+      body: JSON.stringify({ planId, paymentMethodId }),
+    });
+  }
+
+  async cancelSubscription(): Promise<ApiResponse<any>> {
+    return this.request<any>("/subscription-tier/cancel", {
+      method: "POST",
+    });
   }
 
   // Utility methods

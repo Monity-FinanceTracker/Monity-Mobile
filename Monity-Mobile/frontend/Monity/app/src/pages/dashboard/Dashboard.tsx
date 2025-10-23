@@ -172,22 +172,22 @@ export default function Dashboard() {
               />
             </View>
             <View>
-              <Text className="font-medium text-white text-base">{title}</Text>
-              <Text className="text-sm text-gray-400">
+              <Text className="font-medium text-white text-sm">{title}</Text>
+              <Text className="text-xs text-gray-400">
                 {categoryName as string}
               </Text>
             </View>
           </View>
           <View className="items-end">
             <Text
-              className={`font-semibold text-base ${
+              className={`font-semibold text-sm ${
                 amount > 0 ? "text-green-400" : "text-red-400"
               }`}
             >
               {amount > 0 ? "+" : ""}
               {formatCurrency(Math.abs(amount))}
             </Text>
-            <Text className="text-sm text-gray-400">
+            <Text className="text-xs text-gray-400">
               {formatTransactionDate(transaction.date)}
             </Text>
           </View>
@@ -199,17 +199,22 @@ export default function Dashboard() {
   return (
     <SafeAreaView
       className="flex-1 bg-[#191E29]"
-      edges={["top", "bottom", "left", "right"]}
+      edges={["top", "left", "right"]}
     >
-      <ScrollView className="flex-1" refreshControl={refreshControl}>
+      <ScrollView 
+        className="flex-1" 
+        refreshControl={refreshControl}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
             <View>
-              <Text className="text-white text-2xl font-bold">
+              <Text className="text-white text-xl font-bold">
                 Olá, {user?.email?.split("@")[0] || "Usuário"}!
               </Text>
-              <Text className="text-gray-400 text-base">
+              <Text className="text-gray-400 text-sm">
                 Bem-vindo de volta ao Monity
               </Text>
             </View>
@@ -227,7 +232,7 @@ export default function Dashboard() {
           <Card className="bg-gradient-to-r from-[#01C38D] to-[#01C38D]/80 border-0 mb-6">
             <View className="p-6">
               <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-white text-base">Saldo Total</Text>
+                <Text className="text-white text-sm">Saldo Total</Text>
                 <Pressable onPress={() => setShowBalance(!showBalance)}>
                   {showBalance ? (
                     <Eye size={20} color="white" />
@@ -237,7 +242,7 @@ export default function Dashboard() {
                 </Pressable>
               </View>
               <View className="flex-row items-center gap-2">
-                <Text className="text-3xl font-bold text-white">
+                <Text className="text-2xl font-bold text-white">
                   {showBalance
                     ? balance
                       ? formatCurrency(balance?.total)
@@ -277,8 +282,8 @@ export default function Dashboard() {
                       <TrendingUp size={20} color="#10B981" />
                     </View>
                     <View>
-                      <Text className="text-sm text-gray-400">Receitas</Text>
-                      <Text className="text-lg font-semibold text-green-400">
+                      <Text className="text-xs text-gray-400">Receitas</Text>
+                      <Text className="text-base font-semibold text-green-400">
                         {balance ? formatCurrency(balance?.income) : "R$ 0,00"}
                       </Text>
                       {(!balance || (balance?.income || 0) === 0) && (
@@ -300,8 +305,8 @@ export default function Dashboard() {
                       <TrendingDown size={20} color="#EF4444" />
                     </View>
                     <View>
-                      <Text className="text-sm text-gray-400">Despesas</Text>
-                      <Text className="text-lg font-semibold text-red-400">
+                      <Text className="text-xs text-gray-400">Despesas</Text>
+                      <Text className="text-base font-semibold text-red-400">
                         {balance
                           ? formatCurrency(balance?.expenses)
                           : "R$ 0,00"}
@@ -321,7 +326,7 @@ export default function Dashboard() {
           {/* Recent Transactions */}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-semibold text-white">
+              <Text className="text-base font-semibold text-white">
                 Transações Recentes
               </Text>
               <Pressable
@@ -368,7 +373,7 @@ export default function Dashboard() {
 
           {/* Quick Actions */}
           <View className="mb-6">
-            <Text className="text-lg font-semibold text-white mb-4">
+            <Text className="text-base font-semibold text-white mb-4">
               Ações Rápidas
             </Text>
             <View className="flex-row gap-4">
@@ -377,7 +382,7 @@ export default function Dashboard() {
                 className="flex-1 h-12 bg-[#01C38D] rounded-lg items-center justify-center flex-row gap-2"
               >
                 <Plus size={20} color="#191E29" />
-                <Text className="text-[#191E29] font-medium">
+                <Text className="text-[#191E29] font-medium text-sm">
                   Adicionar Despesa
                 </Text>
               </Pressable>
@@ -386,7 +391,7 @@ export default function Dashboard() {
                 className="flex-1 h-12 bg-[#31344d] border border-[#4B5563] rounded-lg items-center justify-center flex-row gap-2"
               >
                 <Plus size={20} color="#9CA3AF" />
-                <Text className="text-gray-300 font-medium">
+                <Text className="text-gray-300 font-medium text-sm">
                   Adicionar Receita
                 </Text>
               </Pressable>

@@ -25,6 +25,8 @@ import {
   Camera,
   Edit3,
   LogOut,
+  Crown,
+  Star,
 } from "lucide-react-native";
 
 export default function Profile() {
@@ -240,6 +242,11 @@ export default function Profile() {
     );
   };
 
+  const handleUpgradeToPremium = () => {
+    // @ts-ignore - navigation type issue
+    navigation.navigate("SubscriptionPlans");
+  };
+
   const handleUpdateProfile = (field: string, value: string) => {
     setProfileData({ ...profileData, [field]: value });
   };
@@ -270,7 +277,7 @@ export default function Profile() {
             <Pressable onPress={() => navigation.goBack()} className="p-2">
               <ArrowLeft size={20} color="#9CA3AF" />
             </Pressable>
-            <Text className="text-white text-2xl font-bold">Perfil</Text>
+            <Text className="text-white text-xl font-bold">Perfil</Text>
           </View>
 
           {/* Profile Card */}
@@ -279,7 +286,7 @@ export default function Profile() {
               <View className="flex-row items-center gap-4 mb-4">
                 <View className="relative">
                   <View className="w-20 h-20 bg-[#01C38D] rounded-full items-center justify-center">
-                    <Text className="text-[#191E29] font-bold text-2xl">
+                    <Text className="text-[#191E29] font-bold text-xl">
                       {getInitials(profileData.name)}
                     </Text>
                   </View>
@@ -288,11 +295,11 @@ export default function Profile() {
                   </Pressable>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-white text-xl font-bold">
+                  <Text className="text-white text-lg font-bold">
                     {profileData.name || user?.name || "Usuário"}
                   </Text>
                   <Text className="text-gray-400">{profileData.email}</Text>
-                  <Text className="text-sm text-gray-400">
+                  <Text className="text-xs text-gray-400">
                     Membro desde {formatDate(user.createdAt)}
                   </Text>
                 </View>
@@ -313,6 +320,68 @@ export default function Profile() {
               </View>
             </View>
           </Card>
+
+          {/* Premium Subscription Card */}
+          {user?.subscriptionTier !== "premium" && (
+            <Card className="mb-6 border-2 border-[#01C38D] bg-gradient-to-r from-[#01C38D]/10 to-[#01C38D]/5">
+              <View className="p-6">
+                <View className="flex-row items-center gap-3 mb-4">
+                  <Crown size={24} color="#FFD700" />
+                  <Text className="text-white text-xl font-bold">Upgrade para Premium</Text>
+                </View>
+                <Text className="text-gray-300 mb-4">
+                  Desbloqueie recursos exclusivos e tenha controle total das suas finanças
+                </Text>
+                <View className="gap-2 mb-4">
+                  <View className="flex-row items-center gap-2">
+                    <Star size={16} color="#01C38D" />
+                    <Text className="text-gray-300 text-sm">IA para categorização automática</Text>
+                  </View>
+                  <View className="flex-row items-center gap-2">
+                    <Star size={16} color="#01C38D" />
+                    <Text className="text-gray-300 text-sm">Projeções financeiras avançadas</Text>
+                  </View>
+                  <View className="flex-row items-center gap-2">
+                    <Star size={16} color="#01C38D" />
+                    <Text className="text-gray-300 text-sm">Relatórios detalhados</Text>
+                  </View>
+                  <View className="flex-row items-center gap-2">
+                    <Star size={16} color="#01C38D" />
+                    <Text className="text-gray-300 text-sm">Backup automático na nuvem</Text>
+                  </View>
+                </View>
+                <Pressable
+                  onPress={handleUpgradeToPremium}
+                  className="bg-[#01C38D] py-4 rounded-xl flex-row items-center justify-center gap-2"
+                >
+                  <Crown size={20} color="#191E29" />
+                  <Text className="text-[#191E29] font-bold text-lg">
+                    Assinar Premium - R$ 9,90/mês
+                  </Text>
+                </Pressable>
+              </View>
+            </Card>
+          )}
+
+          {/* Premium Status Card */}
+          {user?.subscriptionTier === "premium" && (
+            <Card className="mb-6 bg-gradient-to-r from-[#FFD700]/20 to-[#FFD700]/10 border border-[#FFD700]/30">
+              <View className="p-6">
+                <View className="flex-row items-center gap-3 mb-2">
+                  <Crown size={24} color="#FFD700" />
+                  <Text className="text-white text-xl font-bold">Premium Ativo</Text>
+                </View>
+                <Text className="text-gray-300 mb-2">
+                  Você tem acesso a todos os recursos premium!
+                </Text>
+                {user?.subscriptionExpiresAt && (
+                  <Text className="text-gray-400 text-sm">
+                    Válido até: {new Date(user.subscriptionExpiresAt).toLocaleDateString("pt-BR")}
+                  </Text>
+                )}
+              </View>
+            </Card>
+          )}
 
           {/* Profile Information */}
           <Card className="mb-6">

@@ -81,10 +81,10 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
           <View className="w-full max-w-sm mx-auto">
             {/* Logo Section */}
             <View className="mb-12 items-center">
-              <Text className="text-4xl font-bold text-[#01C38D] mb-2">
+              <Text className="text-3xl font-bold text-[#01C38D] mb-2">
                 Monity
               </Text>
-              <Text className="text-gray-300 text-lg">Welcome back</Text>
+              <Text className="text-gray-300 text-base">Welcome back</Text>
             </View>
 
             {/* Login Form */}
@@ -100,7 +100,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
 
               {/* Email Input */}
               <View className="space-y-1">
-                <Text className="text-gray-300 font-medium text-sm">
+                <Text className="text-gray-300 font-medium text-xs">
                   Email address
                 </Text>
                 <View className="relative">
@@ -131,7 +131,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
 
               {/* Password Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-sm">
+                <Text className="text-gray-300 font-medium text-xs">
                   Password
                 </Text>
                 <View className="relative">

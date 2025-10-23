@@ -201,7 +201,7 @@ export default function Transactions() {
               />
             </View>
             <View className="flex-1">
-              <Text className="font-medium text-white text-base">{title}</Text>
+              <Text className="font-medium text-white text-sm">{title}</Text>
               <View className="flex-row items-center gap-2 mt-1">
                 <View className="bg-[#31344d] px-2 py-1 rounded-md">
                   <Text className="text-xs text-gray-300">
@@ -216,7 +216,7 @@ export default function Transactions() {
           </View>
           <View className="items-end">
             <Text
-              className={`text-lg font-semibold ${
+              className={`text-base font-semibold ${
                 amount > 0 ? "text-green-400" : "text-red-400"
               }`}
             >
@@ -243,11 +243,16 @@ export default function Transactions() {
   return (
     <SafeAreaView
       className="flex-1 bg-[#191E29]"
-      edges={["top", "bottom", "left", "right"]}
+      edges={["top", "left", "right"]}
     >
-      <ScrollView className="flex-1" refreshControl={refreshControl}>
+      <ScrollView 
+        className="flex-1" 
+        refreshControl={refreshControl}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View className="px-6 pt-6 pb-6">
-          <Text className="text-white text-2xl font-bold mb-6">Transações</Text>
+          <Text className="text-white text-xl font-bold mb-6">Transações</Text>
 
           {/* Summary Cards */}
           <View className="flex-row gap-4 mb-6">
@@ -258,8 +263,8 @@ export default function Transactions() {
                     <TrendingUp size={20} color="#10B981" />
                   </View>
                   <View>
-                    <Text className="text-sm text-gray-400">Receitas</Text>
-                    <Text className="text-lg font-semibold text-green-400">
+                    <Text className="text-xs text-gray-400">Receitas</Text>
+                    <Text className="text-base font-semibold text-green-400">
                       R$ {totalIncome.toFixed(2)}
                     </Text>
                   </View>
@@ -274,8 +279,8 @@ export default function Transactions() {
                     <TrendingDown size={20} color="#EF4444" />
                   </View>
                   <View>
-                    <Text className="text-sm text-gray-400">Despesas</Text>
-                    <Text className="text-lg font-semibold text-red-400">
+                    <Text className="text-xs text-gray-400">Despesas</Text>
+                    <Text className="text-base font-semibold text-red-400">
                       R$ {totalExpenses.toFixed(2)}
                     </Text>
                   </View>
@@ -350,7 +355,7 @@ export default function Transactions() {
 
           {/* Transactions List Header */}
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-semibold text-white">
+            <Text className="text-base font-semibold text-white">
               {filteredTransactions.length} transações encontradas
             </Text>
             <Pressable className="flex-row items-center gap-2">

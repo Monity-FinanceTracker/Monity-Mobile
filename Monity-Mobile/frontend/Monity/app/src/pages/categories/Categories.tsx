@@ -346,7 +346,7 @@ export default function Categories() {
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center gap-2 mb-1">
-                  <Text className="font-medium text-white text-base">
+                  <Text className="font-medium text-white text-sm">
                     {category.name}
                   </Text>
                   <View
@@ -367,7 +367,7 @@ export default function Categories() {
                     </Text>
                   </View>
                 </View>
-                <Text className="text-sm text-gray-400">
+                <Text className="text-xs text-gray-400">
                   {category.transactionCount || 0} transações •{" "}
                   {(category.percentage || 0).toFixed(1)}% do total
                 </Text>
@@ -375,7 +375,7 @@ export default function Categories() {
             </View>
             <View className="flex-row items-center gap-1">
               <Text
-                className={`text-lg font-semibold mr-2 ${
+                className={`text-base font-semibold mr-2 ${
                   category.type === "income" ? "text-green-400" : "text-red-400"
                 }`}
               >
@@ -404,7 +404,7 @@ export default function Categories() {
     return (
       <Card className="mb-6">
         <View className="p-4">
-          <Text className="text-white text-lg font-semibold mb-4">
+          <Text className="text-white text-base font-semibold mb-4">
             Análise por Categoria
           </Text>
           <View className="gap-4">
@@ -452,13 +452,18 @@ export default function Categories() {
   return (
     <SafeAreaView
       className="flex-1 bg-[#191E29]"
-      edges={["top", "bottom", "left", "right"]}
+      edges={["top", "left", "right"]}
     >
-      <ScrollView className="flex-1" refreshControl={refreshControl}>
+      <ScrollView 
+        className="flex-1" 
+        refreshControl={refreshControl}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-white text-2xl font-bold">Categorias</Text>
+            <Text className="text-white text-xl font-bold">Categorias</Text>
             <Pressable
               onPress={() => setShowCreateForm(true)}
               className="bg-[#01C38D] px-4 py-2 rounded-lg flex-row items-center gap-2"
@@ -478,8 +483,8 @@ export default function Categories() {
                       <TrendingUp size={20} color="#10B981" />
                     </View>
                     <View>
-                      <Text className="text-sm text-gray-400">Receitas</Text>
-                      <Text className="text-lg font-semibold text-green-400">
+                      <Text className="text-xs text-gray-400">Receitas</Text>
+                      <Text className="text-base font-semibold text-green-400">
                         {formatCurrency(totalIncome)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -499,8 +504,8 @@ export default function Categories() {
                       <TrendingDown size={20} color="#EF4444" />
                     </View>
                     <View>
-                      <Text className="text-sm text-gray-400">Despesas</Text>
-                      <Text className="text-lg font-semibold text-red-400">
+                      <Text className="text-xs text-gray-400">Despesas</Text>
+                      <Text className="text-base font-semibold text-red-400">
                         {formatCurrency(totalExpenses)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -523,8 +528,8 @@ export default function Categories() {
                       <PieChart size={20} color="#3B82F6" />
                     </View>
                     <View>
-                      <Text className="text-sm text-gray-400">Poupança</Text>
-                      <Text className="text-lg font-semibold text-blue-400">
+                      <Text className="text-xs text-gray-400">Poupança</Text>
+                      <Text className="text-base font-semibold text-blue-400">
                         {formatCurrency(totalSavings)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -682,7 +687,7 @@ export default function Categories() {
           {(showCreateForm || editingCategory) && (
             <Card className="mt-6">
               <View className="p-4">
-                <Text className="text-white text-lg font-semibold mb-4">
+                <Text className="text-white text-base font-semibold mb-4">
                   {editingCategory ? "Editar Categoria" : "Nova Categoria"}
                 </Text>
                 <View className="gap-4">

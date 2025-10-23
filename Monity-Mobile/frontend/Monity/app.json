@@ -18,9 +18,17 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.Monity"
+      "package": "com.Monity",
+      "statusBar": {
+        "backgroundColor": "#191E29",
+        "style": "light"
+      },
+      "navigationBar": {
+        "backgroundColor": "#191E29",
+        "style": "light"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -51,6 +59,7 @@
       "supabaseUrl": "https://eeubnmpetzhjcludrjwz.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTI4MzQsImV4cCI6MjA2ODA4ODgzNH0.QZc4eJ4tLW10WIwhsu_p7TvldzodQrwJRnJ8LlzXkdM",
       "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps",
+      "stripePublishableKey": "pk_live_51S3p8JCGOtqtf3r1YeRTBP0SACrt2Cq5oOBGzjyIgAVnFmoA3Tl1Nr8dWFtVRpmiZu9ASdzY9abCQMo6byUexLTH00M21w3voE",
       "router": {},
       "eas": {
         "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"

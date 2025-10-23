@@ -14,6 +14,7 @@ import invitationRoutes from "./invitations";
 import financialProjectionsRoutes from "./financialProjections";
 import userRoutes from "./users";
 import billingRoutes from "./billing";
+import webhookRoutes from "./webhooks";
 
 export default (controllers: any, middleware: any) => {
   // Version 1 of the API
@@ -69,7 +70,7 @@ export default (controllers: any, middleware: any) => {
   v1Router.use(
     "/subscription-tier",
     middleware.auth.authenticate,
-    subscriptionRoutes(controllers)
+    subscriptionRoutes(controllers, middleware)
   );
   v1Router.use(
     "/balance",
@@ -100,6 +101,9 @@ export default (controllers: any, middleware: any) => {
     middleware.auth.requireRole("admin"),
     adminRoutes(controllers)
   );
+
+  // Webhook routes (no authentication required)
+  v1Router.use("/webhooks", webhookRoutes);
 
   return v1Router;
 };

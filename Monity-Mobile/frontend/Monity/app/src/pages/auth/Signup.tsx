@@ -118,10 +118,10 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
           <View className="w-full max-w-sm mx-auto">
             {/* Logo Section */}
             <View className="mb-8 items-center">
-              <Text className="text-4xl font-bold text-[#01C38D] mb-2">
+              <Text className="text-3xl font-bold text-[#01C38D] mb-2">
                 Monity
               </Text>
-              <Text className="text-gray-300 text-lg">Create your account</Text>
+              <Text className="text-gray-300 text-base">Create your account</Text>
             </View>
 
             {/* Signup Form */}
@@ -137,7 +137,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
               {/* Name Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-sm">
+                <Text className="text-gray-300 font-medium text-xs">
                   Full name
                 </Text>
                 <View className="relative">
@@ -173,7 +173,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
               {/* Email Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-sm">
+                <Text className="text-gray-300 font-medium text-xs">
                   Email address
                 </Text>
                 <View className="relative">
@@ -211,7 +211,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
               {/* Password Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-sm">
+                <Text className="text-gray-300 font-medium text-xs">
                   Password
                 </Text>
                 <View className="relative">
@@ -289,7 +289,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
               {/* Confirm Password Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-sm">
+                <Text className="text-gray-300 font-medium text-xs">
                   Confirm password
                 </Text>
                 <View className="relative">

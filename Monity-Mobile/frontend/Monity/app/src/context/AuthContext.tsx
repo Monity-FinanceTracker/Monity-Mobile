@@ -22,6 +22,7 @@ type AuthContextValue = {
     newPassword: string
   ) => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -194,6 +195,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await apiService.getProfile();
+      if (response.success && response.data) {
+        setUser(response.data);
+      }
+    } catch (error) {
+      console.error("Refresh user error:", error);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -204,6 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateProfile,
       changePassword,
       deleteAccount,
+      refreshUser,
     }),
     [
       user,
@@ -214,6 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateProfile,
       changePassword,
       deleteAccount,
+      refreshUser,
     ]
   );
 

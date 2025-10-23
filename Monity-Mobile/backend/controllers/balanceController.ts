@@ -56,26 +56,26 @@ export default class BalanceController {
       let savings = 0;
 
       decryptedTransactions.forEach((transaction: any) => {
-        const amount = transaction.amount; // Keep original amount (negative for expenses, positive for income)
+        const amount = parseFloat(transaction.amount) || 0; // Ensure amount is a number
         console.log(
-          `[Transaction] ID: ${transaction.id}, Type: ${transaction.typeId}, Amount: ${transaction.amount}, Description: ${transaction.description}`
+          `[Transaction] ID: ${transaction.id}, Type: ${transaction.typeId}, Amount: ${amount}, Description: ${transaction.description}`
         );
 
         if (transaction.typeId === 2) {
           // Income (positive values)
-          income += Math.abs(amount);
+          income += Math.abs(amount); // Always use absolute value
           console.log(
             `[Income] Added ${Math.abs(amount)}, Total Income: ${income}`
           );
         } else if (transaction.typeId === 1) {
-          // Expense (negative values, convert to positive for display)
-          expenses += Math.abs(amount);
+          // Expense (convert to positive for calculation)
+          expenses += Math.abs(amount); // Always use absolute value
           console.log(
             `[Expense] Added ${Math.abs(amount)}, Total Expenses: ${expenses}`
           );
         } else if (transaction.typeId === 3) {
           // Savings (positive values)
-          savings += Math.abs(amount);
+          savings += Math.abs(amount); // Always use absolute value
           console.log(
             `[Savings] Added ${Math.abs(amount)}, Total Savings: ${savings}`
           );
@@ -86,16 +86,13 @@ export default class BalanceController {
         "[Balance Calculation] Income:",
         income,
         "Expenses:",
-        expenses
+        expenses,
+        "Savings:",
+        savings
       );
 
-      // Calculate total balance (sum of all amounts - expenses are already negative)
-      const total = decryptedTransactions.reduce(
-        (sum: number, transaction: any) => {
-          return sum + transaction.amount;
-        },
-        0
-      );
+      // Calculate total balance (income - expenses)
+      const total = income - expenses;
 
       console.log("[Balance Calculation] Total:", total);
 
@@ -195,13 +192,13 @@ export default class BalanceController {
       // Calculate monthly balance (income - expenses)
       let balance = 0;
       decryptedTransactions.forEach((transaction: any) => {
-        const amount = Math.abs(transaction.amount); // Ensure amount is positive
+        const amount = transaction.amount; // Use original amount (negative for expenses, positive for income)
         if (transaction.typeId === 2) {
-          // Income
+          // Income (positive values)
           balance += amount;
         } else if (transaction.typeId === 1) {
-          // Expense
-          balance -= amount;
+          // Expense (negative values)
+          balance += amount; // Add negative amount (which subtracts from balance)
         }
         // Note: Savings are not included in balance calculation
       });
@@ -251,15 +248,15 @@ export default class BalanceController {
           monthlyBalances[monthKey] = 0;
         }
 
-        const amount = Math.abs(transaction.amount); // Ensure amount is positive
+        const amount = transaction.amount; // Use original amount (negative for expenses, positive for income)
         if (transaction.typeId === 2) {
-          // Income
+          // Income (positive values)
           runningBalance += amount;
           monthlyBalances[monthKey] += amount;
         } else if (transaction.typeId === 1) {
-          // Expense
-          runningBalance -= amount;
-          monthlyBalances[monthKey] -= amount;
+          // Expense (negative values)
+          runningBalance += amount; // Add negative amount (which subtracts from balance)
+          monthlyBalances[monthKey] += amount; // Add negative amount (which subtracts from balance)
         }
         // Note: Savings are not included in balance calculation
       });
