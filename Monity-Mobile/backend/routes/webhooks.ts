@@ -1,12 +1,18 @@
 import express from "express";
 import { logger } from "../utils/logger";
 import { supabaseAdmin } from "../config/supabase";
-import { validateStripeWebhook, getStripeSubscription } from "../config/stripe";
+import { validateStripeWebhook, getStripeSubscription, isStripeEnabled } from "../config/stripe";
 
 const router = express.Router();
 
 // Middleware para processar webhook do Stripe
 router.post("/stripe", express.raw({ type: "application/json" }), async (req, res) => {
+  // Verificar se Stripe está habilitado
+  if (!isStripeEnabled) {
+    logger.warn("Stripe webhook received but Stripe is not configured");
+    return res.status(503).json({ error: "Payment system is not available" });
+  }
+
   const sig = req.headers["stripe-signature"] as string;
   
   if (!sig) {

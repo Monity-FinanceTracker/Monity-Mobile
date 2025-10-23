@@ -32,6 +32,22 @@ SUPABASE_KEY=sua_supabase_service_key_aqui
 ENCRYPTION_KEY=sua_chave_de_criptografia_de_32_caracteres
 
 # ===========================================
+# STRIPE CONFIGURAÇÃO (OPCIONAL)
+# ===========================================
+
+# Chave secreta do Stripe (para pagamentos)
+STRIPE_SECRET_KEY=sk_test_sua_chave_secreta_do_stripe
+
+# ID do produto Premium no Stripe
+STRIPE_PREMIUM_PRODUCT_ID=prod_sua_produto_id
+
+# ID do preço Premium no Stripe
+STRIPE_PREMIUM_PRICE_ID=price_sua_price_id
+
+# Secret do webhook do Stripe
+STRIPE_WEBHOOK_SECRET=whsec_sua_webhook_secret
+
+# ===========================================
 # REDIS (OPCIONAL - para cache)
 # ===========================================
 
@@ -51,6 +67,11 @@ REDIS_URL=redis://localhost:6379
 #    - Pode usar: openssl rand -hex 16
 #    - Ou qualquer string de 32 caracteres
 
-# 3. Nunca commite este arquivo com valores reais!
+# 3. STRIPE: Configuração opcional para pagamentos
+#    - Se não configurado, funcionalidades de pagamento ficam desabilitadas
+#    - Acesse: https://dashboard.stripe.com/apikeys
+#    - Configure webhooks em: https://dashboard.stripe.com/webhooks
+
+# 4. Nunca commite este arquivo com valores reais!
 #    - Use .env.example como template
 #    - Mantenha .env no .gitignore

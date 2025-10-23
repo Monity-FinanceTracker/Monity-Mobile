@@ -3,13 +3,10 @@ import Stripe from 'stripe';
 // Configuração do Stripe para produção
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
-if (!stripeSecretKey) {
-  throw new Error('STRIPE_SECRET_KEY não está definida nas variáveis de ambiente');
-}
-
-export const stripe = new Stripe(stripeSecretKey, {
+// Tornar Stripe opcional - só inicializa se a chave estiver configurada
+export const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
   apiVersion: '2025-09-30.clover',
-});
+}) : null;
 
 // IDs dos produtos e preços do Stripe (configurados via variáveis de ambiente)
 export const STRIPE_CONFIG = {
@@ -23,17 +20,19 @@ export const STRIPE_CONFIG = {
   WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
 };
 
-// Validar configuração obrigatória
-if (!STRIPE_CONFIG.PREMIUM_PRICE_ID) {
-  throw new Error('STRIPE_PREMIUM_PRICE_ID não está definida nas variáveis de ambiente');
-}
+// Validar configuração apenas se Stripe estiver habilitado
+export const isStripeEnabled = !!stripeSecretKey && !!STRIPE_CONFIG.PREMIUM_PRICE_ID && !!STRIPE_CONFIG.WEBHOOK_SECRET;
 
-if (!STRIPE_CONFIG.WEBHOOK_SECRET) {
-  throw new Error('STRIPE_WEBHOOK_SECRET não está definida nas variáveis de ambiente');
+if (stripeSecretKey && (!STRIPE_CONFIG.PREMIUM_PRICE_ID || !STRIPE_CONFIG.WEBHOOK_SECRET)) {
+  console.warn('⚠️ Stripe parcialmente configurado. Algumas funcionalidades podem não funcionar corretamente.');
 }
 
 // Função para criar customer no Stripe
 export const createStripeCustomer = async (email: string, userId: string) => {
+  if (!stripe) {
+    throw new Error('Stripe não está configurado');
+  }
+  
   try {
     const customer = await stripe.customers.create({
       email,
@@ -54,8 +53,18 @@ export const createStripeCustomer = async (email: string, userId: string) => {
 export const createStripeSubscription = async (
   customerId: string, 
   paymentMethodId: string,
-  priceId: string = STRIPE_CONFIG.PREMIUM_PRICE_ID!
+  priceId?: string
 ) => {
+  if (!stripe) {
+    throw new Error('Stripe não está configurado');
+  }
+  
+  if (!priceId && !STRIPE_CONFIG.PREMIUM_PRICE_ID) {
+    throw new Error('Price ID não está configurado');
+  }
+  
+  const finalPriceId = priceId || STRIPE_CONFIG.PREMIUM_PRICE_ID!;
+  
   try {
     // Anexar método de pagamento ao customer
     await stripe.paymentMethods.attach(paymentMethodId, {
@@ -72,7 +81,7 @@ export const createStripeSubscription = async (
     // Criar subscription
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
-      items: [{ price: priceId }],
+      items: [{ price: finalPriceId }],
       default_payment_method: paymentMethodId,
       expand: ['latest_invoice.payment_intent'],
     });
@@ -86,6 +95,10 @@ export const createStripeSubscription = async (
 
 // Função para cancelar subscription no Stripe
 export const cancelStripeSubscription = async (subscriptionId: string) => {
+  if (!stripe) {
+    throw new Error('Stripe não está configurado');
+  }
+  
   try {
     const subscription = await stripe.subscriptions.cancel(subscriptionId);
     return subscription;
@@ -97,6 +110,10 @@ export const cancelStripeSubscription = async (subscriptionId: string) => {
 
 // Função para obter subscription do Stripe
 export const getStripeSubscription = async (subscriptionId: string) => {
+  if (!stripe) {
+    throw new Error('Stripe não está configurado');
+  }
+  
   try {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     return subscription;
@@ -108,11 +125,19 @@ export const getStripeSubscription = async (subscriptionId: string) => {
 
 // Função para validar webhook do Stripe
 export const validateStripeWebhook = (payload: string, signature: string) => {
+  if (!stripe) {
+    throw new Error('Stripe não está configurado');
+  }
+  
+  if (!STRIPE_CONFIG.WEBHOOK_SECRET) {
+    throw new Error('Webhook secret não está configurado');
+  }
+  
   try {
     const event = stripe.webhooks.constructEvent(
       payload,
       signature,
-      STRIPE_CONFIG.WEBHOOK_SECRET!
+      STRIPE_CONFIG.WEBHOOK_SECRET
     );
     return event;
   } catch (error) {

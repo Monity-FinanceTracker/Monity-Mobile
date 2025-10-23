@@ -4,7 +4,8 @@ import {
   createStripeCustomer, 
   createStripeSubscription, 
   cancelStripeSubscription,
-  STRIPE_CONFIG 
+  STRIPE_CONFIG,
+  isStripeEnabled
 } from "../config/stripe";
 import type { Request, Response, NextFunction } from "express";
 
@@ -109,6 +110,15 @@ export default class SubscriptionController {
     const { planId, paymentMethodId } = req.body;
 
     try {
+      // Verificar se Stripe está habilitado
+      if (!isStripeEnabled) {
+        logger.warn("Stripe not configured", { userId, planId });
+        return res.status(503).json({ 
+          success: false, 
+          error: "Payment system is not available at the moment" 
+        });
+      }
+
       // Validações de entrada
       if (planId !== "premium") {
         logger.warn("Invalid plan selected", { userId, planId });
@@ -218,6 +228,15 @@ export default class SubscriptionController {
     const userId = req.user.id;
 
     try {
+      // Verificar se Stripe está habilitado
+      if (!isStripeEnabled) {
+        logger.warn("Stripe not configured for cancellation", { userId });
+        return res.status(503).json({ 
+          success: false, 
+          error: "Payment system is not available at the moment" 
+        });
+      }
+
       // Obter dados da subscription do usuário
       const { data: profile, error: profileError } = await supabaseAdmin
         .from("profiles")

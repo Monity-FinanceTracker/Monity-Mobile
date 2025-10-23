@@ -1,5 +1,5 @@
 # Multi-stage build para otimizar tamanho da imagem
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Stage de produção
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # Definir diretório de trabalho
 WORKDIR /app
