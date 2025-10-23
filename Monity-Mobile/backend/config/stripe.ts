@@ -8,7 +8,7 @@ if (!stripeSecretKey) {
 }
 
 export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-09-30.clover',
 });
 
 // IDs dos produtos e preços do Stripe (configurados via variáveis de ambiente)
@@ -54,7 +54,7 @@ export const createStripeCustomer = async (email: string, userId: string) => {
 export const createStripeSubscription = async (
   customerId: string, 
   paymentMethodId: string,
-  priceId: string = STRIPE_CONFIG.PREMIUM_PRICE_ID
+  priceId: string = STRIPE_CONFIG.PREMIUM_PRICE_ID!
 ) => {
   try {
     // Anexar método de pagamento ao customer
@@ -112,7 +112,7 @@ export const validateStripeWebhook = (payload: string, signature: string) => {
     const event = stripe.webhooks.constructEvent(
       payload,
       signature,
-      STRIPE_CONFIG.WEBHOOK_SECRET
+      STRIPE_CONFIG.WEBHOOK_SECRET!
     );
     return event;
   } catch (error) {

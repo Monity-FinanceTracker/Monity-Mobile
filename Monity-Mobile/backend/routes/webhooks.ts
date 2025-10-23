@@ -89,7 +89,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
       .from("profiles")
       .update({
         subscription_tier: "premium",
-        subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+        subscription_expires_at: new Date((subscription as any).current_period_end * 1000).toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq("id", profile.id);
@@ -106,7 +106,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
     logger.info("Subscription renewed successfully", { 
       userId: profile.id, 
       subscriptionId,
-      periodEnd: subscription.current_period_end 
+      periodEnd: (subscription as any).current_period_end 
     });
   } catch (error) {
     logger.error("Error handling invoice payment succeeded", { error });
@@ -230,7 +230,7 @@ async function handleSubscriptionUpdated(subscription: any) {
 
     if (subscription.status === "active") {
       subscriptionTier = "premium";
-      expiresAt = new Date(subscription.current_period_end * 1000).toISOString();
+      expiresAt = new Date((subscription as any).current_period_end * 1000).toISOString();
     }
 
     const { error: updateError } = await supabaseAdmin

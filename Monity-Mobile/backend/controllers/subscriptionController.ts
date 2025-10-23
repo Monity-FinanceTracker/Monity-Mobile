@@ -165,7 +165,7 @@ export default class SubscriptionController {
         .from("profiles")
         .update({
           subscription_tier: "premium",
-          subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+          subscription_expires_at: new Date((subscription as any).current_period_end * 1000).toISOString(),
           stripe_customer_id: customerId,
           stripe_subscription_id: subscription.id,
           updated_at: new Date().toISOString()
@@ -185,7 +185,7 @@ export default class SubscriptionController {
         planId, 
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
-        periodEnd: subscription.current_period_end
+        periodEnd: (subscription as any).current_period_end
       });
 
       res.json({ 
@@ -194,8 +194,8 @@ export default class SubscriptionController {
           subscription: {
             id: subscription.id,
             status: subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
+            current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
           },
           message: "Assinatura premium ativada com sucesso!"
         }
