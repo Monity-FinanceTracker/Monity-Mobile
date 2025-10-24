@@ -71,7 +71,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#191E29]">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#191E29' }}>
       <StatusBar barStyle="light-content" backgroundColor="#191E29" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -105,7 +105,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
                 </Text>
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center">
-                    <Mail size={20} color="#9CA3AF" />
+                    <Mail size={20} />
                   </View>
                   <TextInput
                     value={email}
@@ -136,7 +136,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
                 </Text>
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center">
-                    <Lock size={20} color="#9CA3AF" />
+                    <Lock size={20} />
                   </View>
                   <TextInput
                     value={password}
@@ -162,9 +162,9 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
                     className="absolute inset-y-0 right-0 pr-4 justify-center"
                   >
                     {showPassword ? (
-                      <EyeOff size={20} color="#9CA3AF" />
+                      <EyeOff size={20} />
                     ) : (
-                      <Eye size={20} color="#9CA3AF" />
+                      <Eye size={20} />
                     )}
                   </TouchableOpacity>
                 </View>

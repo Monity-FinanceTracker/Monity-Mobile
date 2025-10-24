@@ -1,3 +1,4 @@
+import React from 'react';
 import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
 import Constants from 'expo-constants';
 import { apiService } from './apiService';
@@ -41,6 +42,11 @@ export class PaymentService {
   // Inicializar Stripe
   initializeStripe(stripeInstance: any) {
     this.stripe = stripeInstance;
+  }
+
+  // Getter para acessar o Stripe
+  getStripe() {
+    return this.stripe;
   }
 
   // Criar método de pagamento
@@ -100,11 +106,25 @@ export class PaymentService {
     cvc: string;
   }): Promise<{ success: boolean; message: string; subscription?: any }> {
     try {
-      // 1. Criar método de pagamento
-      const paymentMethod = await this.createPaymentMethod(cardDetails);
+      console.log('Iniciando criação do método de pagamento...');
+      
+      // Validar dados antes de enviar para o Stripe
+      const validation = this.validateCardDetails(cardDetails);
+      if (!validation.isValid) {
+        return {
+          success: false,
+          message: validation.errors.join(', ')
+        };
+      }
 
-      // 2. Criar assinatura via API
+      // 1. Criar método de pagamento no Stripe
+      const paymentMethod = await this.createPaymentMethod(cardDetails);
+      console.log('Método de pagamento criado:', paymentMethod.id);
+
+      // 2. Criar assinatura via API do backend
+      console.log('Criando assinatura via API...');
       const response = await apiService.createSubscription('premium', paymentMethod.id);
+      console.log('Resposta da API:', response);
 
       if (response.success) {
         return {
@@ -139,6 +159,16 @@ export class PaymentService {
           return {
             success: false,
             message: 'CVC incorreto. Verifique o código de segurança.'
+          };
+        } else if (error.message.includes('invalid_number')) {
+          return {
+            success: false,
+            message: 'Número do cartão inválido.'
+          };
+        } else if (error.message.includes('network')) {
+          return {
+            success: false,
+            message: 'Erro de conexão. Verifique sua internet e tente novamente.'
           };
         }
       }
@@ -213,7 +243,7 @@ export const usePaymentService = () => {
   const paymentService = PaymentService.getInstance();
 
   // Inicializar o serviço quando o hook for usado
-  if (stripe && !paymentService.stripe) {
+  if (stripe && !paymentService.getStripe()) {
     paymentService.initializeStripe(stripe);
   }
 
@@ -221,7 +251,7 @@ export const usePaymentService = () => {
 };
 
 // Provider do Stripe para envolver a aplicação
-export const StripePaymentProvider = ({ children }: { children: React.ReactNode }) => {
+export const StripePaymentProvider = ({ children }: { children: React.ReactElement | React.ReactElement[] }) => {
   return (
     <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
       {children}

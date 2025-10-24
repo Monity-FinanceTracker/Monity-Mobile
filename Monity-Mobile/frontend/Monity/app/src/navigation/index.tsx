@@ -53,8 +53,8 @@ function MainTabs() {
           left: 0,
           right: 0,
         },
-        tabBarActiveTintColor: "#01C38D",
-        tabBarInactiveTintColor: "#9ca3af",
+        tabBarActiveTintColor: "white",
+        tabBarInactiveTintColor: "white",
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "500",
@@ -69,7 +69,7 @@ function MainTabs() {
         name="Dashboard"
         component={Dashboard}
         options={{
-          tabBarIcon: ({ color, size }) => <Home size={20} color={color} />,
+          tabBarIcon: ({ color, size }) => <Home size={20} color="white" />,
           tabBarLabel: "Início",
         }}
       />
@@ -77,7 +77,7 @@ function MainTabs() {
         name="Transactions"
         component={Transactions}
         options={{
-          tabBarIcon: ({ color, size }) => <Receipt size={20} color={color} />,
+          tabBarIcon: ({ color, size }) => <Receipt size={20} color="white" />,
           tabBarLabel: "Transações",
         }}
       />
@@ -91,7 +91,7 @@ function MainTabs() {
                 focused ? "bg-[#01C38D]" : "bg-[#31344d]"
               }`}
             >
-              <Plus size={24} color={focused ? "#191E29" : "#9ca3af"} />
+              <Plus size={24} color="white" />
             </View>
           ),
           tabBarLabel: "Adicionar",
@@ -102,7 +102,7 @@ function MainTabs() {
         component={Chat}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <MessageCircle size={20} color={color} />
+            <MessageCircle size={20} color="white" />
           ),
           tabBarLabel: "IA Chat",
         }}
@@ -111,7 +111,7 @@ function MainTabs() {
         name="Categories"
         component={Categories}
         options={{
-          tabBarIcon: ({ color, size }) => <Tag size={20} color={color} />,
+          tabBarIcon: ({ color, size }) => <Tag size={20} color="white" />,
           tabBarLabel: "Categorias",
         }}
       />

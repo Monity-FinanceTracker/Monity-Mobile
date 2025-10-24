@@ -197,7 +197,7 @@ export default function Transactions() {
             >
               <Icon
                 size={20}
-                color={transactionType === "income" ? "#10B981" : "#EF4444"}
+                color="white"
               />
             </View>
             <View className="flex-1">
@@ -217,13 +217,13 @@ export default function Transactions() {
           <View className="items-end">
             <Text
               className={`text-base font-semibold ${
-                amount > 0 ? "text-green-400" : "text-red-400"
+                transactionType === "income" ? "text-green-400" : "text-red-400"
               }`}
             >
-              {amount > 0 ? "+" : ""}R$ {Math.abs(amount).toFixed(2)}
+              {transactionType === "income" ? "+" : "-"}R$ {Math.abs(amount).toFixed(2)}
             </Text>
             <View className="flex-row items-center gap-1 mt-1">
-              <Calendar size={12} color="#9CA3AF" />
+              <Calendar size={12} color="white" />
               <Text className="text-xs text-gray-400">
                 {formatDate(item.date)}
               </Text>
@@ -252,7 +252,7 @@ export default function Transactions() {
         showsVerticalScrollIndicator={false}
       >
         <View className="px-6 pt-6 pb-6">
-          <Text className="text-white text-xl font-bold mb-6">Transações</Text>
+          <Text className="text-white text-lg font-bold mb-6">Transações</Text>
 
           {/* Summary Cards */}
           <View className="flex-row gap-4 mb-6">
@@ -260,11 +260,11 @@ export default function Transactions() {
               <Card>
                 <View className="flex-row items-center gap-3 p-4">
                   <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center">
-                    <TrendingUp size={20} color="#10B981" />
+                    <TrendingUp size={20} color="white" />
                   </View>
                   <View>
                     <Text className="text-xs text-gray-400">Receitas</Text>
-                    <Text className="text-base font-semibold text-green-400">
+                    <Text className="text-sm font-semibold text-green-400">
                       R$ {totalIncome.toFixed(2)}
                     </Text>
                   </View>
@@ -276,11 +276,11 @@ export default function Transactions() {
               <Card>
                 <View className="flex-row items-center gap-3 p-4">
                   <View className="w-10 h-10 bg-red-500/10 rounded-lg items-center justify-center">
-                    <TrendingDown size={20} color="#EF4444" />
+                    <TrendingDown size={20} color="white" />
                   </View>
                   <View>
                     <Text className="text-xs text-gray-400">Despesas</Text>
-                    <Text className="text-base font-semibold text-red-400">
+                    <Text className="text-sm font-semibold text-red-400">
                       R$ {totalExpenses.toFixed(2)}
                     </Text>
                   </View>
@@ -355,12 +355,12 @@ export default function Transactions() {
 
           {/* Transactions List Header */}
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-base font-semibold text-white">
+            <Text className="text-sm font-semibold text-white">
               {filteredTransactions.length} transações encontradas
             </Text>
             <Pressable className="flex-row items-center gap-2">
-              <Filter size={16} color="#9CA3AF" />
-              <Text className="text-gray-400 text-sm">Filtros</Text>
+              <Filter size={16} color="white" />
+              <Text className="text-gray-400 text-xs">Filtros</Text>
             </Pressable>
           </View>
 
@@ -380,12 +380,12 @@ export default function Transactions() {
           ) : (
             <View className="items-center py-12">
               <View className="w-16 h-16 bg-[#31344d] rounded-full items-center justify-center mb-4">
-                <Search size={24} color="#9CA3AF" />
+                <Search size={24} color="white" />
               </View>
-              <Text className="text-lg font-medium text-white mb-2">
+              <Text className="text-base font-medium text-white mb-2">
                 Nenhuma transação encontrada
               </Text>
-              <Text className="text-gray-400 text-center">
+              <Text className="text-gray-400 text-center text-sm">
                 Tente ajustar os filtros ou termo de busca
               </Text>
             </View>

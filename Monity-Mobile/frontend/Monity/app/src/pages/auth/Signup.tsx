@@ -108,7 +108,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
     password && confirmPassword && password === confirmPassword;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#191E29]">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#191E29' }}>
       <StatusBar barStyle="light-content" backgroundColor="#191E29" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -142,7 +142,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                 </Text>
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center">
-                    <User size={20} color="#9CA3AF" />
+                    <User size={20}  />
                   </View>
                   <TextInput
                     value={name}
@@ -165,7 +165,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                   />
                   {name && name.length >= 2 && (
                     <View className="absolute inset-y-0 right-0 pr-4 justify-center">
-                      <CheckCircle size={20} color="#10B981" />
+                      <CheckCircle size={20}  />
                     </View>
                   )}
                 </View>
@@ -178,7 +178,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                 </Text>
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center">
-                    <Mail size={20} color="#9CA3AF" />
+                    <Mail size={20}  />
                   </View>
                   <TextInput
                     value={email}
@@ -203,7 +203,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                   />
                   {email && isValidEmail(email) && (
                     <View className="absolute inset-y-0 right-0 pr-4 justify-center">
-                      <CheckCircle size={20} color="#10B981" />
+                      <CheckCircle size={20}  />
                     </View>
                   )}
                 </View>
@@ -216,7 +216,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                 </Text>
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center">
-                    <Lock size={20} color="#9CA3AF" />
+                    <Lock size={20}  />
                   </View>
                   <TextInput
                     value={password}
@@ -244,9 +244,9 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     className="absolute inset-y-0 right-0 pr-4 justify-center"
                   >
                     {showPassword ? (
-                      <EyeOff size={20} color="#9CA3AF" />
+                      <EyeOff size={20}  />
                     ) : (
-                      <Eye size={20} color="#9CA3AF" />
+                      <Eye size={20}  />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -294,7 +294,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                 </Text>
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center">
-                    <Lock size={20} color="#9CA3AF" />
+                    <Lock size={20}  />
                   </View>
                   <TextInput
                     value={confirmPassword}
@@ -324,9 +324,9 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     className="absolute inset-y-0 right-0 pr-4 justify-center"
                   >
                     {showConfirmPassword ? (
-                      <EyeOff size={20} color="#9CA3AF" />
+                      <EyeOff size={20}  />
                     ) : (
-                      <Eye size={20} color="#9CA3AF" />
+                      <Eye size={20}  />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -335,14 +335,14 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                   <View className="mt-2">
                     {passwordsMatch ? (
                       <View className="flex-row items-center">
-                        <CheckCircle size={16} color="#10B981" />
+                        <CheckCircle size={16}  />
                         <Text className="text-green-600 ml-2 text-sm">
                           Passwords match
                         </Text>
                       </View>
                     ) : (
                       <View className="flex-row items-center">
-                        <XCircle size={16} color="#EF4444" />
+                        <XCircle size={16}  />
                         <Text className="text-red-600 ml-2 text-sm">
                           Passwords don't match
                         </Text>

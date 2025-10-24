@@ -32,7 +32,7 @@ const Button = ({
       {...rest}
     >
       {disabled ? (
-        <ActivityIndicator size="small" color="#fff" />
+        <ActivityIndicator size="small"  />
       ) : // Render children if they exist, otherwise render the title
       children ? (
         children

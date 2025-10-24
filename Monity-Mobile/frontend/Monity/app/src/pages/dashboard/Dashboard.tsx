@@ -168,7 +168,7 @@ export default function Dashboard() {
             >
               <Icon
                 size={20}
-                color={transactionType === "income" ? "#10B981" : "#EF4444"}
+                color="white"
               />
             </View>
             <View>
@@ -181,10 +181,10 @@ export default function Dashboard() {
           <View className="items-end">
             <Text
               className={`font-semibold text-sm ${
-                amount > 0 ? "text-green-400" : "text-red-400"
+                transactionType === "income" ? "text-green-400" : "text-red-400"
               }`}
             >
-              {amount > 0 ? "+" : ""}
+              {transactionType === "income" ? "+" : "-"}
               {formatCurrency(Math.abs(amount))}
             </Text>
             <Text className="text-xs text-gray-400">
@@ -198,7 +198,7 @@ export default function Dashboard() {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-[#191E29]"
+      style={{ flex: 1, backgroundColor: '#191E29' }}
       edges={["top", "left", "right"]}
     >
       <ScrollView 
@@ -211,10 +211,10 @@ export default function Dashboard() {
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
             <View>
-              <Text className="text-white text-xl font-bold">
+              <Text className="text-white text-lg font-bold">
                 Olá, {user?.email?.split("@")[0] || "Usuário"}!
               </Text>
-              <Text className="text-gray-400 text-sm">
+              <Text className="text-gray-400 text-xs">
                 Bem-vindo de volta ao Monity
               </Text>
             </View>
@@ -222,7 +222,7 @@ export default function Dashboard() {
               onPress={() => navigation.navigate("Profile" as never)}
               className="w-10 h-10 bg-[#01C38D] rounded-full items-center justify-center"
             >
-              <Text className="text-[#191E29] font-semibold text-lg">
+              <Text className="text-[#191E29] font-semibold text-sm">
                 {getInitials(user?.email || "")}
               </Text>
             </Pressable>
@@ -232,7 +232,7 @@ export default function Dashboard() {
           <Card className="bg-gradient-to-r from-[#01C38D] to-[#01C38D]/80 border-0 mb-6">
             <View className="p-6">
               <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-white text-sm">Saldo Total</Text>
+                <Text className="text-white text-xs">Saldo Total</Text>
                 <Pressable onPress={() => setShowBalance(!showBalance)}>
                   {showBalance ? (
                     <Eye size={20} color="white" />
@@ -242,7 +242,7 @@ export default function Dashboard() {
                 </Pressable>
               </View>
               <View className="flex-row items-center gap-2">
-                <Text className="text-2xl font-bold text-white">
+                <Text className="text-xl font-bold text-white">
                   {showBalance
                     ? balance
                       ? formatCurrency(balance?.total)
@@ -252,12 +252,12 @@ export default function Dashboard() {
                 {balance && (
                   <View className="flex-row items-center gap-1">
                     {(balance.changePercentage || 0) >= 0 ? (
-                      <TrendingUp size={16} color="#10B981" />
+                      <TrendingUp size={16} color="white" />
                     ) : (
-                      <TrendingDown size={16} color="#EF4444" />
+                      <TrendingDown size={16} color="white" />
                     )}
                     <Text
-                      className={`text-sm ${
+                      className={`text-xs ${
                         (balance.changePercentage || 0) >= 0
                           ? "text-green-400"
                           : "text-red-400"
@@ -273,17 +273,17 @@ export default function Dashboard() {
           </Card>
 
           {/* Quick Stats */}
-          <View className="flex-row gap-4 mb-6">
+          <View className="gap-4 mb-6">
             <View className="flex-1">
               <Card>
                 <View className="p-4">
                   <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center">
-                      <TrendingUp size={20} color="#10B981" />
+                      <TrendingUp size={20} color="white" />
                     </View>
                     <View>
                       <Text className="text-xs text-gray-400">Receitas</Text>
-                      <Text className="text-base font-semibold text-green-400">
+                      <Text className="text-sm font-semibold text-green-400">
                         {balance ? formatCurrency(balance?.income) : "R$ 0,00"}
                       </Text>
                       {(!balance || (balance?.income || 0) === 0) && (
@@ -302,11 +302,11 @@ export default function Dashboard() {
                 <View className="p-4">
                   <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-red-500/10 rounded-lg items-center justify-center">
-                      <TrendingDown size={20} color="#EF4444" />
+                      <TrendingDown size={20} color="white" />
                     </View>
                     <View>
                       <Text className="text-xs text-gray-400">Despesas</Text>
-                      <Text className="text-base font-semibold text-red-400">
+                      <Text className="text-sm font-semibold text-red-400">
                         {balance
                           ? formatCurrency(balance?.expenses)
                           : "R$ 0,00"}
@@ -326,14 +326,14 @@ export default function Dashboard() {
           {/* Recent Transactions */}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-base font-semibold text-white">
+              <Text className="text-sm font-semibold text-white">
                 Transações Recentes
               </Text>
               <Pressable
                 onPress={() => navigation.navigate("Transactions" as never)}
                 className="flex-row items-center gap-1"
               >
-                <Text className="text-gray-400 text-sm">Ver todas</Text>
+                <Text className="text-gray-400 text-xs">Ver todas</Text>
               </Pressable>
             </View>
 
@@ -349,12 +349,12 @@ export default function Dashboard() {
               ) : (
                 <View className="items-center py-8">
                   <View className="w-16 h-16 bg-[#01C38D]/20 rounded-full items-center justify-center mb-4">
-                    <Banknote size={32} color="#01C38D" />
+                    <Banknote size={32} color="white" />
                   </View>
-                  <Text className="text-white text-lg font-semibold mb-2">
+                  <Text className="text-white text-base font-semibold mb-2">
                     Nenhuma transação ainda
                   </Text>
-                  <Text className="text-gray-400 text-center mb-4">
+                  <Text className="text-gray-400 text-center mb-4 text-sm">
                     Você ainda não tem transações registradas.{"\n"}
                     Comece adicionando sua primeira receita ou despesa!
                   </Text>
@@ -373,7 +373,7 @@ export default function Dashboard() {
 
           {/* Quick Actions */}
           <View className="mb-6">
-            <Text className="text-base font-semibold text-white mb-4">
+            <Text className="text-sm font-semibold text-white mb-4">
               Ações Rápidas
             </Text>
             <View className="flex-row gap-4">
@@ -381,8 +381,8 @@ export default function Dashboard() {
                 onPress={() => navigation.navigate("AddExpense" as never)}
                 className="flex-1 h-12 bg-[#01C38D] rounded-lg items-center justify-center flex-row gap-2"
               >
-                <Plus size={20} color="#191E29" />
-                <Text className="text-[#191E29] font-medium text-sm">
+                <Plus size={20} color="white" />
+                <Text className="text-[#191E29] font-medium text-xs">
                   Adicionar Despesa
                 </Text>
               </Pressable>
@@ -390,8 +390,8 @@ export default function Dashboard() {
                 onPress={() => navigation.navigate("AddExpense" as never)}
                 className="flex-1 h-12 bg-[#31344d] border border-[#4B5563] rounded-lg items-center justify-center flex-row gap-2"
               >
-                <Plus size={20} color="#9CA3AF" />
-                <Text className="text-gray-300 font-medium text-sm">
+                <Plus size={20} color="white" />
+                <Text className="text-gray-300 font-medium text-xs">
                   Adicionar Receita
                 </Text>
               </Pressable>

@@ -258,7 +258,7 @@ export default function Profile() {
         edges={["top", "bottom", "left", "right"]}
       >
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#01C38D" />
+          <ActivityIndicator size="large"  />
           <Text className="text-white mt-4">Carregando perfil...</Text>
         </View>
       </SafeAreaView>
@@ -275,49 +275,47 @@ export default function Profile() {
           {/* Header */}
           <View className="flex-row items-center gap-4 mb-6">
             <Pressable onPress={() => navigation.goBack()} className="p-2">
-              <ArrowLeft size={20} color="#9CA3AF" />
+              <ArrowLeft size={20} color="white" />
             </Pressable>
-            <Text className="text-white text-xl font-bold">Perfil</Text>
+            <Text className="text-white text-lg font-bold">Perfil</Text>
           </View>
 
           {/* Profile Card */}
           <Card className="mb-6">
             <View className="p-6">
-              <View className="flex-row items-center gap-4 mb-4">
-                <View className="relative">
+              <View className="items-center mb-4">
+                <View className="relative mb-4">
                   <View className="w-20 h-20 bg-[#01C38D] rounded-full items-center justify-center">
-                    <Text className="text-[#191E29] font-bold text-xl">
+                    <Text className="text-[#191E29] font-bold text-lg">
                       {getInitials(profileData.name)}
                     </Text>
                   </View>
                   <Pressable className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#31344d] rounded-full items-center justify-center">
-                    <Camera size={14} color="#9CA3AF" />
+                    <Camera size={14} color="white" />
                   </Pressable>
                 </View>
-                <View className="flex-1">
-                  <Text className="text-white text-lg font-bold">
-                    {profileData.name || user?.name || "Usuário"}
-                  </Text>
-                  <Text className="text-gray-400">{profileData.email}</Text>
-                  <Text className="text-xs text-gray-400">
-                    Membro desde {formatDate(user.createdAt)}
-                  </Text>
-                </View>
-                <Pressable
-                  onPress={isEditing ? handleSave : () => setIsEditing(true)}
-                  disabled={isLoading}
-                  className="bg-[#31344d] border border-[#4B5563] px-4 py-2 rounded-lg flex-row items-center gap-2"
-                >
-                  {isLoading ? (
-                    <ActivityIndicator size="small" color="#9CA3AF" />
-                  ) : (
-                    <Edit3 size={16} color="#9CA3AF" />
-                  )}
-                  <Text className="text-gray-300 text-sm">
-                    {isEditing ? "Salvar" : "Editar"}
-                  </Text>
-                </Pressable>
+                <Text className="text-white text-base font-bold text-center mb-1">
+                  {profileData.name || user?.name || "Usuário"}
+                </Text>
+                <Text className="text-gray-400 text-center mb-1">{profileData.email}</Text>
+                <Text className="text-xs text-gray-400 text-center">
+                  Membro desde {formatDate(user.createdAt)}
+                </Text>
               </View>
+              <Pressable
+                onPress={isEditing ? handleSave : () => setIsEditing(true)}
+                disabled={isLoading}
+                className="bg-[#31344d] border border-[#4B5563] px-4 py-2 rounded-lg flex-row items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small"  />
+                ) : (
+                  <Edit3 size={16} color="white" />
+                )}
+                <Text className="text-gray-300 text-sm">
+                  {isEditing ? "Salvar" : "Editar"}
+                </Text>
+              </Pressable>
             </View>
           </Card>
 
@@ -326,27 +324,27 @@ export default function Profile() {
             <Card className="mb-6 border-2 border-[#01C38D] bg-gradient-to-r from-[#01C38D]/10 to-[#01C38D]/5">
               <View className="p-6">
                 <View className="flex-row items-center gap-3 mb-4">
-                  <Crown size={24} color="#FFD700" />
-                  <Text className="text-white text-xl font-bold">Upgrade para Premium</Text>
+                  <Crown size={24} color="white" />
+                  <Text className="text-white text-lg font-bold">Upgrade para Premium</Text>
                 </View>
                 <Text className="text-gray-300 mb-4">
                   Desbloqueie recursos exclusivos e tenha controle total das suas finanças
                 </Text>
                 <View className="gap-2 mb-4">
                   <View className="flex-row items-center gap-2">
-                    <Star size={16} color="#01C38D" />
+                    <Star size={16} color="white" />
                     <Text className="text-gray-300 text-sm">IA para categorização automática</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <Star size={16} color="#01C38D" />
+                    <Star size={16} color="white" />
                     <Text className="text-gray-300 text-sm">Projeções financeiras avançadas</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <Star size={16} color="#01C38D" />
+                    <Star size={16} color="white" />
                     <Text className="text-gray-300 text-sm">Relatórios detalhados</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <Star size={16} color="#01C38D" />
+                    <Star size={16} color="white" />
                     <Text className="text-gray-300 text-sm">Backup automático na nuvem</Text>
                   </View>
                 </View>
@@ -354,8 +352,8 @@ export default function Profile() {
                   onPress={handleUpgradeToPremium}
                   className="bg-[#01C38D] py-4 rounded-xl flex-row items-center justify-center gap-2"
                 >
-                  <Crown size={20} color="#191E29" />
-                  <Text className="text-[#191E29] font-bold text-lg">
+                  <Crown size={20} color="white" />
+                  <Text className="text-[#191E29] font-bold text-sm">
                     Assinar Premium - R$ 9,90/mês
                   </Text>
                 </Pressable>
@@ -368,8 +366,8 @@ export default function Profile() {
             <Card className="mb-6 bg-gradient-to-r from-[#FFD700]/20 to-[#FFD700]/10 border border-[#FFD700]/30">
               <View className="p-6">
                 <View className="flex-row items-center gap-3 mb-2">
-                  <Crown size={24} color="#FFD700" />
-                  <Text className="text-white text-xl font-bold">Premium Ativo</Text>
+                  <Crown size={24} color="white" />
+                  <Text className="text-white text-lg font-bold">Premium Ativo</Text>
                 </View>
                 <Text className="text-gray-300 mb-2">
                   Você tem acesso a todos os recursos premium!
@@ -387,8 +385,8 @@ export default function Profile() {
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-4">
-                <User size={20} color="#9CA3AF" />
-                <Text className="text-white text-lg font-semibold">
+                <User size={20} color="white" />
+                <Text className="text-white text-sm font-semibold">
                   Informações Pessoais
                 </Text>
               </View>
@@ -431,15 +429,15 @@ export default function Profile() {
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-4">
-                <Settings size={20} color="#9CA3AF" />
-                <Text className="text-white text-lg font-semibold">
+                <Settings size={20} color="white" />
+                <Text className="text-white text-sm font-semibold">
                   Configurações
                 </Text>
               </View>
               <View className="gap-6">
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-3">
-                    <Bell size={20} color="#9CA3AF" />
+                    <Bell size={20} color="white" />
                     <View>
                       <Text className="font-medium text-white">
                         Notificações
@@ -459,7 +457,7 @@ export default function Profile() {
 
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-3">
-                    <Shield size={20} color="#9CA3AF" />
+                    <Shield size={20} color="white" />
                     <View>
                       <Text className="font-medium text-white">
                         Autenticação Biométrica
@@ -503,7 +501,7 @@ export default function Profile() {
           {/* Account Actions */}
           <Card className="mb-6">
             <View className="p-4">
-              <Text className="text-white text-lg font-semibold mb-4">
+              <Text className="text-white text-sm font-semibold mb-4">
                 Ações da Conta
               </Text>
               <View className="gap-3">
@@ -511,7 +509,7 @@ export default function Profile() {
                   onPress={handleExportData}
                   className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
                 >
-                  <Download size={20} color="#9CA3AF" />
+                  <Download size={20} color="white" />
                   <Text className="text-gray-300 ml-3">Exportar Dados</Text>
                 </Pressable>
                 <Pressable
@@ -519,7 +517,7 @@ export default function Profile() {
                   disabled={isLoading}
                   className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
                 >
-                  <Shield size={20} color="#9CA3AF" />
+                  <Shield size={20} color="white" />
                   <Text className="text-gray-300 ml-3">Alterar Senha</Text>
                 </Pressable>
                 <Pressable
@@ -527,7 +525,7 @@ export default function Profile() {
                   disabled={isLoading}
                   className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
                 >
-                  <LogOut size={20} color="#9CA3AF" />
+                  <LogOut size={20} color="white" />
                   <Text className="text-gray-300 ml-3">Sair da Conta</Text>
                 </Pressable>
                 <Pressable
@@ -535,7 +533,7 @@ export default function Profile() {
                   disabled={isLoading}
                   className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
                 >
-                  <Trash2 size={20} color="#EF4444" />
+                  <Trash2 size={20} color="white" />
                   <Text className="text-red-400 ml-3">Excluir Conta</Text>
                 </Pressable>
               </View>

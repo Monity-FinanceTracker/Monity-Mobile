@@ -20,15 +20,7 @@
       },
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.Monity",
-      "statusBar": {
-        "backgroundColor": "#191E29",
-        "style": "light"
-      },
-      "navigationBar": {
-        "backgroundColor": "#191E29",
-        "style": "light"
-      }
+      "package": "com.Monity"
     },
     "web": {
       "bundler": "metro",
@@ -51,8 +43,7 @@
       "expo-router"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "extra": {
       "apiUrl": "https://monity-mobile-production-9509.up.railway.app/api/v1",

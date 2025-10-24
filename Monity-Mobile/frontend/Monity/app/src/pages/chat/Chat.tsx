@@ -35,8 +35,8 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const { refreshing, onRefresh } = usePullToRefresh({
-    onRefresh: () => {
+  const { refreshControl, isRefreshing, handleRefresh } = usePullToRefresh({
+    onRefresh: async () => {
       // Refresh chat history or load new data
       console.log("Refreshing chat...");
     },
@@ -113,10 +113,10 @@ export default function Chat() {
         >
           <View className={`flex-row items-start mb-1`}>
             {!isUser && (
-              <Bot size={16} color="#01C38D" className="mr-2 mt-0.5" />
+              <Bot size={16}  className="mr-2 mt-0.5" />
             )}
             {isUser && (
-              <User size={16} color="#191E29" className="mr-2 mt-0.5" />
+              <User size={16}  className="mr-2 mt-0.5" />
             )}
             <Text
               className={`text-sm font-medium ${
@@ -161,7 +161,7 @@ export default function Chat() {
       {/* Header */}
       <View className="bg-[#23263a] px-6 py-4 border-b border-[#31344d]">
         <View className="flex-row items-center">
-          <MessageCircle size={24} color="#01C38D" className="mr-3" />
+          <MessageCircle size={24}  className="mr-3" />
           <View>
             <Text className="text-white text-base font-semibold">
               Chat com IA
@@ -182,8 +182,7 @@ export default function Chat() {
         <ScrollView
           ref={scrollViewRef}
           className="flex-1 px-6 py-4"
-          refreshing={refreshing}
-          onRefresh={onRefresh}
+          refreshControl={refreshControl}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20 }}
         >
@@ -193,11 +192,11 @@ export default function Chat() {
             <View className="flex-row justify-start mb-4">
               <View className="bg-[#23263a] rounded-2xl rounded-bl-md p-3">
                 <View className="flex-row items-center">
-                  <Bot size={16} color="#01C38D" className="mr-2" />
+                  <Bot size={16}  className="mr-2" />
                   <Text className="text-white text-xs font-medium mr-2">
                     IA Assistente está digitando
                   </Text>
-                  <Loader size={14} color="#01C38D" className="animate-spin" />
+                  <Loader size={14}  className="animate-spin" />
                 </View>
               </View>
             </View>
@@ -246,7 +245,7 @@ export default function Chat() {
                 !inputText.trim() || isLoading ? "opacity-50" : ""
               }`}
             >
-              <Send size={20} color="#191E29" />
+              <Send size={20}  />
             </TouchableOpacity>
           </View>
         </View>

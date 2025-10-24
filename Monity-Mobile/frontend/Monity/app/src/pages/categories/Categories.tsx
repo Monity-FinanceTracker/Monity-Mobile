@@ -342,7 +342,7 @@ export default function Categories() {
               <View
                 className={`w-12 h-12 rounded-lg items-center justify-center ${getBackgroundColorClass(category.color)}`}
               >
-                <Icon size={20} color={getColorClass(category.color)} />
+                <Icon size={20} color="white" />
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center gap-2 mb-1">
@@ -385,13 +385,13 @@ export default function Categories() {
                 onPress={() => handleEditCategory(category)}
                 className="bg-[#31344d] rounded-lg p-1.5 h-7 w-7 items-center justify-center"
               >
-                <Edit size={12} color="#9CA3AF" />
+                <Edit size={12} color="white" />
               </Pressable>
               <Pressable
                 onPress={() => handleDeleteCategory(parseInt(category.id))}
                 className="bg-[#31344d] rounded-lg p-1.5 h-7 w-7 items-center justify-center"
               >
-                <Trash2 size={12} color="#EF4444" />
+                <Trash2 size={12} color="white" />
               </Pressable>
             </View>
           </View>
@@ -415,7 +415,7 @@ export default function Categories() {
                   <View
                     className={`w-8 h-8 rounded items-center justify-center ${getBackgroundColorClass(category.color)}`}
                   >
-                    <Icon size={14} color={getColorClass(category.color)} />
+                    <Icon size={14} color="white" />
                   </View>
                   <View className="flex-1">
                     <View className="flex-row items-center justify-between mb-1">
@@ -463,12 +463,12 @@ export default function Categories() {
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-white text-xl font-bold">Categorias</Text>
+            <Text className="text-white text-lg font-bold">Categorias</Text>
             <Pressable
               onPress={() => setShowCreateForm(true)}
               className="bg-[#01C38D] px-4 py-2 rounded-lg flex-row items-center gap-2"
             >
-              <Plus size={16} color="#191E29" />
+              <Plus size={16} color="white" />
               <Text className="text-[#191E29] font-medium">Nova</Text>
             </Pressable>
           </View>
@@ -480,11 +480,11 @@ export default function Categories() {
                 <View className="p-4">
                   <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center">
-                      <TrendingUp size={20} color="#10B981" />
+                      <TrendingUp size={20} color="white" />
                     </View>
                     <View>
                       <Text className="text-xs text-gray-400">Receitas</Text>
-                      <Text className="text-base font-semibold text-green-400">
+                      <Text className="text-sm font-semibold text-green-400">
                         {formatCurrency(totalIncome)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -501,11 +501,11 @@ export default function Categories() {
                 <View className="p-4">
                   <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-red-500/10 rounded-lg items-center justify-center">
-                      <TrendingDown size={20} color="#EF4444" />
+                      <TrendingDown size={20} color="white" />
                     </View>
                     <View>
                       <Text className="text-xs text-gray-400">Despesas</Text>
-                      <Text className="text-base font-semibold text-red-400">
+                      <Text className="text-sm font-semibold text-red-400">
                         {formatCurrency(totalExpenses)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -525,11 +525,11 @@ export default function Categories() {
                 <View className="p-4">
                   <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-blue-500/10 rounded-lg items-center justify-center">
-                      <PieChart size={20} color="#3B82F6" />
+                      <PieChart size={20} color="white" />
                     </View>
                     <View>
                       <Text className="text-xs text-gray-400">Poupança</Text>
-                      <Text className="text-base font-semibold text-blue-400">
+                      <Text className="text-sm font-semibold text-blue-400">
                         {formatCurrency(totalSavings)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -627,7 +627,7 @@ export default function Categories() {
               >
                 <BarChart3
                   size={16}
-                  color={viewMode === "list" ? "#191E29" : "#9CA3AF"}
+                  color="white"
                 />
               </Pressable>
               <Pressable
@@ -638,7 +638,7 @@ export default function Categories() {
               >
                 <PieChart
                   size={16}
-                  color={viewMode === "chart" ? "#191E29" : "#9CA3AF"}
+                  color="white"
                 />
               </Pressable>
             </View>
@@ -658,19 +658,19 @@ export default function Categories() {
               ) : (
                 <View className="items-center py-12">
                   <View className="w-16 h-16 bg-[#31344d] rounded-full items-center justify-center mb-4">
-                    <Palette size={24} color="#9CA3AF" />
+                    <Palette size={24} color="white" />
                   </View>
-                  <Text className="text-lg font-medium text-white mb-2">
+                  <Text className="text-base font-medium text-white mb-2">
                     Nenhuma categoria encontrada
                   </Text>
-                  <Text className="text-gray-400 text-center mb-4">
+                  <Text className="text-gray-400 text-center mb-4 text-sm">
                     Crie categorias para organizar suas transações
                   </Text>
                   <Pressable
                     onPress={() => setShowCreateForm(true)}
                     className="bg-[#01C38D] px-6 py-3 rounded-lg flex-row items-center gap-2"
                   >
-                    <Plus size={16} color="#191E29" />
+                    <Plus size={16} color="white" />
                     <Text className="text-[#191E29] font-medium">
                       Criar Primeira Categoria
                     </Text>
@@ -687,7 +687,7 @@ export default function Categories() {
           {(showCreateForm || editingCategory) && (
             <Card className="mt-6">
               <View className="p-4">
-                <Text className="text-white text-base font-semibold mb-4">
+                <Text className="text-white text-sm font-semibold mb-4">
                   {editingCategory ? "Editar Categoria" : "Nova Categoria"}
                 </Text>
                 <View className="gap-4">
@@ -721,11 +721,7 @@ export default function Categories() {
                       >
                         <TrendingDown
                           size={16}
-                          color={
-                            newCategory.type === "expense"
-                              ? "#191E29"
-                              : "#9CA3AF"
-                          }
+                          color="white"
                         />
                         <Text
                           className={`font-medium ${
@@ -749,11 +745,7 @@ export default function Categories() {
                       >
                         <TrendingUp
                           size={16}
-                          color={
-                            newCategory.type === "income"
-                              ? "#191E29"
-                              : "#9CA3AF"
-                          }
+                          color="white"
                         />
                         <Text
                           className={`font-medium ${
@@ -791,7 +783,7 @@ export default function Categories() {
                           >
                             <Icon
                               size={20}
-                              color={isSelected ? "#191E29" : "#9CA3AF"}
+                              color="white"
                             />
                           </Pressable>
                         );

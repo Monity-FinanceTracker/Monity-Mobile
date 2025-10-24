@@ -146,7 +146,7 @@ class ApiService {
         // Try to get text response for debugging
         const textResponse = await response.text();
         console.error("❌ Raw response:", textResponse.substring(0, 500));
-        throw new Error(`JSON Parse error: ${jsonError.message}. Response: ${textResponse.substring(0, 200)}`);
+        throw new Error(`JSON Parse error: ${jsonError instanceof Error ? jsonError.message : 'Unknown error'}. Response: ${textResponse.substring(0, 200)}`);
       }
 
       if (!response.ok) {
