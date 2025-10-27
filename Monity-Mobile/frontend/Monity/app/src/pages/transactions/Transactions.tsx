@@ -7,6 +7,8 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Modal,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../components/molecules/Card";
@@ -22,6 +24,9 @@ import {
   Home,
   Coffee,
   Gamepad2,
+  Edit,
+  Trash2,
+  X,
 } from "lucide-react-native";
 import { apiService, Transaction } from "../../services/apiService";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
@@ -59,6 +64,8 @@ export default function Transactions() {
   const [selectedPeriod, setSelectedPeriod] = useState("thisMonth");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [showActionModal, setShowActionModal] = useState(false);
 
   const loadTransactions = async () => {
     try {
@@ -174,6 +181,48 @@ export default function Transactions() {
     })
     .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
 
+  const handleTransactionPress = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setShowActionModal(true);
+  };
+
+  const handleEditTransaction = () => {
+    setShowActionModal(false);
+    // TODO: Navigate to edit screen or show edit modal
+    Alert.alert("Editar", "Funcionalidade de edição será implementada em breve");
+  };
+
+  const handleDeleteTransaction = () => {
+    if (!selectedTransaction) return;
+    
+    Alert.alert(
+      "Confirmar Exclusão",
+      "Tem certeza que deseja excluir esta transação?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const response = await apiService.deleteTransaction(selectedTransaction.id);
+              if (response.success) {
+                Alert.alert("Sucesso", "Transação excluída com sucesso!");
+                setShowActionModal(false);
+                loadTransactions();
+              } else {
+                Alert.alert("Erro", response.error || "Falha ao excluir transação");
+              }
+            } catch (error) {
+              console.error("Error deleting transaction:", error);
+              Alert.alert("Erro", "Falha ao excluir transação");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderTransaction = ({ item }: { item: Transaction }) => {
     // Handle both old and new data formats
     const title = item.title || item.description || "Transação sem título";
@@ -185,64 +234,66 @@ export default function Transactions() {
 
     const Icon = getTransactionIcon(categoryName as string);
     return (
-      <Card className="mb-3">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-3 flex-1">
-            <View
-              className={`w-12 h-12 rounded-lg items-center justify-center ${
-                transactionType === "income"
-                  ? "bg-green-500/10"
-                  : "bg-red-500/10"
-              }`}
-            >
-              <Icon
-                size={20}
-                color="white"
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="font-medium text-white text-sm">{title}</Text>
-              <View className="flex-row items-center gap-2 mt-1">
-                <View className="bg-[#31344d] px-2 py-1 rounded-md">
-                  <Text className="text-xs text-gray-300">
-                    {categoryName as string}
+      <Pressable onPress={() => handleTransactionPress(item)}>
+        <Card className="mb-3">
+          <View className="flex-row items-center justify-between p-4">
+            <View className="flex-row items-center gap-3 flex-1">
+              <View
+                className={`w-12 h-12 rounded-lg items-center justify-center ${
+                  transactionType === "income"
+                    ? "bg-green-500/10"
+                    : "bg-red-500/10"
+                }`}
+              >
+                <Icon
+                  size={20}
+                  color="white"
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="font-medium text-white text-sm">{title}</Text>
+                <View className="flex-row items-center gap-2 mt-1">
+                  <View className="bg-card-bg px-2 py-1 rounded-md">
+                    <Text className="text-xs text-gray-300">
+                      {categoryName as string}
+                    </Text>
+                  </View>
+                  <Text className="text-xs text-gray-400">
+                    {item.paymentMethod || "N/A"}
                   </Text>
                 </View>
+              </View>
+            </View>
+            <View className="items-end">
+              <Text
+                className={`text-base font-semibold ${
+                  transactionType === "income" ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {transactionType === "income" ? "+" : "-"}R$ {Math.abs(amount).toFixed(2)}
+              </Text>
+              <View className="flex-row items-center gap-1 mt-1">
+                <Calendar size={12} color="white" />
                 <Text className="text-xs text-gray-400">
-                  {item.paymentMethod || "N/A"}
+                  {formatDate(item.date)}
                 </Text>
+                {item.time && (
+                  <>
+                    <Text className="text-xs text-gray-400">•</Text>
+                    <Text className="text-xs text-gray-400">{item.time}</Text>
+                  </>
+                )}
               </View>
             </View>
           </View>
-          <View className="items-end">
-            <Text
-              className={`text-base font-semibold ${
-                transactionType === "income" ? "text-green-400" : "text-red-400"
-              }`}
-            >
-              {transactionType === "income" ? "+" : "-"}R$ {Math.abs(amount).toFixed(2)}
-            </Text>
-            <View className="flex-row items-center gap-1 mt-1">
-              <Calendar size={12} color="white" />
-              <Text className="text-xs text-gray-400">
-                {formatDate(item.date)}
-              </Text>
-              {item.time && (
-                <>
-                  <Text className="text-xs text-gray-400">•</Text>
-                  <Text className="text-xs text-gray-400">{item.time}</Text>
-                </>
-              )}
-            </View>
-          </View>
-        </View>
-      </Card>
+        </Card>
+      </Pressable>
     );
   };
 
   return (
     <SafeAreaView
-      className="flex-1 bg-[#191E29]"
+      className="flex-1 bg-background"
       edges={["top", "left", "right"]}
     >
       <ScrollView 
@@ -255,17 +306,17 @@ export default function Transactions() {
           <Text className="text-white text-lg font-bold mb-6">Transações</Text>
 
           {/* Summary Cards */}
-          <View className="flex-row gap-4 mb-6">
+          <View className="flex-row gap-3 mb-6">
             <View className="flex-1">
-              <Card>
+              <Card className="p-0">
                 <View className="flex-row items-center gap-3 p-4">
-                  <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center">
-                    <TrendingUp size={20} color="white" />
+                  <View className="w-12 h-12 bg-income-bg rounded-xl items-center justify-center">
+                    <TrendingUp size={24} color="#4ADE80" />
                   </View>
-                  <View>
-                    <Text className="text-xs text-gray-400">Receitas</Text>
-                    <Text className="text-sm font-semibold text-green-400">
-                      R$ {totalIncome.toFixed(2)}
+                  <View className="flex-1">
+                    <Text className="text-xs text-text-muted mb-1">Receitas</Text>
+                    <Text className="text-base font-bold text-income">
+                      R$ {totalIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </Text>
                   </View>
                 </View>
@@ -273,15 +324,15 @@ export default function Transactions() {
             </View>
 
             <View className="flex-1">
-              <Card>
+              <Card className="p-0">
                 <View className="flex-row items-center gap-3 p-4">
-                  <View className="w-10 h-10 bg-red-500/10 rounded-lg items-center justify-center">
-                    <TrendingDown size={20} color="white" />
+                  <View className="w-12 h-12 bg-expense-bg rounded-xl items-center justify-center">
+                    <TrendingDown size={24} color="#F87171" />
                   </View>
-                  <View>
-                    <Text className="text-xs text-gray-400">Despesas</Text>
-                    <Text className="text-sm font-semibold text-red-400">
-                      R$ {totalExpenses.toFixed(2)}
+                  <View className="flex-1">
+                    <Text className="text-xs text-text-muted mb-1">Despesas</Text>
+                    <Text className="text-base font-bold text-expense">
+                      R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </Text>
                   </View>
                 </View>
@@ -296,7 +347,7 @@ export default function Transactions() {
               placeholderTextColor="#9CA3AF"
               value={searchTerm}
               onChangeText={setSearchTerm}
-              className="bg-[#23263a] border border-[#31344d] rounded-xl pl-10 pr-4 py-3 text-white"
+              className="bg-card-bg border border-border-default rounded-xl pl-10 pr-4 py-3 text-white"
             />
           </View>
 
@@ -313,8 +364,8 @@ export default function Transactions() {
                   onPress={() => setSelectedFilter(option.value)}
                   className={`px-4 py-2 rounded-lg ${
                     selectedFilter === option.value
-                      ? "bg-[#01C38D]"
-                      : "bg-[#31344d] border border-[#4B5563]"
+                      ? "bg-accent"
+                      : "bg-card-bg border border-border-default"
                   }`}
                 >
                   <Text
@@ -335,7 +386,7 @@ export default function Transactions() {
                   onPress={() => setSelectedPeriod(option.value)}
                   className={`px-4 py-2 rounded-lg ${
                     selectedPeriod === option.value
-                      ? "bg-[#31344d]"
+                      ? "bg-card-bg"
                       : "bg-transparent"
                   }`}
                 >
@@ -379,7 +430,7 @@ export default function Transactions() {
             />
           ) : (
             <View className="items-center py-12">
-              <View className="w-16 h-16 bg-[#31344d] rounded-full items-center justify-center mb-4">
+              <View className="w-16 h-16 bg-card-bg rounded-full items-center justify-center mb-4">
                 <Search size={24} color="white" />
               </View>
               <Text className="text-base font-medium text-white mb-2">
@@ -392,6 +443,102 @@ export default function Transactions() {
           )}
         </View>
       </ScrollView>
+
+      {/* Transaction Action Modal */}
+      <Modal
+        visible={showActionModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowActionModal(false)}
+      >
+        <TouchableOpacity 
+          className="flex-1 bg-black/50 justify-end"
+          activeOpacity={1}
+          onPress={() => setShowActionModal(false)}
+        >
+          <TouchableOpacity activeOpacity={1}>
+            <View className="bg-secondary-bg rounded-t-3xl p-6">
+              {selectedTransaction && (
+                <>
+                  {/* Transaction Details */}
+                  <View className="flex-row items-center justify-between mb-6">
+                    <Text className="text-white text-lg font-bold">
+                      Ações da Transação
+                    </Text>
+                    <Pressable
+                      onPress={() => setShowActionModal(false)}
+                      className="w-8 h-8 bg-card-bg rounded-full items-center justify-center"
+                    >
+                      <X size={16} color="white" />
+                    </Pressable>
+                  </View>
+
+                  {/* Transaction Info */}
+                  <Card className="mb-6">
+                    <View className="p-4">
+                      <Text className="text-white font-semibold text-base mb-2">
+                        {selectedTransaction.title || selectedTransaction.description || "Transação"}
+                      </Text>
+                      <View className="flex-row items-center gap-2 mb-2">
+                        <View className="bg-card-bg px-2 py-1 rounded-md">
+                          <Text className="text-xs text-gray-300">
+                            {selectedTransaction.category?.name || selectedTransaction.category || "Sem categoria"}
+                          </Text>
+                        </View>
+                        <Text className="text-xs text-gray-400">
+                          {selectedTransaction.paymentMethod || "N/A"}
+                        </Text>
+                      </View>
+                      <Text
+                        className={`text-xl font-bold ${
+                          (selectedTransaction.type || (selectedTransaction.categoryId === "1" ? "expense" : "income")) === "income"
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {(selectedTransaction.type || (selectedTransaction.categoryId === "1" ? "expense" : "income")) === "income" ? "+" : "-"}
+                        R$ {Math.abs(selectedTransaction.amount || 0).toFixed(2)}
+                      </Text>
+                    </View>
+                  </Card>
+
+                  {/* Action Buttons */}
+                  <View className="gap-3">
+                    <Pressable
+                      onPress={handleEditTransaction}
+                      className="bg-accent rounded-xl p-4 flex-row items-center justify-center gap-3"
+                    >
+                      <Edit size={20} color="white" />
+                      <Text className="text-[#191E29] font-semibold text-base">
+                        Editar Transação
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={handleDeleteTransaction}
+                      className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex-row items-center justify-center gap-3"
+                    >
+                      <Trash2 size={20} color="#EF4444" />
+                      <Text className="text-red-400 font-semibold text-base">
+                        Excluir Transação
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setShowActionModal(false)}
+                      className="bg-card-bg rounded-xl p-4 flex-row items-center justify-center"
+                    >
+                      <Text className="text-gray-300 font-semibold text-base">
+                        Cancelar
+                      </Text>
+                    </Pressable>
+                  </View>
+                </>
+              )}
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -198,7 +198,7 @@ export default function Dashboard() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: '#191E29' }}
+      style={{ flex: 1, backgroundColor: '#0A0A0A' }}
       edges={["top", "left", "right"]}
     >
       <ScrollView 
@@ -220,7 +220,7 @@ export default function Dashboard() {
             </View>
             <Pressable
               onPress={() => navigation.navigate("Profile" as never)}
-              className="w-10 h-10 bg-[#01C38D] rounded-full items-center justify-center"
+              className="w-10 h-10 bg-accent rounded-full items-center justify-center"
             >
               <Text className="text-[#191E29] font-semibold text-sm">
                 {getInitials(user?.email || "")}
@@ -348,7 +348,7 @@ export default function Dashboard() {
                 recentTransactions.map(renderTransaction)
               ) : (
                 <View className="items-center py-8">
-                  <View className="w-16 h-16 bg-[#01C38D]/20 rounded-full items-center justify-center mb-4">
+                  <View className="w-16 h-16 bg-accent/20 rounded-full items-center justify-center mb-4">
                     <Banknote size={32} color="white" />
                   </View>
                   <Text className="text-white text-base font-semibold mb-2">
@@ -360,7 +360,7 @@ export default function Dashboard() {
                   </Text>
                   <Pressable
                     onPress={() => navigation.navigate("AddExpense" as never)}
-                    className="bg-[#01C38D] px-6 py-3 rounded-xl"
+                    className="bg-accent px-6 py-3 rounded-xl"
                   >
                     <Text className="text-white font-semibold">
                       Adicionar Transação
@@ -379,19 +379,19 @@ export default function Dashboard() {
             <View className="flex-row gap-4">
               <Pressable
                 onPress={() => navigation.navigate("AddExpense" as never)}
-                className="flex-1 h-12 bg-[#01C38D] rounded-lg items-center justify-center flex-row gap-2"
+                className="flex-1 h-12 bg-accent rounded-lg items-center justify-center flex-row gap-2"
               >
-                <Plus size={20} color="white" />
-                <Text className="text-[#191E29] font-medium text-xs">
+                <Plus size={20} color="#232323" />
+                <Text className="text-[#232323] font-semibold text-xs">
                   Adicionar Despesa
                 </Text>
               </Pressable>
               <Pressable
                 onPress={() => navigation.navigate("AddExpense" as never)}
-                className="flex-1 h-12 bg-[#31344d] border border-[#4B5563] rounded-lg items-center justify-center flex-row gap-2"
+                className="flex-1 h-12 bg-card-bg border border-border-default rounded-lg items-center justify-center flex-row gap-2"
               >
-                <Plus size={20} color="white" />
-                <Text className="text-gray-300 font-medium text-xs">
+                <Plus size={20} color="#FFFFFF" />
+                <Text className="text-text-primary font-semibold text-xs">
                   Adicionar Receita
                 </Text>
               </Pressable>

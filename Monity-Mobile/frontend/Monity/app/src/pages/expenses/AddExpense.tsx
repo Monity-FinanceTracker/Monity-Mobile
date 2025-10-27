@@ -271,7 +271,7 @@ export default function AddExpense() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: '#191E29' }}
+      style={{ flex: 1, backgroundColor: '#0A0A0A' }}
       edges={["top", "left", "right"]}
     >
       <ScrollView 
@@ -297,8 +297,8 @@ export default function AddExpense() {
               onPress={() => setTransactionType("expense")}
               className={`flex-1 h-12 rounded-lg items-center justify-center flex-row gap-2 ${
                 transactionType === "expense"
-                  ? "bg-[#01C38D]"
-                  : "bg-[#31344d] border border-[#4B5563]"
+                  ? "bg-accent"
+                  : "bg-card-bg border border-border-default"
               }`}
             >
               <TrendingDown
@@ -319,8 +319,8 @@ export default function AddExpense() {
               onPress={() => setTransactionType("income")}
               className={`flex-1 h-12 rounded-lg items-center justify-center flex-row gap-2 ${
                 transactionType === "income"
-                  ? "bg-[#01C38D]"
-                  : "bg-[#31344d] border border-[#4B5563]"
+                  ? "bg-accent"
+                  : "bg-card-bg border border-border-default"
               }`}
             >
               <TrendingUp
@@ -354,7 +354,7 @@ export default function AddExpense() {
                   onChangeText={handleAmountChange}
                   placeholder="0,00"
                   placeholderTextColor="#9CA3AF"
-                  className="pl-12 text-lg font-bold h-12 bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4"
+                  className="pl-12 text-lg font-bold h-12 bg-card-bg border border-border-default rounded-xl text-white px-4"
                   keyboardType="numeric"
                 />
               </View>
@@ -376,7 +376,7 @@ export default function AddExpense() {
                     : "Ex: Salário Janeiro, Freelance Design..."
                 }
                 placeholderTextColor="#9CA3AF"
-                className="bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4 py-3 h-20 text-left"
+                className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 h-20 text-left"
                 multiline
                 textAlignVertical="top"
               />
@@ -396,7 +396,11 @@ export default function AddExpense() {
                   </Text>
                 </View>
               ) : filteredCategories.length > 0 ? (
-                <View className="flex-row flex-wrap gap-3">
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 12 }}
+                >
                   {filteredCategories.map((category) => {
                     const Icon = getCategoryIcon(category.icon);
                     const isSelected = selectedCategory === category.id;
@@ -404,33 +408,34 @@ export default function AddExpense() {
                       <Pressable
                         key={category.id}
                         onPress={() => setSelectedCategory(category.id)}
-                        className={`w-[48%] h-16 rounded-lg items-center justify-center flex-col gap-2 ${
+                        className={`w-24 h-24 rounded-xl items-center justify-center flex-col gap-2 ${
                           isSelected
-                            ? "bg-[#01C38D]"
-                            : "bg-[#31344d] border border-[#4B5563]"
+                            ? "bg-accent"
+                            : "bg-card-bg border border-border-default"
                         }`}
                       >
                         <View
-                          className={`w-8 h-8 rounded-lg items-center justify-center ${getBackgroundColorClass(category.color)}`}
+                          className={`w-10 h-10 rounded-lg items-center justify-center ${getBackgroundColorClass(category.color)}`}
                         >
                           <Icon
-                            size={16}
+                            size={20}
                             color="white"
                           />
                         </View>
                         <Text
-                          className={`text-xs ${
+                          className={`text-xs text-center px-1 ${
                             isSelected
                               ? "text-[#191E29] font-medium"
                               : "text-gray-300"
                           }`}
+                          numberOfLines={2}
                         >
                           {category.name}
                         </Text>
                       </Pressable>
                     );
                   })}
-                </View>
+                </ScrollView>
               ) : (
                 <View className="items-center py-8">
                   <Text className="text-gray-400 text-center mb-4">
@@ -461,8 +466,8 @@ export default function AddExpense() {
                       onPress={() => setSelectedPaymentMethod(method.id)}
                       className={`h-12 rounded-lg items-center justify-start flex-row px-4 ${
                         isSelected
-                          ? "bg-[#01C38D]"
-                          : "bg-[#31344d] border border-[#4B5563]"
+                          ? "bg-accent"
+                          : "bg-card-bg border border-border-default"
                       }`}
                     >
                       <Icon
@@ -479,7 +484,7 @@ export default function AddExpense() {
                         {method.name}
                       </Text>
                       {method.id === "pix" && (
-                        <View className="ml-auto bg-[#31344d] px-2 py-1 rounded-md">
+                        <View className="ml-auto bg-card-bg px-2 py-1 rounded-md">
                           <Text className="text-xs text-gray-300">
                             Instantâneo
                           </Text>
@@ -513,7 +518,7 @@ export default function AddExpense() {
                       onChangeText={setDate}
                       placeholder="YYYY-MM-DD"
                       placeholderTextColor="#9CA3AF"
-                      className="pl-10 bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4 py-3"
+                      className="pl-10 bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
                     />
                   </View>
                 </View>
@@ -526,8 +531,8 @@ export default function AddExpense() {
                     <View
                       className={`w-4 h-4 rounded border-2 items-center justify-center ${
                         isRecurring
-                          ? "bg-[#01C38D] border-[#01C38D]"
-                          : "border-[#4B5563]"
+                          ? "bg-accent border-accent"
+                          : "border-border-default"
                       }`}
                     >
                       {isRecurring && (
@@ -549,7 +554,7 @@ export default function AddExpense() {
           <View className="flex-row gap-3">
             <Pressable
               onPress={() => navigation.goBack()}
-              className="flex-1 h-12 rounded-lg items-center justify-center bg-[#31344d] border border-[#4B5563]"
+              className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"
             >
               <Text className="text-gray-300 font-medium">Cancelar</Text>
             </Pressable>
@@ -567,7 +572,7 @@ export default function AddExpense() {
                 !selectedCategory ||
                 !selectedPaymentMethod
                   ? "bg-[#4B5563]"
-                  : "bg-[#01C38D]"
+                  : "bg-accent"
               }`}
             >
               <Text

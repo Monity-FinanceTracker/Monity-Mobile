@@ -1,3 +1,94 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/**
+ * Monity Design System - CSS Variables
+ * Based on rules.mdc design specifications
+ */
+
+@layer base {
+  :root {
+    /* Backgrounds */
+    --background: #0A0A0A;
+    --primary-bg: #191E29;
+    --secondary-bg: #23263a;
+    --card-bg: #171717;
+
+    /* Borders & Dividers */
+    --border: #262626;
+    --border-hover: rgba(38, 38, 38, 0.8);
+
+    /* Accent Colors */
+    --accent: #01C38D;
+    --accent-hover: #01A071;
+    --accent-light: rgba(1, 195, 141, 0.1);
+    --accent-medium: rgba(1, 195, 141, 0.2);
+
+    /* Text Colors */
+    --text-primary: #FFFFFF;
+    --text-secondary: #696E79;
+    --text-muted: #9CA3AF;
+    --text-gray: #D1D5DB;
+
+    /* Status Colors */
+    --success: #10B981;
+    --success-light: rgba(16, 185, 129, 0.2);
+    --error: #EF4444;
+    --error-light: rgba(239, 68, 68, 0.2);
+    --warning: #F59E0B;
+    --warning-light: rgba(245, 158, 11, 0.2);
+    --info: #3B82F6;
+    --info-light: rgba(59, 130, 246, 0.2);
+
+    /* Transaction Colors */
+    --income: #4ADE80;
+    --income-bg: rgba(34, 197, 94, 0.2);
+    --expense: #F87171;
+    --expense-bg: rgba(239, 68, 68, 0.2);
+    --savings: #60A5FA;
+    --savings-bg: rgba(59, 130, 246, 0.2);
+
+    /* Financial Health Colors */
+    --health-excellent: #4ADE80;
+    --health-good: #60A5FA;
+    --health-fair: #FBBF24;
+    --health-poor: #F87171;
+
+    /* Overlays */
+    --overlay: rgba(0, 0, 0, 0.5);
+    --overlay-light: rgba(0, 0, 0, 0.3);
+    --overlay-heavy: rgba(0, 0, 0, 0.8);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border-default;
+  }
+
+  body {
+    @apply bg-primary-bg text-text-primary;
+    font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom utility classes for gradients */
+@layer utilities {
+  .gradient-primary {
+    background: linear-gradient(to right, #01C38D, #01A071);
+  }
+
+  .gradient-text {
+    background: linear-gradient(to right, #01C38D, #01A071);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-reverse {
+    background: linear-gradient(to right, #01A071, #01C38D);
+  }
+}

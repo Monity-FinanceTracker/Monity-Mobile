@@ -1,27 +1,37 @@
 import React, { useState } from "react";
 import { TextInput, View, TextInputProps } from "react-native";
+import { COLORS } from "../../constants/colors";
 
 interface InputProps extends TextInputProps {
   className?: string;
+  hasError?: boolean;
 }
 
 const Input = (props: InputProps) => {
-  const { className, ...rest } = props;
+  const { className, hasError, ...rest } = props;
 
-  // You can handle focus state here similarly to the web example
+  // Handle focus state for border color
   const [isFocused, setIsFocused] = useState(false);
   const onFocus = () => setIsFocused(true);
   const onBlur = () => setIsFocused(false);
 
+  // Determine border color based on state
+  const getBorderColor = () => {
+    if (hasError) return "border-error";
+    if (isFocused) return "border-accent";
+    return "border-border-default";
+  };
+
   return (
     <View className="relative">
       <TextInput
-        className={`w-full bg-[#2A3240]/80 rounded-xl px-4 py-4 text-white text-base caret-[#01C38D]
-          ${isFocused ? "border-[#01C38D]" : "border-[#31344d]"} 
-          ${className || ""}`}
-        placeholderTextColor="#9ca3af"
+        className={`w-full bg-card-bg/80 rounded-xl px-4 py-4 text-text-primary text-base border ${getBorderColor()} ${
+          className || ""
+        }`}
+        placeholderTextColor={COLORS.textMuted}
         onFocus={onFocus}
         onBlur={onBlur}
+        selectionColor={COLORS.accent}
         {...rest}
       />
     </View>

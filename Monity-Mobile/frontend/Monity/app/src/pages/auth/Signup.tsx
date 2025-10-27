@@ -20,6 +20,7 @@ import {
   XCircle,
 } from "lucide-react-native";
 import { useAuth } from "../../context/AuthContext";
+import { COLORS } from "../../constants/colors";
 
 interface SignupProps {
   onNavigateToLogin: () => void;
@@ -108,8 +109,8 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
     password && confirmPassword && password === confirmPassword;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#191E29' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#191E29" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -149,10 +150,10 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     onChangeText={setName}
                     onFocus={() => setFocusedField("name")}
                     onBlur={() => setFocusedField("")}
-                    className={`bg-[#23263a] border-2 ${
+                    className={`bg-card-bg border-2 ${
                       focusedField === "name"
-                        ? "border-[#01C38D]"
-                        : "border-[#31344d]"
+                        ? "border-accent"
+                        : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Enter your full name"
                     placeholderTextColor="#9CA3AF"
@@ -185,10 +186,10 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     onChangeText={setEmail}
                     onFocus={() => setFocusedField("email")}
                     onBlur={() => setFocusedField("")}
-                    className={`bg-[#23263a] border-2 ${
+                    className={`bg-card-bg border-2 ${
                       focusedField === "email"
-                        ? "border-[#01C38D]"
-                        : "border-[#31344d]"
+                        ? "border-accent"
+                        : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Enter your email"
                     placeholderTextColor="#9CA3AF"
@@ -223,10 +224,10 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     onChangeText={setPassword}
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField("")}
-                    className={`bg-[#23263a] border-2 ${
+                    className={`bg-card-bg border-2 ${
                       focusedField === "password"
-                        ? "border-[#01C38D]"
-                        : "border-[#31344d]"
+                        ? "border-accent"
+                        : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Create a password"
                     placeholderTextColor="#9CA3AF"
@@ -301,12 +302,12 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     onChangeText={setConfirmPassword}
                     onFocus={() => setFocusedField("confirmPassword")}
                     onBlur={() => setFocusedField("")}
-                    className={`bg-[#23263a] border-2 ${
+                    className={`bg-card-bg border-2 ${
                       focusedField === "confirmPassword"
-                        ? "border-[#01C38D]"
+                        ? "border-accent"
                         : confirmPassword && !passwordsMatch
                           ? "border-red-400"
-                          : "border-[#31344d]"
+                          : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Confirm your password"
                     placeholderTextColor="#9CA3AF"
@@ -361,7 +362,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                 className={`w-full py-3.5 rounded-xl mt-6 ${
                   loading || !passwordsMatch || passwordStrength.score < 2
                     ? "bg-gray-400"
-                    : "bg-[#01C38D]"
+                    : "bg-accent"
                 }`}
                 style={{
                   backgroundColor:

@@ -15,6 +15,7 @@ import Chat from "../pages/chat/Chat";
 import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
 import { Platform, View, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { COLORS } from "../constants/colors";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -36,8 +37,8 @@ function MainTabs() {
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          backgroundColor: "#23263a",
-          borderTopColor: "#31344d",
+          backgroundColor: COLORS.primaryBg,
+          borderTopColor: COLORS.border,
           borderTopWidth: 1,
           // Add extra bottom padding for Android gesture nav / soft keys
           paddingBottom: Platform.OS === "android" ? Math.max(16, insets.bottom + 8) : Math.max(8, insets.bottom),
@@ -53,8 +54,8 @@ function MainTabs() {
           left: 0,
           right: 0,
         },
-        tabBarActiveTintColor: "white",
-        tabBarInactiveTintColor: "white",
+        tabBarActiveTintColor: '#01C38D',
+        tabBarInactiveTintColor: '#9CA3AF',
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "500",
@@ -69,7 +70,7 @@ function MainTabs() {
         name="Dashboard"
         component={Dashboard}
         options={{
-          tabBarIcon: ({ color, size }) => <Home size={20} color="white" />,
+          tabBarIcon: ({ color }) => <Home size={20} color={color} />,
           tabBarLabel: "Início",
         }}
       />
@@ -77,7 +78,7 @@ function MainTabs() {
         name="Transactions"
         component={Transactions}
         options={{
-          tabBarIcon: ({ color, size }) => <Receipt size={20} color="white" />,
+          tabBarIcon: ({ color }) => <Receipt size={20} color={color} />,
           tabBarLabel: "Transações",
         }}
       />
@@ -85,13 +86,13 @@ function MainTabs() {
         name="AddExpense"
         component={AddExpense}
         options={{
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View
               className={`w-8 h-8 rounded-full items-center justify-center ${
-                focused ? "bg-[#01C38D]" : "bg-[#31344d]"
+                focused ? "bg-accent" : "bg-border-default"
               }`}
             >
-              <Plus size={24} color="white" />
+              <Plus size={24} color={COLORS.textPrimary} />
             </View>
           ),
           tabBarLabel: "Adicionar",
@@ -101,8 +102,8 @@ function MainTabs() {
         name="Chat"
         component={Chat}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <MessageCircle size={20} color="white" />
+          tabBarIcon: ({ color }) => (
+            <MessageCircle size={20} color={color} />
           ),
           tabBarLabel: "IA Chat",
         }}
@@ -111,7 +112,7 @@ function MainTabs() {
         name="Categories"
         component={Categories}
         options={{
-          tabBarIcon: ({ color, size }) => <Tag size={20} color="white" />,
+          tabBarIcon: ({ color }) => <Tag size={20} color={color} />,
           tabBarLabel: "Categorias",
         }}
       />
@@ -124,8 +125,8 @@ function Gate() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#191E29]">
-        <Text className="text-white text-base">Loading...</Text>
+      <View className="flex-1 items-center justify-center bg-primary-bg">
+        <Text className="text-text-primary text-base">Loading...</Text>
       </View>
     );
   }

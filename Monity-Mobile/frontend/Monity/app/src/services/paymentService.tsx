@@ -62,18 +62,33 @@ export class PaymentService {
 
     const { createPaymentMethod } = this.stripe;
 
-    const { paymentMethod, error } = await createPaymentMethod({
+    console.log('Criando método de pagamento com dados:', {
+      number: cardDetails.number.replace(/\s/g, '').substring(0, 4) + '****',
+      expiryMonth: cardDetails.expiryMonth,
+      expiryYear: cardDetails.expiryYear,
+      cvcLength: cardDetails.cvc.length
+    });
+
+    // Formato correto para @stripe/stripe-react-native v0.50.x
+    const result = await createPaymentMethod({
       paymentMethodType: 'Card',
       card: {
         number: cardDetails.number.replace(/\s/g, ''), // Remove espaços
-        expiryMonth: cardDetails.expiryMonth,
-        expiryYear: cardDetails.expiryYear,
+        expMonth: cardDetails.expiryMonth,
+        expYear: cardDetails.expiryYear,
         cvc: cardDetails.cvc,
       },
     });
+    
+    const { paymentMethod, error } = result || {};
 
     if (error) {
+      console.error('Erro do Stripe:', error);
       throw new Error(error.message || 'Erro ao criar método de pagamento');
+    }
+
+    if (!paymentMethod) {
+      throw new Error('Método de pagamento não foi criado');
     }
 
     return paymentMethod;

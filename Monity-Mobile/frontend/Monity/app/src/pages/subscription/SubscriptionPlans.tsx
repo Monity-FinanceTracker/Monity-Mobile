@@ -101,7 +101,7 @@ export default function SubscriptionPlans() {
   if (isLoading) {
     return (
       <SafeAreaView
-        className="flex-1 bg-[#191E29]"
+        className="flex-1 bg-background"
         edges={["top", "bottom", "left", "right"]}
       >
         <View className="flex-1 items-center justify-center">
@@ -127,7 +127,7 @@ export default function SubscriptionPlans() {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-[#191E29]"
+      className="flex-1 bg-background"
       edges={["top", "bottom", "left", "right"]}
     >
       <ScrollView className="flex-1">
@@ -163,9 +163,9 @@ export default function SubscriptionPlans() {
               <Card
                 key={plan.id}
                 className={`${
-                  plan.popular ? "border-2 border-[#01C38D]" : ""
+                  plan.popular ? "border-2 border-accent" : ""
                 } ${
-                  isCurrentPlan(plan.id) ? "bg-[#01C38D]/10" : ""
+                  isCurrentPlan(plan.id) ? "bg-accent/10" : ""
                 }`}
               >
                 <View className="p-6">
@@ -191,7 +191,7 @@ export default function SubscriptionPlans() {
                         {formatPrice(plan.price)}
                       </Text>
                       {plan.popular && (
-                        <View className="bg-[#01C38D] px-2 py-1 rounded-full mt-1">
+                        <View className="bg-accent px-2 py-1 rounded-full mt-1">
                           <Text className="text-[#191E29] text-xs font-bold">
                             MAIS POPULAR
                           </Text>
@@ -240,8 +240,8 @@ export default function SubscriptionPlans() {
                       isCurrentPlan(plan.id)
                         ? "bg-gray-600"
                         : plan.id === "premium"
-                        ? "bg-[#01C38D]"
-                        : "bg-[#31344d] border border-[#4B5563]"
+                        ? "bg-accent"
+                        : "bg-card-bg border border-border-default"
                     }`}
                   >
                     {isSubscribing ? (

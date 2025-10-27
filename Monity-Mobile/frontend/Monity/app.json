@@ -50,10 +50,10 @@
       "supabaseUrl": "https://eeubnmpetzhjcludrjwz.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTI4MzQsImV4cCI6MjA2ODA4ODgzNH0.QZc4eJ4tLW10WIwhsu_p7TvldzodQrwJRnJ8LlzXkdM",
       "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps",
-      "stripePublishableKey": "pk_live_51S3p8JCGOtqtf3r1YeRTBP0SACrt2Cq5oOBGzjyIgAVnFmoA3Tl1Nr8dWFtVRpmiZu9ASdzY9abCQMo6byUexLTH00M21w3voE",
+      "stripePublishableKey": "pk_live_51SH0m9BDlx4noKmetogVrJWuB7swkwBpzLi3d8GOsYUPeMB1w5IuTjVrpbrmSlJxPUj065ZdWc9CENn7AXeIWmWC00WD1iCqqz",
       "router": {},
       "eas": {
-        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
+        "projectId": "e2bfd3ea-a052-4ec5-9d67-bcd4067cab20"
       }
     }
   }

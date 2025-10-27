@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react-native";
 import { useAuth } from "../../context/AuthContext";
+import { COLORS } from "../../constants/colors";
 
 interface LoginProps {
   onNavigateToSignup: () => void;
@@ -71,8 +72,8 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#191E29' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#191E29" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.primaryBg }}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryBg} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -81,18 +82,18 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
           <View className="w-full max-w-sm mx-auto">
             {/* Logo Section */}
             <View className="mb-12 items-center">
-              <Text className="text-3xl font-bold text-[#01C38D] mb-2">
+              <Text className="text-3xl font-bold text-accent mb-2">
                 Monity
               </Text>
-              <Text className="text-gray-300 text-base">Welcome back</Text>
+              <Text className="text-text-gray text-base">Welcome back</Text>
             </View>
 
             {/* Login Form */}
             <View className="space-y-6">
               {/* Error Message */}
               {error && (
-                <View className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                  <Text className="text-red-400 text-center text-sm">
+                <View className="p-4 bg-error-light border border-error/30 rounded-lg">
+                  <Text className="text-error text-center text-sm">
                     {error}
                   </Text>
                 </View>
@@ -100,30 +101,31 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
 
               {/* Email Input */}
               <View className="space-y-1">
-                <Text className="text-gray-300 font-medium text-xs">
+                <Text className="text-text-gray font-medium text-xs">
                   Email address
                 </Text>
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center">
-                    <Mail size={20} />
+                    <Mail size={20} color={COLORS.textMuted} />
                   </View>
                   <TextInput
                     value={email}
                     onChangeText={setEmail}
                     onFocus={() => setEmailFocused(true)}
                     onBlur={() => setEmailFocused(false)}
-                    className={`bg-[#23263a] border-2 ${
-                      emailFocused ? "border-[#01C38D]" : "border-[#31344d]"
+                    className={`bg-card-bg border-2 ${
+                      emailFocused ? "border-accent" : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Enter your email"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={COLORS.textMuted}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
+                    selectionColor={COLORS.accent}
                     style={{
                       paddingLeft: 48,
                       fontSize: 16,
-                      color: "#ffffff",
+                      color: COLORS.textPrimary,
                     }}
                   />
                 </View>
@@ -131,30 +133,31 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
 
               {/* Password Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-xs">
+                <Text className="text-text-gray font-medium text-xs">
                   Password
                 </Text>
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center">
-                    <Lock size={20} />
+                    <Lock size={20} color={COLORS.textMuted} />
                   </View>
                   <TextInput
                     value={password}
                     onChangeText={setPassword}
                     onFocus={() => setPasswordFocused(true)}
                     onBlur={() => setPasswordFocused(false)}
-                    className={`bg-[#23263a] border-2 ${
-                      passwordFocused ? "border-[#01C38D]" : "border-[#31344d]"
+                    className={`bg-card-bg border-2 ${
+                      passwordFocused ? "border-accent" : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Enter your password"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={COLORS.textMuted}
                     secureTextEntry={!showPassword}
                     autoComplete="current-password"
+                    selectionColor={COLORS.accent}
                     style={{
                       paddingLeft: 48,
                       paddingRight: 48,
                       fontSize: 16,
-                      color: "#ffffff",
+                      color: COLORS.textPrimary,
                     }}
                   />
                   <TouchableOpacity
@@ -162,9 +165,9 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
                     className="absolute inset-y-0 right-0 pr-4 justify-center"
                   >
                     {showPassword ? (
-                      <EyeOff size={20} />
+                      <EyeOff size={20} color={COLORS.textMuted} />
                     ) : (
-                      <Eye size={20} />
+                      <Eye size={20} color={COLORS.textMuted} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -174,20 +177,23 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={loading}
-                className={`w-full py-3.5 rounded-xl mt-5 ${
-                  loading ? "bg-gray-400" : "bg-[#01C38D]"
-                }`}
-                style={{ backgroundColor: loading ? "#9CA3AF" : "#01C38D" }}
+                className="w-full py-3.5 rounded-xl mt-5"
+                style={{
+                  backgroundColor: loading ? COLORS.textMuted : COLORS.accent
+                }}
               >
                 {loading ? (
                   <View className="flex-row items-center justify-center">
-                    <ActivityIndicator size="small" color="white" />
-                    <Text className="text-white font-semibold text-base ml-2">
+                    <ActivityIndicator size="small" color={COLORS.textPrimary} />
+                    <Text className="text-text-primary font-semibold text-base ml-2">
                       Signing in...
                     </Text>
                   </View>
                 ) : (
-                  <Text className="text-white font-semibold text-base text-center">
+                  <Text
+                    className="font-semibold text-base text-center"
+                    style={{ color: '#232323' }}
+                  >
                     Sign in
                   </Text>
                 )}
@@ -197,11 +203,11 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
             {/* Sign up link */}
             <View className="mt-8">
               <View className="flex-row items-center justify-center">
-                <Text className="text-gray-400 text-sm">
+                <Text className="text-text-muted text-sm">
                   Don't have an account?
                 </Text>
                 <TouchableOpacity onPress={onNavigateToSignup} className="ml-2">
-                  <Text className="text-[#01C38D] font-semibold text-sm">
+                  <Text className="text-accent font-semibold text-sm">
                     Sign up
                   </Text>
                 </TouchableOpacity>

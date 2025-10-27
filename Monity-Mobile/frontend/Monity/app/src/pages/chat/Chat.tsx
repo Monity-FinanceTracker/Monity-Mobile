@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MessageCircle, Send, Bot, User, Loader } from "lucide-react-native";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 import { geminiService } from "../../services/geminiService";
+import { COLORS } from "../../constants/colors";
 
 interface Message {
   id: string;
@@ -108,19 +109,19 @@ export default function Chat() {
       >
         <View
           className={`max-w-[80%] rounded-2xl p-3 ${
-            isUser ? "bg-[#01C38D] rounded-br-md" : "bg-[#23263a] rounded-bl-md"
+            isUser ? "bg-accent rounded-br-md" : "bg-card-bg border border-border-default rounded-bl-md"
           }`}
         >
           <View className={`flex-row items-start mb-1`}>
             {!isUser && (
-              <Bot size={16}  className="mr-2 mt-0.5" />
+              <Bot size={16} color={COLORS.accent} className="mr-2 mt-0.5" />
             )}
             {isUser && (
-              <User size={16}  className="mr-2 mt-0.5" />
+              <User size={16} color="#232323" className="mr-2 mt-0.5" />
             )}
             <Text
               className={`text-sm font-medium ${
-                isUser ? "text-[#191E29]" : "text-white"
+                isUser ? "text-[#232323]" : "text-text-primary"
               }`}
             >
               {isUser ? "Você" : "IA Assistente"}
@@ -128,14 +129,14 @@ export default function Chat() {
           </View>
           <Text
             className={`text-sm leading-5 ${
-              isUser ? "text-[#191E29]" : "text-white"
+              isUser ? "text-[#232323]" : "text-text-primary"
             }`}
           >
             {message.content}
           </Text>
           <Text
             className={`text-xs mt-1 ${
-              isUser ? "text-[#191E29]/70" : "text-gray-400"
+              isUser ? "text-[#232323]/70" : "text-text-muted"
             }`}
           >
             {formatTime(message.timestamp)}
@@ -157,16 +158,16 @@ export default function Chat() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#191E29]" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
       {/* Header */}
-      <View className="bg-[#23263a] px-6 py-4 border-b border-[#31344d]">
+      <View className="bg-primary-bg px-6 py-4 border-b border-border-default">
         <View className="flex-row items-center">
-          <MessageCircle size={24}  className="mr-3" />
+          <MessageCircle size={24} color={COLORS.accent} className="mr-3" />
           <View>
-            <Text className="text-white text-base font-semibold">
+            <Text className="text-text-primary text-base font-semibold">
               Chat com IA
             </Text>
-            <Text className="text-gray-400 text-xs">
+            <Text className="text-text-muted text-xs">
               Seu assistente financeiro inteligente
             </Text>
           </View>
@@ -190,13 +191,13 @@ export default function Chat() {
 
           {isLoading && (
             <View className="flex-row justify-start mb-4">
-              <View className="bg-[#23263a] rounded-2xl rounded-bl-md p-3">
+              <View className="bg-card-bg rounded-2xl rounded-bl-md p-3 border border-border-default">
                 <View className="flex-row items-center">
-                  <Bot size={16}  className="mr-2" />
-                  <Text className="text-white text-xs font-medium mr-2">
+                  <Bot size={16} color={COLORS.accent} className="mr-2" />
+                  <Text className="text-text-primary text-xs font-medium mr-2">
                     IA Assistente está digitando
                   </Text>
-                  <Loader size={14}  className="animate-spin" />
+                  <Loader size={14} color={COLORS.accent} className="animate-spin" />
                 </View>
               </View>
             </View>
@@ -205,7 +206,7 @@ export default function Chat() {
           {/* Suggested Questions */}
           {messages.length === 1 && (
             <View className="mt-4">
-              <Text className="text-gray-400 text-sm font-medium mb-3">
+              <Text className="text-text-muted text-sm font-medium mb-3">
                 Perguntas sugeridas:
               </Text>
               <View className="space-y-2">
@@ -213,9 +214,9 @@ export default function Chat() {
                   <TouchableOpacity
                     key={index}
                     onPress={() => handleSuggestedQuestion(question)}
-                    className="bg-[#23263a] rounded-xl p-3 border border-[#31344d]"
+                    className="bg-card-bg rounded-xl p-3 border border-border-default"
                   >
-                    <Text className="text-white text-sm">{question}</Text>
+                    <Text className="text-text-primary text-sm">{question}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -224,28 +225,29 @@ export default function Chat() {
         </ScrollView>
 
         {/* Input */}
-        <View className="bg-[#23263a] px-6 py-4 border-t border-[#31344d]" style={{ paddingBottom: Platform.OS === "android" ? 90 : 20 }}>
+        <View className="bg-primary-bg px-6 py-4 border-t border-border-default" style={{ paddingBottom: Platform.OS === "android" ? 100 : 90 }}>
           <View className="flex-row items-end space-x-3">
-            <View className="flex-1 bg-[#31344d] rounded-2xl px-4 py-3">
+            <View className="flex-1 bg-card-bg rounded-2xl px-4 py-3 border border-border-default">
               <TextInput
                 value={inputText}
                 onChangeText={setInputText}
                 placeholder="Digite sua pergunta..."
-                placeholderTextColor="#9ca3af"
-                className="text-white text-base max-h-20"
+                placeholderTextColor={COLORS.textMuted}
+                className="text-text-primary text-base max-h-20"
                 multiline
                 textAlignVertical="top"
                 editable={!isLoading}
+                selectionColor={COLORS.accent}
               />
             </View>
             <TouchableOpacity
               onPress={handleSendMessage}
               disabled={!inputText.trim() || isLoading}
-              className={`bg-[#01C38D] w-12 h-12 rounded-xl items-center justify-center ${
+              className={`bg-accent w-12 h-12 rounded-xl items-center justify-center ${
                 !inputText.trim() || isLoading ? "opacity-50" : ""
               }`}
             >
-              <Send size={20}  />
+              <Send size={20} color="#232323" />
             </TouchableOpacity>
           </View>
         </View>

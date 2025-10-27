@@ -254,7 +254,7 @@ export default function Profile() {
   if (!user) {
     return (
       <SafeAreaView
-        className="flex-1 bg-[#191E29]"
+        className="flex-1 bg-background"
         edges={["top", "bottom", "left", "right"]}
       >
         <View className="flex-1 items-center justify-center">
@@ -267,7 +267,7 @@ export default function Profile() {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-[#191E29]"
+      className="flex-1 bg-background"
       edges={["top", "bottom", "left", "right"]}
     >
       <ScrollView className="flex-1" refreshControl={refreshControl}>
@@ -285,12 +285,12 @@ export default function Profile() {
             <View className="p-6">
               <View className="items-center mb-4">
                 <View className="relative mb-4">
-                  <View className="w-20 h-20 bg-[#01C38D] rounded-full items-center justify-center">
+                  <View className="w-20 h-20 bg-accent rounded-full items-center justify-center">
                     <Text className="text-[#191E29] font-bold text-lg">
                       {getInitials(profileData.name)}
                     </Text>
                   </View>
-                  <Pressable className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#31344d] rounded-full items-center justify-center">
+                  <Pressable className="absolute -bottom-1 -right-1 w-8 h-8 bg-card-bg rounded-full items-center justify-center">
                     <Camera size={14} color="white" />
                   </Pressable>
                 </View>
@@ -305,7 +305,7 @@ export default function Profile() {
               <Pressable
                 onPress={isEditing ? handleSave : () => setIsEditing(true)}
                 disabled={isLoading}
-                className="bg-[#31344d] border border-[#4B5563] px-4 py-2 rounded-lg flex-row items-center justify-center gap-2"
+                className="bg-card-bg border border-border-default px-4 py-2 rounded-lg flex-row items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <ActivityIndicator size="small"  />
@@ -321,7 +321,7 @@ export default function Profile() {
 
           {/* Premium Subscription Card */}
           {user?.subscriptionTier !== "premium" && (
-            <Card className="mb-6 border-2 border-[#01C38D] bg-gradient-to-r from-[#01C38D]/10 to-[#01C38D]/5">
+            <Card className="mb-6 border-2 border-accent bg-gradient-to-r from-[#01C38D]/10 to-[#01C38D]/5">
               <View className="p-6">
                 <View className="flex-row items-center gap-3 mb-4">
                   <Crown size={24} color="white" />
@@ -350,7 +350,7 @@ export default function Profile() {
                 </View>
                 <Pressable
                   onPress={handleUpgradeToPremium}
-                  className="bg-[#01C38D] py-4 rounded-xl flex-row items-center justify-center gap-2"
+                  className="bg-accent py-4 rounded-xl flex-row items-center justify-center gap-2"
                 >
                   <Crown size={20} color="white" />
                   <Text className="text-[#191E29] font-bold text-sm">
@@ -399,7 +399,7 @@ export default function Profile() {
                     value={profileData.name}
                     onChangeText={(text) => handleUpdateProfile("name", text)}
                     editable={isEditing}
-                    className={`bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4 py-3 ${
+                    className={`bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 ${
                       !isEditing ? "opacity-50" : ""
                     }`}
                     placeholder="Digite seu nome completo"
@@ -412,7 +412,7 @@ export default function Profile() {
                     value={profileData.email}
                     onChangeText={(text) => handleUpdateProfile("email", text)}
                     editable={isEditing}
-                    className={`bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4 py-3 ${
+                    className={`bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 ${
                       !isEditing ? "opacity-50" : ""
                     }`}
                     placeholder="Digite seu email"
@@ -507,7 +507,7 @@ export default function Profile() {
               <View className="gap-3">
                 <Pressable
                   onPress={handleExportData}
-                  className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
+                  className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <Download size={20} color="white" />
                   <Text className="text-gray-300 ml-3">Exportar Dados</Text>
@@ -515,7 +515,7 @@ export default function Profile() {
                 <Pressable
                   onPress={handleChangePassword}
                   disabled={isLoading}
-                  className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
+                  className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <Shield size={20} color="white" />
                   <Text className="text-gray-300 ml-3">Alterar Senha</Text>
@@ -523,7 +523,7 @@ export default function Profile() {
                 <Pressable
                   onPress={handleLogout}
                   disabled={isLoading}
-                  className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
+                  className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <LogOut size={20} color="white" />
                   <Text className="text-gray-300 ml-3">Sair da Conta</Text>
@@ -531,7 +531,7 @@ export default function Profile() {
                 <Pressable
                   onPress={handleDeleteAccount}
                   disabled={isLoading}
-                  className="w-full bg-[#31344d] border border-[#4B5563] rounded-lg px-4 py-3 flex-row items-center"
+                  className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <Trash2 size={20} color="white" />
                   <Text className="text-red-400 ml-3">Excluir Conta</Text>

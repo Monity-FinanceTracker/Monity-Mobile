@@ -6,6 +6,8 @@ import {
   Pressable,
   TextInput,
   Alert,
+  Modal,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../components/molecules/Card";
@@ -28,6 +30,7 @@ import {
   Palette,
   BarChart3,
   PieChart,
+  X,
 } from "lucide-react-native";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 
@@ -323,7 +326,7 @@ export default function Categories() {
 
   const renderProgressBar = (percentage: number, color: string) => {
     return (
-      <View className="w-full h-2 bg-[#31344d] rounded-full overflow-hidden">
+      <View className="w-full h-2 bg-card-bg rounded-full overflow-hidden">
         <View
           className={`h-full ${color}`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
@@ -337,62 +340,64 @@ export default function Categories() {
     return (
       <Card key={category.id} className="mb-3">
         <View className="p-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-3 flex-1">
-              <View
-                className={`w-12 h-12 rounded-lg items-center justify-center ${getBackgroundColorClass(category.color)}`}
-              >
-                <Icon size={20} color="white" />
-              </View>
-              <View className="flex-1">
-                <View className="flex-row items-center gap-2 mb-1">
-                  <Text className="font-medium text-white text-sm">
-                    {category.name}
-                  </Text>
-                  <View
-                    className={`px-2 py-1 rounded-md ${
+          <View className="flex-row items-center gap-3">
+            <View
+              className={`w-12 h-12 rounded-lg items-center justify-center flex-shrink-0 ${getBackgroundColorClass(category.color)}`}
+            >
+              <Icon size={20} color="white" />
+            </View>
+            <View className="flex-1 min-w-0">
+              <View className="flex-row items-center gap-2 mb-1 flex-wrap">
+                <Text className="font-medium text-white text-sm">
+                  {category.name}
+                </Text>
+                <View
+                  className={`px-2 py-1 rounded-md ${
+                    category.type === "income"
+                      ? "bg-green-500/20"
+                      : "bg-gray-500/20"
+                  }`}
+                >
+                  <Text
+                    className={`text-xs ${
                       category.type === "income"
-                        ? "bg-green-500/20"
-                        : "bg-gray-500/20"
+                        ? "text-green-400"
+                        : "text-gray-400"
                     }`}
                   >
-                    <Text
-                      className={`text-xs ${
-                        category.type === "income"
-                          ? "text-green-400"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      {category.type === "income" ? "Receita" : "Despesa"}
-                    </Text>
-                  </View>
+                    {category.type === "income" ? "Receita" : "Despesa"}
+                  </Text>
                 </View>
-                <Text className="text-xs text-gray-400">
-                  {category.transactionCount || 0} transações •{" "}
-                  {(category.percentage || 0).toFixed(1)}% do total
-                </Text>
               </View>
-            </View>
-            <View className="flex-row items-center gap-1">
-              <Text
-                className={`text-base font-semibold mr-2 ${
-                  category.type === "income" ? "text-green-400" : "text-red-400"
-                }`}
-              >
-                {formatCurrency(category.totalSpent || 0)}
+              <Text className="text-xs text-gray-400 mb-2">
+                {category.transactionCount || 0} transações •{" "}
+                {(category.percentage || 0).toFixed(1)}% do total
               </Text>
-              <Pressable
-                onPress={() => handleEditCategory(category)}
-                className="bg-[#31344d] rounded-lg p-1.5 h-7 w-7 items-center justify-center"
-              >
-                <Edit size={12} color="white" />
-              </Pressable>
-              <Pressable
-                onPress={() => handleDeleteCategory(parseInt(category.id))}
-                className="bg-[#31344d] rounded-lg p-1.5 h-7 w-7 items-center justify-center"
-              >
-                <Trash2 size={12} color="white" />
-              </Pressable>
+              <View className="flex-row items-center justify-between">
+                <Text
+                  className={`text-sm font-semibold ${
+                    category.type === "income" ? "text-green-400" : "text-red-400"
+                  }`}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {formatCurrency(category.totalSpent || 0)}
+                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Pressable
+                    onPress={() => handleEditCategory(category)}
+                    className="bg-card-bg rounded-lg p-2 items-center justify-center"
+                  >
+                    <Edit size={14} color="white" />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleDeleteCategory(parseInt(category.id))}
+                    className="bg-card-bg rounded-lg p-2 items-center justify-center"
+                  >
+                    <Trash2 size={14} color="white" />
+                  </Pressable>
+                </View>
+              </View>
             </View>
           </View>
         </View>
@@ -451,7 +456,7 @@ export default function Categories() {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-[#191E29]"
+      className="flex-1 bg-background"
       edges={["top", "left", "right"]}
     >
       <ScrollView 
@@ -466,7 +471,7 @@ export default function Categories() {
             <Text className="text-white text-lg font-bold">Categorias</Text>
             <Pressable
               onPress={() => setShowCreateForm(true)}
-              className="bg-[#01C38D] px-4 py-2 rounded-lg flex-row items-center gap-2"
+              className="bg-accent px-4 py-2 rounded-lg flex-row items-center gap-2"
             >
               <Plus size={16} color="white" />
               <Text className="text-[#191E29] font-medium">Nova</Text>
@@ -478,13 +483,13 @@ export default function Categories() {
             <View className="flex-1">
               <Card>
                 <View className="p-4">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center">
+                  <View className="flex-row items-center gap-2">
+                    <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center flex-shrink-0">
                       <TrendingUp size={20} color="white" />
                     </View>
-                    <View>
+                    <View className="flex-1 min-w-0">
                       <Text className="text-xs text-gray-400">Receitas</Text>
-                      <Text className="text-sm font-semibold text-green-400">
+                      <Text className="text-xs font-semibold text-green-400" numberOfLines={1} adjustsFontSizeToFit>
                         {formatCurrency(totalIncome)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -499,13 +504,13 @@ export default function Categories() {
             <View className="flex-1">
               <Card>
                 <View className="p-4">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-red-500/10 rounded-lg items-center justify-center">
+                  <View className="flex-row items-center gap-2">
+                    <View className="w-10 h-10 bg-red-500/10 rounded-lg items-center justify-center flex-shrink-0">
                       <TrendingDown size={20} color="white" />
                     </View>
-                    <View>
+                    <View className="flex-1 min-w-0">
                       <Text className="text-xs text-gray-400">Despesas</Text>
-                      <Text className="text-sm font-semibold text-red-400">
+                      <Text className="text-xs font-semibold text-red-400" numberOfLines={1} adjustsFontSizeToFit>
                         {formatCurrency(totalExpenses)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -549,8 +554,8 @@ export default function Categories() {
                 onPress={() => setFilterType("all")}
                 className={`px-4 py-2 rounded-lg ${
                   filterType === "all"
-                    ? "bg-[#01C38D]"
-                    : "bg-[#31344d] border border-[#4B5563]"
+                    ? "bg-accent"
+                    : "bg-card-bg border border-border-default"
                 }`}
               >
                 <Text
@@ -567,8 +572,8 @@ export default function Categories() {
                 onPress={() => setFilterType("income")}
                 className={`px-4 py-2 rounded-lg ${
                   filterType === "income"
-                    ? "bg-[#01C38D]"
-                    : "bg-[#31344d] border border-[#4B5563]"
+                    ? "bg-accent"
+                    : "bg-card-bg border border-border-default"
                 }`}
               >
                 <Text
@@ -585,8 +590,8 @@ export default function Categories() {
                 onPress={() => setFilterType("expense")}
                 className={`px-4 py-2 rounded-lg ${
                   filterType === "expense"
-                    ? "bg-[#01C38D]"
-                    : "bg-[#31344d] border border-[#4B5563]"
+                    ? "bg-accent"
+                    : "bg-card-bg border border-border-default"
                 }`}
               >
                 <Text
@@ -603,8 +608,8 @@ export default function Categories() {
                 onPress={() => setFilterType("savings")}
                 className={`px-4 py-2 rounded-lg ${
                   filterType === "savings"
-                    ? "bg-[#01C38D]"
-                    : "bg-[#31344d] border border-[#4B5563]"
+                    ? "bg-accent"
+                    : "bg-card-bg border border-border-default"
                 }`}
               >
                 <Text
@@ -622,7 +627,7 @@ export default function Categories() {
               <Pressable
                 onPress={() => setViewMode("list")}
                 className={`p-2 rounded-lg ${
-                  viewMode === "list" ? "bg-[#01C38D]" : "bg-[#31344d]"
+                  viewMode === "list" ? "bg-accent" : "bg-card-bg"
                 }`}
               >
                 <BarChart3
@@ -633,7 +638,7 @@ export default function Categories() {
               <Pressable
                 onPress={() => setViewMode("chart")}
                 className={`p-2 rounded-lg ${
-                  viewMode === "chart" ? "bg-[#01C38D]" : "bg-[#31344d]"
+                  viewMode === "chart" ? "bg-accent" : "bg-card-bg"
                 }`}
               >
                 <PieChart
@@ -657,7 +662,7 @@ export default function Categories() {
                 filteredCategories.map(renderCategory)
               ) : (
                 <View className="items-center py-12">
-                  <View className="w-16 h-16 bg-[#31344d] rounded-full items-center justify-center mb-4">
+                  <View className="w-16 h-16 bg-card-bg rounded-full items-center justify-center mb-4">
                     <Palette size={24} color="white" />
                   </View>
                   <Text className="text-base font-medium text-white mb-2">
@@ -668,7 +673,7 @@ export default function Categories() {
                   </Text>
                   <Pressable
                     onPress={() => setShowCreateForm(true)}
-                    className="bg-[#01C38D] px-6 py-3 rounded-lg flex-row items-center gap-2"
+                    className="bg-accent px-6 py-3 rounded-lg flex-row items-center gap-2"
                   >
                     <Plus size={16} color="white" />
                     <Text className="text-[#191E29] font-medium">
@@ -682,14 +687,45 @@ export default function Categories() {
 
           {/* Chart View */}
           {viewMode === "chart" && renderChartView()}
+        </View>
+      </ScrollView>
 
-          {/* Create/Edit Category Form */}
-          {(showCreateForm || editingCategory) && (
-            <Card className="mt-6">
-              <View className="p-4">
-                <Text className="text-white text-sm font-semibold mb-4">
-                  {editingCategory ? "Editar Categoria" : "Nova Categoria"}
-                </Text>
+      {/* Create/Edit Category Modal */}
+      <Modal
+        visible={showCreateForm || editingCategory !== null}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          setShowCreateForm(false);
+          setEditingCategory(null);
+        }}
+      >
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-primary-bg rounded-t-3xl max-h-[90%]">
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View className="p-6">
+                {/* Modal Header */}
+                <View className="flex-row items-center justify-between mb-6">
+                  <Text className="text-white text-xl font-bold">
+                    {editingCategory ? "Editar Categoria" : "Nova Categoria"}
+                  </Text>
+                  <Pressable
+                    onPress={() => {
+                      setShowCreateForm(false);
+                      setEditingCategory(null);
+                      setNewCategory({
+                        name: "",
+                        icon: "Coffee",
+                        color: "bg-blue-500",
+                        type: "expense",
+                      });
+                    }}
+                    className="w-8 h-8 bg-card-bg rounded-full items-center justify-center"
+                  >
+                    <X size={16} color="white" />
+                  </Pressable>
+                </View>
+
                 <View className="gap-4">
                   <View>
                     <Text className="text-gray-400 text-sm mb-2">
@@ -702,7 +738,7 @@ export default function Categories() {
                       }
                       placeholder="Ex: Educação, Pets, Viagem..."
                       placeholderTextColor="#9CA3AF"
-                      className="bg-[#23263a] border border-[#31344d] rounded-xl text-white px-4 py-3"
+                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
                     />
                   </View>
 
@@ -715,8 +751,8 @@ export default function Categories() {
                         }
                         className={`flex-1 h-12 rounded-lg items-center justify-center flex-row gap-2 ${
                           newCategory.type === "expense"
-                            ? "bg-[#01C38D]"
-                            : "bg-[#31344d] border border-[#4B5563]"
+                            ? "bg-accent"
+                            : "bg-card-bg border border-border-default"
                         }`}
                       >
                         <TrendingDown
@@ -739,8 +775,8 @@ export default function Categories() {
                         }
                         className={`flex-1 h-12 rounded-lg items-center justify-center flex-row gap-2 ${
                           newCategory.type === "income"
-                            ? "bg-[#01C38D]"
-                            : "bg-[#31344d] border border-[#4B5563]"
+                            ? "bg-accent"
+                            : "bg-card-bg border border-border-default"
                         }`}
                       >
                         <TrendingUp
@@ -777,8 +813,8 @@ export default function Categories() {
                             }
                             className={`h-12 w-12 rounded-lg items-center justify-center ${
                               isSelected
-                                ? "bg-[#01C38D]"
-                                : "bg-[#31344d] border border-[#4B5563]"
+                                ? "bg-accent"
+                                : "bg-card-bg border border-border-default"
                             }`}
                           >
                             <Icon
@@ -811,7 +847,7 @@ export default function Categories() {
                     </View>
                   </View>
 
-                  <View className="flex-row gap-3 pt-2">
+                  <View className="flex-row gap-3 pt-2 pb-4">
                     <Pressable
                       onPress={() => {
                         setShowCreateForm(false);
@@ -823,7 +859,7 @@ export default function Categories() {
                           type: "expense",
                         });
                       }}
-                      className="flex-1 h-12 rounded-lg items-center justify-center bg-[#31344d] border border-[#4B5563]"
+                      className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"
                     >
                       <Text className="text-gray-300 font-medium">
                         Cancelar
@@ -837,7 +873,7 @@ export default function Categories() {
                       }
                       disabled={!newCategory.name}
                       className={`flex-1 h-12 rounded-lg items-center justify-center ${
-                        !newCategory.name ? "bg-[#4B5563]" : "bg-[#01C38D]"
+                        !newCategory.name ? "bg-[#4B5563]" : "bg-accent"
                       }`}
                     >
                       <Text
@@ -853,10 +889,10 @@ export default function Categories() {
                   </View>
                 </View>
               </View>
-            </Card>
-          )}
+            </ScrollView>
+          </View>
         </View>
-      </ScrollView>
+      </Modal>
     </SafeAreaView>
   );
 }
