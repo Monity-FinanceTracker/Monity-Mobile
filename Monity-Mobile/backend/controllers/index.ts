@@ -5,6 +5,7 @@ import GroupController from "./groupController";
 import SavingsGoalController from "./savingsGoalController";
 import BalanceController from "./balanceController";
 import SubscriptionController from "./subscriptionController";
+import BillingController from "./billingController";
 import AdminController from "./adminController";
 import AiController from "./aiController";
 import InvitationController from "./invitationController";
@@ -20,6 +21,7 @@ const initializeControllers = (supabase: any) => {
     savingsGoalController: new SavingsGoalController(supabase),
     balanceController: new BalanceController(supabase),
     subscriptionController: new SubscriptionController(supabase),
+    billingController: new BillingController(supabase),
     adminController: new AdminController(supabase),
     aiController: new AiController(supabase),
     invitationController: new InvitationController(supabase),

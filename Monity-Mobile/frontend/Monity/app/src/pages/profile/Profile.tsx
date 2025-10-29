@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import Card from "../../components/molecules/Card";
 import { useAuth } from "../../context/AuthContext";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
+import { COLORS } from "../../constants/colors";
 import {
   ArrowLeft,
   User,
@@ -33,10 +34,10 @@ export default function Profile() {
   const navigation = useNavigation();
   const { user, updateProfile, logout, changePassword, deleteAccount } =
     useAuth();
+  const colors = COLORS;
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
   const [biometric, setBiometric] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "",
@@ -267,17 +268,17 @@ export default function Profile() {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-background"
+      style={{ flex: 1, backgroundColor: colors.background }}
       edges={["top", "bottom", "left", "right"]}
     >
-      <ScrollView className="flex-1" refreshControl={refreshControl}>
+      <ScrollView style={{ flex: 1 }} refreshControl={refreshControl}>
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
           <View className="flex-row items-center gap-4 mb-6">
             <Pressable onPress={() => navigation.goBack()} className="p-2">
-              <ArrowLeft size={20} color="white" />
+              <ArrowLeft size={20} color={colors.textPrimary} />
             </Pressable>
-            <Text className="text-white text-lg font-bold">Perfil</Text>
+            <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>Perfil</Text>
           </View>
 
           {/* Profile Card */}
@@ -291,16 +292,13 @@ export default function Profile() {
                     </Text>
                   </View>
                   <Pressable className="absolute -bottom-1 -right-1 w-8 h-8 bg-card-bg rounded-full items-center justify-center">
-                    <Camera size={14} color="white" />
+                    <Camera size={14} color={colors.textPrimary} />
                   </Pressable>
                 </View>
-                <Text className="text-white text-base font-bold text-center mb-1">
+                <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 }}>
                   {profileData.name || user?.name || "Usuário"}
                 </Text>
-                <Text className="text-gray-400 text-center mb-1">{profileData.email}</Text>
-                <Text className="text-xs text-gray-400 text-center">
-                  Membro desde {formatDate(user.createdAt)}
-                </Text>
+                <Text style={{ color: colors.textMuted, textAlign: 'center', marginBottom: 4 }}>{profileData.email}</Text>
               </View>
               <Pressable
                 onPress={isEditing ? handleSave : () => setIsEditing(true)}
@@ -310,9 +308,9 @@ export default function Profile() {
                 {isLoading ? (
                   <ActivityIndicator size="small"  />
                 ) : (
-                  <Edit3 size={16} color="white" />
+                  <Edit3 size={16} color={colors.textPrimary} />
                 )}
-                <Text className="text-gray-300 text-sm">
+                <Text style={{ color: colors.textGray, fontSize: 14 }}>
                   {isEditing ? "Salvar" : "Editar"}
                 </Text>
               </Pressable>
@@ -324,36 +322,36 @@ export default function Profile() {
             <Card className="mb-6 border-2 border-accent bg-gradient-to-r from-[#01C38D]/10 to-[#01C38D]/5">
               <View className="p-6">
                 <View className="flex-row items-center gap-3 mb-4">
-                  <Crown size={24} color="white" />
-                  <Text className="text-white text-lg font-bold">Upgrade para Premium</Text>
+                  <Crown size={24} color={colors.textPrimary} />
+                  <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>Upgrade para Premium</Text>
                 </View>
-                <Text className="text-gray-300 mb-4">
+                <Text style={{ color: colors.textGray, marginBottom: 16 }}>
                   Desbloqueie recursos exclusivos e tenha controle total das suas finanças
                 </Text>
                 <View className="gap-2 mb-4">
                   <View className="flex-row items-center gap-2">
-                    <Star size={16} color="white" />
-                    <Text className="text-gray-300 text-sm">IA para categorização automática</Text>
+                    <Star size={16} color={colors.textPrimary} />
+                    <Text style={{ color: colors.textGray, fontSize: 14 }}>IA para categorização automática</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <Star size={16} color="white" />
-                    <Text className="text-gray-300 text-sm">Projeções financeiras avançadas</Text>
+                    <Star size={16} color={colors.textPrimary} />
+                    <Text style={{ color: colors.textGray, fontSize: 14 }}>Projeções financeiras avançadas</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <Star size={16} color="white" />
-                    <Text className="text-gray-300 text-sm">Relatórios detalhados</Text>
+                    <Star size={16} color={colors.textPrimary} />
+                    <Text style={{ color: colors.textGray, fontSize: 14 }}>Relatórios detalhados</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <Star size={16} color="white" />
-                    <Text className="text-gray-300 text-sm">Backup automático na nuvem</Text>
+                    <Star size={16} color={colors.textPrimary} />
+                    <Text style={{ color: colors.textGray, fontSize: 14 }}>Backup automático na nuvem</Text>
                   </View>
                 </View>
                 <Pressable
                   onPress={handleUpgradeToPremium}
                   className="bg-accent py-4 rounded-xl flex-row items-center justify-center gap-2"
                 >
-                  <Crown size={20} color="white" />
-                  <Text className="text-[#191E29] font-bold text-sm">
+                  <Crown size={20} color="#191E29" />
+                  <Text style={{ color: '#191E29', fontWeight: 'bold', fontSize: 14 }}>
                     Assinar Premium - R$ 9,90/mês
                   </Text>
                 </Pressable>
@@ -366,14 +364,14 @@ export default function Profile() {
             <Card className="mb-6 bg-gradient-to-r from-[#FFD700]/20 to-[#FFD700]/10 border border-[#FFD700]/30">
               <View className="p-6">
                 <View className="flex-row items-center gap-3 mb-2">
-                  <Crown size={24} color="white" />
-                  <Text className="text-white text-lg font-bold">Premium Ativo</Text>
+                  <Crown size={24} color={colors.textPrimary} />
+                  <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>Premium Ativo</Text>
                 </View>
-                <Text className="text-gray-300 mb-2">
+                <Text style={{ color: colors.textGray, marginBottom: 8 }}>
                   Você tem acesso a todos os recursos premium!
                 </Text>
                 {user?.subscriptionExpiresAt && (
-                  <Text className="text-gray-400 text-sm">
+                  <Text style={{ color: colors.textMuted, fontSize: 14 }}>
                     Válido até: {new Date(user.subscriptionExpiresAt).toLocaleDateString("pt-BR")}
                   </Text>
                 )}
@@ -385,14 +383,14 @@ export default function Profile() {
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-4">
-                <User size={20} color="white" />
-                <Text className="text-white text-sm font-semibold">
+                <User size={20} color={colors.textPrimary} />
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600' }}>
                   Informações Pessoais
                 </Text>
               </View>
               <View className="gap-4">
                 <View>
-                  <Text className="text-gray-400 text-sm mb-2">
+                  <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
                     Nome Completo
                   </Text>
                   <TextInput
@@ -407,7 +405,7 @@ export default function Profile() {
                   />
                 </View>
                 <View>
-                  <Text className="text-gray-400 text-sm mb-2">Email</Text>
+                  <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>Email</Text>
                   <TextInput
                     value={profileData.email}
                     onChangeText={(text) => handleUpdateProfile("email", text)}
@@ -429,20 +427,20 @@ export default function Profile() {
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-4">
-                <Settings size={20} color="white" />
-                <Text className="text-white text-sm font-semibold">
+                <Settings size={20} color={colors.textPrimary} />
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600' }}>
                   Configurações
                 </Text>
               </View>
               <View className="gap-6">
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-3">
-                    <Bell size={20} color="white" />
+                    <Bell size={20} color={colors.textPrimary} />
                     <View>
-                      <Text className="font-medium text-white">
+                      <Text style={{ fontWeight: '500', color: colors.textPrimary }}>
                         Notificações
                       </Text>
-                      <Text className="text-sm text-gray-400">
+                      <Text style={{ fontSize: 14, color: colors.textMuted }}>
                         Receber alertas e lembretes
                       </Text>
                     </View>
@@ -450,19 +448,19 @@ export default function Profile() {
                   <Switch
                     value={notifications}
                     onValueChange={setNotifications}
-                    trackColor={{ false: "#31344d", true: "#01C38D" }}
-                    thumbColor={notifications ? "#191E29" : "#9CA3AF"}
+                    trackColor={{ false: colors.secondaryBg, true: colors.accent }}
+                    thumbColor={notifications ? "#191E29" : colors.textMuted}
                   />
                 </View>
 
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-3">
-                    <Shield size={20} color="white" />
+                    <Shield size={20} color={colors.textPrimary} />
                     <View>
-                      <Text className="font-medium text-white">
+                      <Text style={{ fontWeight: '500', color: colors.textPrimary }}>
                         Autenticação Biométrica
                       </Text>
-                      <Text className="text-sm text-gray-400">
+                      <Text style={{ fontSize: 14, color: colors.textMuted }}>
                         Usar digital ou Face ID
                       </Text>
                     </View>
@@ -470,30 +468,11 @@ export default function Profile() {
                   <Switch
                     value={biometric}
                     onValueChange={setBiometric}
-                    trackColor={{ false: "#31344d", true: "#01C38D" }}
-                    thumbColor={biometric ? "#191E29" : "#9CA3AF"}
+                    trackColor={{ false: colors.secondaryBg, true: colors.accent }}
+                    thumbColor={biometric ? "#191E29" : colors.textMuted}
                   />
                 </View>
 
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-5 h-5 bg-white rounded-full" />
-                    <View>
-                      <Text className="font-medium text-white">
-                        Tema Escuro
-                      </Text>
-                      <Text className="text-sm text-gray-400">
-                        Aparência do aplicativo
-                      </Text>
-                    </View>
-                  </View>
-                  <Switch
-                    value={darkMode}
-                    onValueChange={setDarkMode}
-                    trackColor={{ false: "#31344d", true: "#01C38D" }}
-                    thumbColor={darkMode ? "#191E29" : "#9CA3AF"}
-                  />
-                </View>
               </View>
             </View>
           </Card>
@@ -501,7 +480,7 @@ export default function Profile() {
           {/* Account Actions */}
           <Card className="mb-6">
             <View className="p-4">
-              <Text className="text-white text-sm font-semibold mb-4">
+              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
                 Ações da Conta
               </Text>
               <View className="gap-3">
@@ -509,32 +488,32 @@ export default function Profile() {
                   onPress={handleExportData}
                   className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
-                  <Download size={20} color="white" />
-                  <Text className="text-gray-300 ml-3">Exportar Dados</Text>
+                  <Download size={20} color={colors.textPrimary} />
+                  <Text style={{ color: colors.textGray, marginLeft: 12 }}>Exportar Dados</Text>
                 </Pressable>
                 <Pressable
                   onPress={handleChangePassword}
                   disabled={isLoading}
                   className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
-                  <Shield size={20} color="white" />
-                  <Text className="text-gray-300 ml-3">Alterar Senha</Text>
+                  <Shield size={20} color={colors.textPrimary} />
+                  <Text style={{ color: colors.textGray, marginLeft: 12 }}>Alterar Senha</Text>
                 </Pressable>
                 <Pressable
                   onPress={handleLogout}
                   disabled={isLoading}
                   className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
-                  <LogOut size={20} color="white" />
-                  <Text className="text-gray-300 ml-3">Sair da Conta</Text>
+                  <LogOut size={20} color={colors.textPrimary} />
+                  <Text style={{ color: colors.textGray, marginLeft: 12 }}>Sair da Conta</Text>
                 </Pressable>
                 <Pressable
                   onPress={handleDeleteAccount}
                   disabled={isLoading}
                   className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
-                  <Trash2 size={20} color="white" />
-                  <Text className="text-red-400 ml-3">Excluir Conta</Text>
+                  <Trash2 size={20} color="#EF4444" />
+                  <Text style={{ color: '#EF4444', marginLeft: 12 }}>Excluir Conta</Text>
                 </Pressable>
               </View>
             </View>
@@ -544,8 +523,8 @@ export default function Profile() {
           <Card className="mb-6">
             <View className="p-4">
               <View className="items-center">
-                <Text className="text-sm text-gray-400">Monity v1.0.0</Text>
-                <Text className="text-sm text-gray-400">
+                <Text style={{ fontSize: 14, color: colors.textMuted }}>Monity v1.0.0</Text>
+                <Text style={{ fontSize: 14, color: colors.textMuted }}>
                   © 2025 Monity. Todos os direitos reservados.
                 </Text>
               </View>

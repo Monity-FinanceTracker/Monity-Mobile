@@ -72,8 +72,8 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.primaryBg }}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryBg} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -82,10 +82,10 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
           <View className="w-full max-w-sm mx-auto">
             {/* Logo Section */}
             <View className="mb-12 items-center">
-              <Text className="text-3xl font-bold text-accent mb-2">
+              <Text className="text-5xl font-bold text-accent mb-2">
                 Monity
               </Text>
-              <Text className="text-text-gray text-base">Welcome back</Text>
+              <Text className="text-text-gray text-lg">Welcome back!</Text>
             </View>
 
             {/* Login Form */}
@@ -101,7 +101,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
 
               {/* Email Input */}
               <View className="space-y-1">
-                <Text className="text-text-gray font-medium text-xs">
+                <Text className="text-text-gray font-medium text-xs mb-1">
                   Email address
                 </Text>
                 <View className="relative">
@@ -123,7 +123,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
                     autoComplete="email"
                     selectionColor={COLORS.accent}
                     style={{
-                      paddingLeft: 48,
+                      paddingLeft: 15,
                       fontSize: 16,
                       color: COLORS.textPrimary,
                     }}
@@ -133,7 +133,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
 
               {/* Password Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-text-gray font-medium text-xs">
+                <Text className="text-text-gray font-medium text-xs mb-1">
                   Password
                 </Text>
                 <View className="relative">
@@ -154,8 +154,7 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
                     autoComplete="current-password"
                     selectionColor={COLORS.accent}
                     style={{
-                      paddingLeft: 48,
-                      paddingRight: 48,
+                      paddingLeft: 15,
                       fontSize: 16,
                       color: COLORS.textPrimary,
                     }}

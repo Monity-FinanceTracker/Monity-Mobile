@@ -37,7 +37,7 @@ function MainTabs() {
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          backgroundColor: COLORS.primaryBg,
+          backgroundColor: COLORS.background,
           borderTopColor: COLORS.border,
           borderTopWidth: 1,
           // Add extra bottom padding for Android gesture nav / soft keys
@@ -86,7 +86,7 @@ function MainTabs() {
         name="AddExpense"
         component={AddExpense}
         options={{
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused, color: tabColor }) => (
             <View
               className={`w-8 h-8 rounded-full items-center justify-center ${
                 focused ? "bg-accent" : "bg-border-default"

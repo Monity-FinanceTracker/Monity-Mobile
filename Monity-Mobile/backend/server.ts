@@ -54,6 +54,17 @@ const createServer = (supabaseClient?: SupabaseClient): Express => {
   // O manipulador do webhook deve vir ANTES do express.json()
   const controllers = initializeControllers(supabaseClient || supabase);
 
+  // Configurar webhook para receber body em formato raw
+  // IMPORTANTE: Isso DEVE vir antes do express.json()
+  app.post(
+    "/api/v1/webhook/stripe",
+    express.raw({ type: "application/json" }),
+    controllers.billingController?.handleWebhook || ((req, res) => {
+      logger.warn("Billing controller not available");
+      res.status(503).json({ error: "Webhook handler not available" });
+    })
+  );
+
   app.use(cors(corsOptions));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));

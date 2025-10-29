@@ -1,5 +1,6 @@
 import React from "react";
-import { View, ViewProps } from "react-native";
+import { View, ViewProps, StyleSheet } from "react-native";
+import { COLORS } from "../../constants/colors";
 
 type CardProps = ViewProps & {
   className?: string;
@@ -12,18 +13,52 @@ export default function Card({
   variant = "default",
   ...rest
 }: CardProps) {
+  const colors = COLORS;
+
   // Define variant-specific styles using design system colors
-  const variantStyles = {
-    default: "bg-card-bg border border-border-default",
-    elevated: "bg-card-bg border border-border-default shadow-lg",
-    outline: "bg-transparent border-2 border-border-default",
-    glass: "bg-card-bg/80 border border-border-default/50",
+  const getVariantStyle = () => {
+    const baseStyle = {
+      borderRadius: 16,
+      padding: 16,
+    };
+
+    switch (variant) {
+      case "elevated":
+        return {
+          ...baseStyle,
+          backgroundColor: colors.cardBg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          // Add shadow for elevated
+        };
+      case "outline":
+        return {
+          ...baseStyle,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderColor: colors.border,
+        };
+      case "glass":
+        return {
+          ...baseStyle,
+          backgroundColor: colors.cardBg + 'CC', // 80% opacity
+          borderWidth: 1,
+          borderColor: colors.border + '80', // 50% opacity
+        };
+      default:
+        return {
+          ...baseStyle,
+          backgroundColor: colors.cardBg,
+          borderWidth: 1,
+          borderColor: colors.border,
+        };
+    }
   };
 
   return (
     <View
       {...rest}
-      className={`rounded-2xl p-4 ${variantStyles[variant]} ${className || ""}`}
+      style={[getVariantStyle(), rest.style]}
     >
       {children}
     </View>

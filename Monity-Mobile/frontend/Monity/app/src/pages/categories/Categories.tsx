@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../components/molecules/Card";
 import Button from "../../components/atoms/Button";
+import { COLORS } from "../../constants/colors";
 import { apiService, Category } from "../../services/apiService";
 import {
   Plus,
@@ -79,6 +80,7 @@ const availableColors = [
 ];
 
 export default function Categories() {
+  const colors = COLORS;
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -339,7 +341,7 @@ export default function Categories() {
     const Icon = getCategoryIcon(category.icon);
     return (
       <Card key={category.id} className="mb-3">
-        <View className="p-4">
+        <View>
           <View className="flex-row items-center gap-3">
             <View
               className={`w-12 h-12 rounded-lg items-center justify-center flex-shrink-0 ${getBackgroundColorClass(category.color)}`}
@@ -408,7 +410,7 @@ export default function Categories() {
   const renderChartView = () => {
     return (
       <Card className="mb-6">
-        <View className="p-4">
+        <View>
           <Text className="text-white text-base font-semibold mb-4">
             Análise por Categoria
           </Text>
@@ -456,7 +458,7 @@ export default function Categories() {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-background"
+      style={{ flex: 1, backgroundColor: colors.background }}
       edges={["top", "left", "right"]}
     >
       <ScrollView 
@@ -473,7 +475,7 @@ export default function Categories() {
               onPress={() => setShowCreateForm(true)}
               className="bg-accent px-4 py-2 rounded-lg flex-row items-center gap-2"
             >
-              <Plus size={16} color="white" />
+              <Plus size={16} color="black" />
               <Text className="text-[#191E29] font-medium">Nova</Text>
             </Pressable>
           </View>

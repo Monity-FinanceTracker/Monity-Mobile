@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MessageCircle, Send, Bot, User, Loader } from "lucide-react-native";
+import { COLORS } from "../../constants/colors";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 import { geminiService } from "../../services/geminiService";
-import { COLORS } from "../../constants/colors";
 
 interface Message {
   id: string;
@@ -23,6 +23,7 @@ interface Message {
 }
 
 export default function Chat() {
+  const colors = COLORS;
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -158,16 +159,16 @@ export default function Chat() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "left", "right"]}>
       {/* Header */}
-      <View className="bg-primary-bg px-6 py-4 border-b border-border-default">
+      <View style={{ backgroundColor: colors.background, paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
         <View className="flex-row items-center">
           <MessageCircle size={24} color={COLORS.accent} className="mr-3" />
           <View>
-            <Text className="text-text-primary text-base font-semibold">
+            <Text className="text-text-primary text-base font-semibold ml-2">
               Chat com IA
             </Text>
-            <Text className="text-text-muted text-xs">
+            <Text className="text-text-muted text-xs ml-2">
               Seu assistente financeiro inteligente
             </Text>
           </View>
@@ -194,7 +195,7 @@ export default function Chat() {
               <View className="bg-card-bg rounded-2xl rounded-bl-md p-3 border border-border-default">
                 <View className="flex-row items-center">
                   <Bot size={16} color={COLORS.accent} className="mr-2" />
-                  <Text className="text-text-primary text-xs font-medium mr-2">
+                  <Text className="text-text-primary text-xs font-medium mr-2 ml-2">
                     IA Assistente está digitando
                   </Text>
                   <Loader size={14} color={COLORS.accent} className="animate-spin" />
@@ -206,7 +207,7 @@ export default function Chat() {
           {/* Suggested Questions */}
           {messages.length === 1 && (
             <View className="mt-4">
-              <Text className="text-text-muted text-sm font-medium mb-3">
+              <Text className="text-text-muted text-sm font-medium mb-3 ml-2 ">
                 Perguntas sugeridas:
               </Text>
               <View className="space-y-2">
@@ -214,7 +215,7 @@ export default function Chat() {
                   <TouchableOpacity
                     key={index}
                     onPress={() => handleSuggestedQuestion(question)}
-                    className="bg-card-bg rounded-xl p-3 border border-border-default"
+                    className="bg-card-bg rounded-xl p-3 border border-border-default mt-2"
                   >
                     <Text className="text-text-primary text-sm">{question}</Text>
                   </TouchableOpacity>
@@ -225,9 +226,9 @@ export default function Chat() {
         </ScrollView>
 
         {/* Input */}
-        <View className="bg-primary-bg px-6 py-4 border-t border-border-default" style={{ paddingBottom: Platform.OS === "android" ? 100 : 90 }}>
-          <View className="flex-row items-end space-x-3">
-            <View className="flex-1 bg-card-bg rounded-2xl px-4 py-3 border border-border-default">
+        <View className="bg-background px-6 py-4 border-t border-border-default" style={{ paddingBottom: Platform.OS === "android" ? 100 : 90 }}>
+          <View className="flex-row items-center space-x-3">
+            <View className="flex-1 bg-card-bg rounded-2xl px-4 border border-border-default" style={{ paddingVertical: 8, minHeight: 48, justifyContent: 'center' }}>
               <TextInput
                 value={inputText}
                 onChangeText={setInputText}
@@ -235,15 +236,16 @@ export default function Chat() {
                 placeholderTextColor={COLORS.textMuted}
                 className="text-text-primary text-base max-h-20"
                 multiline
-                textAlignVertical="top"
+                textAlignVertical="center"
                 editable={!isLoading}
                 selectionColor={COLORS.accent}
+                style={{ paddingVertical: 0 }}
               />
             </View>
             <TouchableOpacity
               onPress={handleSendMessage}
               disabled={!inputText.trim() || isLoading}
-              className={`bg-accent w-12 h-12 rounded-xl items-center justify-center ${
+              className={`bg-accent w-12 h-12 rounded-xl items-center justify-center ml-2 ${
                 !inputText.trim() || isLoading ? "opacity-50" : ""
               }`}
             >

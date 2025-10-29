@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import Card from "../../components/molecules/Card";
 import Button from "../../components/atoms/Button";
 import { useAuth } from "../../context/AuthContext";
+import { COLORS } from "../../constants/colors";
 import { apiService, Transaction, Balance } from "../../services/apiService";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 import {
@@ -31,6 +32,7 @@ import {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const colors = COLORS;
   const navigation = useNavigation();
   const [balance, setBalance] = useState<Balance | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>(
@@ -156,49 +158,51 @@ export default function Dashboard() {
 
     const Icon = getTransactionIcon(categoryName as string);
     return (
-      <Card key={transaction.id} className="mb-3">
-        <View className="flex-row items-center justify-between p-4">
-          <View className="flex-row items-center gap-3">
-            <View
-              className={`w-10 h-10 rounded-lg items-center justify-center ${
-                transactionType === "income"
-                  ? "bg-green-500/10"
-                  : "bg-red-500/10"
-              }`}
-            >
-              <Icon
-                size={20}
-                color="white"
-              />
+      <View key={transaction.id} style={{ marginBottom: 12 }}>
+        <Card>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              <View
+                className={`w-8 h-8 rounded-lg items-center justify-center ${
+                  transactionType === "income"
+                    ? "bg-green-500/10"
+                    : "bg-red-500/10"
+                }`}
+              >
+                <Icon
+                  size={16}
+                  color="white"
+                />
+              </View>
+              <View>
+                <Text className="font-medium text-white text-xs">{title}</Text>
+                <Text className="text-[10px] text-gray-400">
+                  {categoryName as string}
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text className="font-medium text-white text-sm">{title}</Text>
-              <Text className="text-xs text-gray-400">
-                {categoryName as string}
+            <View className="items-end">
+              <Text
+                className={`font-semibold text-xs ${
+                  transactionType === "income" ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {transactionType === "income" ? "+" : "-"}
+                {formatCurrency(Math.abs(amount))}
+              </Text>
+              <Text className="text-[10px] text-gray-400">
+                {formatTransactionDate(transaction.date)}
               </Text>
             </View>
           </View>
-          <View className="items-end">
-            <Text
-              className={`font-semibold text-sm ${
-                transactionType === "income" ? "text-green-400" : "text-red-400"
-              }`}
-            >
-              {transactionType === "income" ? "+" : "-"}
-              {formatCurrency(Math.abs(amount))}
-            </Text>
-            <Text className="text-xs text-gray-400">
-              {formatTransactionDate(transaction.date)}
-            </Text>
-          </View>
-        </View>
-      </Card>
+        </Card>
+      </View>
     );
   };
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: '#0A0A0A' }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       edges={["top", "left", "right"]}
     >
       <ScrollView 
@@ -212,7 +216,7 @@ export default function Dashboard() {
           <View className="flex-row items-center justify-between mb-6">
             <View>
               <Text className="text-white text-lg font-bold">
-                Olá, {user?.email?.split("@")[0] || "Usuário"}!
+                Olá, {user?.name || "Usuário"}!
               </Text>
               <Text className="text-gray-400 text-xs">
                 Bem-vindo de volta ao Monity
@@ -223,7 +227,7 @@ export default function Dashboard() {
               className="w-10 h-10 bg-accent rounded-full items-center justify-center"
             >
               <Text className="text-[#191E29] font-semibold text-sm">
-                {getInitials(user?.email || "")}
+                {getInitials(user?.name || "")}
               </Text>
             </Pressable>
           </View>
@@ -273,7 +277,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Quick Stats */}
-          <View className="gap-4 mb-6">
+          <View className="gap-4 mb-6 mt-6">
             <View className="flex-1">
               <Card>
                 <View className="p-4">

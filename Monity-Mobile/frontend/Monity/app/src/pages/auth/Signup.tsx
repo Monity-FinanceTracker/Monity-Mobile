@@ -119,10 +119,10 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
           <View className="w-full max-w-sm mx-auto">
             {/* Logo Section */}
             <View className="mb-8 items-center">
-              <Text className="text-3xl font-bold text-[#01C38D] mb-2">
+              <Text className="text-5xl font-bold text-accent mb-2">
                 Monity
               </Text>
-              <Text className="text-gray-300 text-base">Create your account</Text>
+              <Text className="text-text-gray text-lg">Create your account</Text>
             </View>
 
             {/* Signup Form */}
@@ -138,7 +138,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
               {/* Name Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-xs">
+                <Text className="text-text-gray font-medium text-xs mb-1">
                   Full name
                 </Text>
                 <View className="relative">
@@ -159,7 +159,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     placeholderTextColor="#9CA3AF"
                     autoCapitalize="words"
                     style={{
-                      paddingLeft: 48,
+                      paddingLeft: 15,
                       fontSize: 16,
                       color: "#ffffff",
                     }}
@@ -174,7 +174,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
               {/* Email Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-xs">
+                <Text className="text-text-gray font-medium text-xs mb-1">
                   Email address
                 </Text>
                 <View className="relative">
@@ -197,7 +197,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     autoCapitalize="none"
                     autoComplete="email"
                     style={{
-                      paddingLeft: 48,
+                      paddingLeft: 15,
                       fontSize: 16,
                       color: "#ffffff",
                     }}
@@ -212,7 +212,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
               {/* Password Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-xs">
+                <Text className="text-text-gray font-medium text-xs mb-1">
                   Password
                 </Text>
                 <View className="relative">
@@ -234,8 +234,8 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     secureTextEntry={!showPassword}
                     autoComplete="new-password"
                     style={{
-                      paddingLeft: 48,
-                      paddingRight: 48,
+                      paddingLeft: 15,
+                      paddingRight: 15,
                       fontSize: 16,
                       color: "#ffffff",
                     }}
@@ -245,9 +245,9 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     className="absolute inset-y-0 right-0 pr-4 justify-center"
                   >
                     {showPassword ? (
-                      <EyeOff size={20}  />
+                      <EyeOff size={20} color={COLORS.textMuted}  />
                     ) : (
-                      <Eye size={20}  />
+                      <Eye size={20} color={COLORS.textMuted}  />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -256,17 +256,18 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                 {password && (
                   <View className="mt-2">
                     <View className="flex-row items-center justify-between mb-1">
-                      <Text className="text-xs text-gray-400">
+                      <Text className="text-xs text-text-gray">
                         Password strength
                       </Text>
                       <Text
                         className="text-xs font-medium"
                         style={{ color: passwordStrength.color }}
                       >
+
                         {passwordStrength.strength}
                       </Text>
                     </View>
-                    <View className="bg-gray-700 rounded-full h-1">
+                    <View className="bg-card-bg rounded-full h-1">
                       <View
                         className="h-full rounded-full transition-all duration-300"
                         style={{
@@ -290,7 +291,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
               {/* Confirm Password Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-xs">
+                <Text className="text-gray-300 font-medium text-xs mb-1">
                   Confirm password
                 </Text>
                 <View className="relative">
@@ -314,8 +315,8 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     secureTextEntry={!showConfirmPassword}
                     autoComplete="new-password"
                     style={{
-                      paddingLeft: 48,
-                      paddingRight: 48,
+                      paddingLeft: 15,
+                      paddingRight: 15,
                       fontSize: 16,
                       color: "#ffffff",
                     }}
@@ -325,9 +326,9 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                     className="absolute inset-y-0 right-0 pr-4 justify-center"
                   >
                     {showConfirmPassword ? (
-                      <EyeOff size={20}  />
+                      <EyeOff size={20} color={COLORS.textMuted}  />
                     ) : (
-                      <Eye size={20}  />
+                      <Eye size={20} color={COLORS.textMuted}  />
                     )}
                   </TouchableOpacity>
                 </View>

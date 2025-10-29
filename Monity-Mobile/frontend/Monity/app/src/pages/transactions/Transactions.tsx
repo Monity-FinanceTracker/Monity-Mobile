@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../components/molecules/Card";
 import Button from "../../components/atoms/Button";
+import { COLORS } from "../../constants/colors";
 import {
   Search,
   Filter,
@@ -59,6 +60,7 @@ const periodOptions = [
 ];
 
 export default function Transactions() {
+  const colors = COLORS;
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [selectedPeriod, setSelectedPeriod] = useState("thisMonth");
@@ -234,111 +236,63 @@ export default function Transactions() {
 
     const Icon = getTransactionIcon(categoryName as string);
     return (
-      <Pressable onPress={() => handleTransactionPress(item)}>
-        <Card className="mb-3">
-          <View className="flex-row items-center justify-between p-4">
-            <View className="flex-row items-center gap-3 flex-1">
-              <View
-                className={`w-12 h-12 rounded-lg items-center justify-center ${
-                  transactionType === "income"
-                    ? "bg-green-500/10"
-                    : "bg-red-500/10"
-                }`}
-              >
-                <Icon
-                  size={20}
-                  color="white"
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="font-medium text-white text-sm">{title}</Text>
-                <View className="flex-row items-center gap-2 mt-1">
-                  <View className="bg-card-bg px-2 py-1 rounded-md">
-                    <Text className="text-xs text-gray-300">
-                      {categoryName as string}
-                    </Text>
-                  </View>
-                  <Text className="text-xs text-gray-400">
-                    {item.paymentMethod || "N/A"}
+      <View style={{ marginBottom: 12 }}>
+        <Pressable onPress={() => handleTransactionPress(item)}>
+          <Card>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2">
+                <View
+                  className={`w-8 h-8 rounded-lg items-center justify-center ${
+                    transactionType === "income"
+                      ? "bg-green-500/10"
+                      : "bg-red-500/10"
+                  }`}
+                >
+                  <Icon
+                    size={16}
+                    color="white"
+                  />
+                </View>
+                <View>
+                  <Text className="font-medium text-white text-xs">{title}</Text>
+                  <Text className="text-[10px] text-gray-400">
+                    {categoryName as string}
                   </Text>
                 </View>
               </View>
-            </View>
-            <View className="items-end">
-              <Text
-                className={`text-base font-semibold ${
-                  transactionType === "income" ? "text-green-400" : "text-red-400"
-                }`}
-              >
-                {transactionType === "income" ? "+" : "-"}R$ {Math.abs(amount).toFixed(2)}
-              </Text>
-              <View className="flex-row items-center gap-1 mt-1">
-                <Calendar size={12} color="white" />
-                <Text className="text-xs text-gray-400">
+              <View className="items-end">
+                <Text
+                  className={`font-semibold text-xs ${
+                    transactionType === "income" ? "text-green-400" : "text-red-400"
+                  }`}
+                >
+                  {transactionType === "income" ? "+" : "-"}
+                  R$ {Math.abs(amount).toFixed(2)}
+                </Text>
+                <Text className="text-[10px] text-gray-400">
                   {formatDate(item.date)}
                 </Text>
-                {item.time && (
-                  <>
-                    <Text className="text-xs text-gray-400">•</Text>
-                    <Text className="text-xs text-gray-400">{item.time}</Text>
-                  </>
-                )}
               </View>
             </View>
-          </View>
-        </Card>
-      </Pressable>
+          </Card>
+        </Pressable>
+      </View>
     );
   };
 
   return (
     <SafeAreaView
-      className="flex-1 bg-background"
+      style={{ flex: 1, backgroundColor: colors.background }}
       edges={["top", "left", "right"]}
     >
       <ScrollView 
-        className="flex-1" 
+        style={{ flex: 1 }} 
         refreshControl={refreshControl}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="px-6 pt-6 pb-6">
-          <Text className="text-white text-lg font-bold mb-6">Transações</Text>
-
-          {/* Summary Cards */}
-          <View className="flex-row gap-3 mb-6">
-            <View className="flex-1">
-              <Card className="p-0">
-                <View className="flex-row items-center gap-3 p-4">
-                  <View className="w-12 h-12 bg-income-bg rounded-xl items-center justify-center">
-                    <TrendingUp size={24} color="#4ADE80" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-xs text-text-muted mb-1">Receitas</Text>
-                    <Text className="text-base font-bold text-income">
-                      R$ {totalIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </Text>
-                  </View>
-                </View>
-              </Card>
-            </View>
-
-            <View className="flex-1">
-              <Card className="p-0">
-                <View className="flex-row items-center gap-3 p-4">
-                  <View className="w-12 h-12 bg-expense-bg rounded-xl items-center justify-center">
-                    <TrendingDown size={24} color="#F87171" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-xs text-text-muted mb-1">Despesas</Text>
-                    <Text className="text-base font-bold text-expense">
-                      R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </Text>
-                  </View>
-                </View>
-              </Card>
-            </View>
-          </View>
+          <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold', marginBottom: 24 }}>Transações</Text>
 
           {/* Search Bar */}
           <View className="relative mb-4">
@@ -369,11 +323,13 @@ export default function Transactions() {
                   }`}
                 >
                   <Text
-                    className={`text-sm font-medium ${
-                      selectedFilter === option.value
-                        ? "text-[#191E29]"
-                        : "text-gray-300"
-                    }`}
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: selectedFilter === option.value
+                        ? "#191E29"
+                        : colors.textGray
+                    }}
                   >
                     {option.label}
                   </Text>
@@ -391,11 +347,12 @@ export default function Transactions() {
                   }`}
                 >
                   <Text
-                    className={`text-sm ${
-                      selectedPeriod === option.value
-                        ? "text-white"
-                        : "text-gray-400"
-                    }`}
+                    style={{
+                      fontSize: 14,
+                      color: selectedPeriod === option.value
+                        ? colors.textPrimary
+                        : colors.textMuted
+                    }}
                   >
                     {option.label}
                   </Text>
@@ -406,19 +363,19 @@ export default function Transactions() {
 
           {/* Transactions List Header */}
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-sm font-semibold text-white">
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
               {filteredTransactions.length} transações encontradas
             </Text>
             <Pressable className="flex-row items-center gap-2">
-              <Filter size={16} color="white" />
-              <Text className="text-gray-400 text-xs">Filtros</Text>
+              <Filter size={16} color={colors.textPrimary} />
+              <Text style={{ fontSize: 12, color: colors.textMuted }}>Filtros</Text>
             </Pressable>
           </View>
 
           {/* Transactions List */}
           {isLoading ? (
             <View className="items-center py-12">
-              <Text className="text-gray-400">Carregando transações...</Text>
+              <Text style={{ color: colors.textMuted }}>Carregando transações...</Text>
             </View>
           ) : filteredTransactions.length > 0 ? (
             <FlatList
@@ -431,12 +388,12 @@ export default function Transactions() {
           ) : (
             <View className="items-center py-12">
               <View className="w-16 h-16 bg-card-bg rounded-full items-center justify-center mb-4">
-                <Search size={24} color="white" />
+                <Search size={24} color={colors.textPrimary} />
               </View>
-              <Text className="text-base font-medium text-white mb-2">
+              <Text style={{ fontSize: 16, fontWeight: '500', color: colors.textPrimary, marginBottom: 8 }}>
                 Nenhuma transação encontrada
               </Text>
-              <Text className="text-gray-400 text-center text-sm">
+              <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 14 }}>
                 Tente ajustar os filtros ou termo de busca
               </Text>
             </View>
@@ -457,44 +414,43 @@ export default function Transactions() {
           onPress={() => setShowActionModal(false)}
         >
           <TouchableOpacity activeOpacity={1}>
-            <View className="bg-secondary-bg rounded-t-3xl p-6">
+            <View className="bg-background rounded-t-3xl p-6">
               {selectedTransaction && (
                 <>
                   {/* Transaction Details */}
                   <View className="flex-row items-center justify-between mb-6">
-                    <Text className="text-white text-lg font-bold">
+                    <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
                       Ações da Transação
                     </Text>
                     <Pressable
                       onPress={() => setShowActionModal(false)}
                       className="w-8 h-8 bg-card-bg rounded-full items-center justify-center"
                     >
-                      <X size={16} color="white" />
+                      <X size={16} color={colors.textPrimary} />
                     </Pressable>
                   </View>
 
                   {/* Transaction Info */}
                   <Card className="mb-6">
                     <View className="p-4">
-                      <Text className="text-white font-semibold text-base mb-2">
+                      <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 16, marginBottom: 8 }}>
                         {selectedTransaction.title || selectedTransaction.description || "Transação"}
                       </Text>
                       <View className="flex-row items-center gap-2 mb-2">
-                        <View className="bg-card-bg px-2 py-1 rounded-md">
-                          <Text className="text-xs text-gray-300">
-                            {selectedTransaction.category?.name || selectedTransaction.category || "Sem categoria"}
+                        <View className="bg-card-bg py-1 rounded-md">
+                          <Text style={{ fontSize: 12, color: colors.textGray }}>
+                            {(selectedTransaction.category?.name || selectedTransaction.category || "Sem categoria") as string}
                           </Text>
                         </View>
-                        <Text className="text-xs text-gray-400">
-                          {selectedTransaction.paymentMethod || "N/A"}
-                        </Text>
                       </View>
                       <Text
-                        className={`text-xl font-bold ${
-                          (selectedTransaction.type || (selectedTransaction.categoryId === "1" ? "expense" : "income")) === "income"
-                            ? "text-green-400"
-                            : "text-red-400"
-                        }`}
+                        style={{
+                          fontSize: 20,
+                          fontWeight: 'bold',
+                          color: (selectedTransaction.type || (selectedTransaction.categoryId === "1" ? "expense" : "income")) === "income"
+                            ? colors.income
+                            : colors.expense
+                        }}
                       >
                         {(selectedTransaction.type || (selectedTransaction.categoryId === "1" ? "expense" : "income")) === "income" ? "+" : "-"}
                         R$ {Math.abs(selectedTransaction.amount || 0).toFixed(2)}
@@ -508,8 +464,8 @@ export default function Transactions() {
                       onPress={handleEditTransaction}
                       className="bg-accent rounded-xl p-4 flex-row items-center justify-center gap-3"
                     >
-                      <Edit size={20} color="white" />
-                      <Text className="text-[#191E29] font-semibold text-base">
+                      <Edit size={20} color="#191E29" />
+                      <Text style={{ color: '#191E29', fontWeight: '600', fontSize: 16 }}>
                         Editar Transação
                       </Text>
                     </Pressable>
@@ -518,8 +474,8 @@ export default function Transactions() {
                       onPress={handleDeleteTransaction}
                       className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex-row items-center justify-center gap-3"
                     >
-                      <Trash2 size={20} color="#EF4444" />
-                      <Text className="text-red-400 font-semibold text-base">
+                      <Trash2 size={20} color={colors.error} />
+                      <Text style={{ color: colors.error, fontWeight: '600', fontSize: 16 }}>
                         Excluir Transação
                       </Text>
                     </Pressable>
@@ -528,7 +484,7 @@ export default function Transactions() {
                       onPress={() => setShowActionModal(false)}
                       className="bg-card-bg rounded-xl p-4 flex-row items-center justify-center"
                     >
-                      <Text className="text-gray-300 font-semibold text-base">
+                      <Text style={{ color: colors.textGray, fontWeight: '600', fontSize: 16 }}>
                         Cancelar
                       </Text>
                     </Pressable>

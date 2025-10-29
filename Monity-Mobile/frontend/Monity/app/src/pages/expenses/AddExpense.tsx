@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Card from "../../components/molecules/Card";
 import Button from "../../components/atoms/Button";
+import { COLORS } from "../../constants/colors";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 import { apiService, Category } from "../../services/apiService";
 import {
@@ -41,6 +42,7 @@ const paymentMethods = [
 
 export default function AddExpense() {
   const navigation = useNavigation();
+  const colors = COLORS;
   const [transactionType, setTransactionType] = useState<"expense" | "income">(
     "expense"
   );
@@ -271,7 +273,7 @@ export default function AddExpense() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: '#0A0A0A' }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       edges={["top", "left", "right"]}
     >
       <ScrollView 
@@ -284,9 +286,9 @@ export default function AddExpense() {
           {/* Header */}
           <View className="flex-row items-center gap-4 mb-6">
             <Pressable onPress={() => navigation.goBack()} className="p-2">
-              <ArrowLeft size={20} color="white" />
+              <ArrowLeft size={20} color={colors.textPrimary} />
             </Pressable>
-            <Text className="text-white text-lg font-bold">
+            <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
               Adicionar Transação
             </Text>
           </View>
@@ -303,14 +305,15 @@ export default function AddExpense() {
             >
               <TrendingDown
                 size={20}
-                color="white"
+                color={transactionType === "expense" ? "#191E29" : colors.textPrimary}
               />
               <Text
-                className={`font-medium ${
-                  transactionType === "expense"
-                    ? "text-[#191E29]"
-                    : "text-gray-300"
-                }`}
+                style={{
+                  fontWeight: '500',
+                  color: transactionType === "expense"
+                    ? "#191E29"
+                    : colors.textGray
+                }}
               >
                 Despesa
               </Text>
@@ -325,14 +328,15 @@ export default function AddExpense() {
             >
               <TrendingUp
                 size={20}
-                color="white"
+                color={transactionType === "income" ? "#191E29" : colors.textPrimary}
               />
               <Text
-                className={`font-medium ${
-                  transactionType === "income"
-                    ? "text-[#191E29]"
-                    : "text-gray-300"
-                }`}
+                style={{
+                  fontWeight: '500',
+                  color: transactionType === "income"
+                    ? "#191E29"
+                    : colors.textGray
+                }}
               >
                 Receita
               </Text>
@@ -341,12 +345,12 @@ export default function AddExpense() {
 
           {/* Amount Input */}
           <Card className="mb-4">
-            <View className="p-4">
-              <Text className="text-white text-sm font-semibold mb-4">
+            <View >
+              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
                 Valor
               </Text>
-              <View className="relative">
-                <Text className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-gray-400">
+              <View className="flex-row bg-card-bg border border-border-default rounded-xl px-4" style={{ height: 48, alignItems: 'center' }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textMuted, marginRight: 8, lineHeight: 22 }}>
                   R$
                 </Text>
                 <TextInput
@@ -354,8 +358,15 @@ export default function AddExpense() {
                   onChangeText={handleAmountChange}
                   placeholder="0,00"
                   placeholderTextColor="#9CA3AF"
-                  className="pl-12 text-lg font-bold h-12 bg-card-bg border border-border-default rounded-xl text-white px-4"
+                  className="flex-1 text-lg font-bold text-white"
                   keyboardType="numeric"
+                  style={{ 
+                    paddingVertical: 0,
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    marginVertical: 0,
+                    lineHeight: 22
+                  }}
                 />
               </View>
             </View>
@@ -363,8 +374,8 @@ export default function AddExpense() {
 
           {/* Description */}
           <Card className="mb-4">
-            <View className="p-4">
-              <Text className="text-white text-sm font-semibold mb-4">
+            <View>
+              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
                 Descrição
               </Text>
               <TextInput
@@ -385,13 +396,13 @@ export default function AddExpense() {
 
           {/* Category Selection */}
           <Card className="mb-4">
-            <View className="p-4">
-              <Text className="text-white text-sm font-semibold mb-4">
+            <View>
+              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
                 Categoria
               </Text>
               {isLoading ? (
                 <View className="items-center py-8">
-                  <Text className="text-gray-400">
+                  <Text style={{ color: colors.textMuted }}>
                     Carregando categorias...
                   </Text>
                 </View>
@@ -419,15 +430,17 @@ export default function AddExpense() {
                         >
                           <Icon
                             size={20}
-                            color="white"
+                            color={colors.textPrimary}
                           />
                         </View>
                         <Text
-                          className={`text-xs text-center px-1 ${
-                            isSelected
-                              ? "text-[#191E29] font-medium"
-                              : "text-gray-300"
-                          }`}
+                          style={{
+                            fontSize: 12,
+                            textAlign: 'center',
+                            paddingHorizontal: 4,
+                            color: isSelected ? "#191E29" : colors.textGray,
+                            fontWeight: isSelected ? '500' : 'normal'
+                          }}
                           numberOfLines={2}
                         >
                           {category.name}
@@ -438,11 +451,11 @@ export default function AddExpense() {
                 </ScrollView>
               ) : (
                 <View className="items-center py-8">
-                  <Text className="text-gray-400 text-center mb-4">
+                  <Text style={{ color: colors.textMuted, textAlign: 'center', marginBottom: 16 }}>
                     Nenhuma categoria encontrada para{" "}
                     {transactionType === "expense" ? "despesas" : "receitas"}
                   </Text>
-                  <Text className="text-gray-500 text-sm text-center">
+                  <Text style={{ color: colors.textGray, fontSize: 14, textAlign: 'center' }}>
                     Crie categorias na seção de Categorias primeiro
                   </Text>
                 </View>
@@ -452,73 +465,86 @@ export default function AddExpense() {
 
           {/* Payment Method */}
           <Card className="mb-4">
-            <View className="p-4">
-              <Text className="text-white text-sm font-semibold mb-4">
-                Método de Pagamento
-              </Text>
-              <View className="gap-2">
-                {paymentMethods.map((method) => {
-                  const Icon = method.icon;
-                  const isSelected = selectedPaymentMethod === method.id;
-                  return (
+            <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
+              Método de Pagamento
+            </Text>
+            <View style={{ gap: 12 }}>
+              {paymentMethods.map((method) => {
+                const Icon = method.icon;
+                const isSelected = selectedPaymentMethod === method.id;
+                return (
+                  <View
+                    key={method.id}
+                    style={{
+                      backgroundColor: colors.cardBg,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      borderRadius: 16,
+                      padding: 8,
+                    }}
+                  >
                     <Pressable
-                      key={method.id}
                       onPress={() => setSelectedPaymentMethod(method.id)}
-                      className={`h-12 rounded-lg items-center justify-start flex-row px-4 ${
-                        isSelected
-                          ? "bg-accent"
-                          : "bg-card-bg border border-border-default"
-                      }`}
+                      className="flex-row items-center justify-between"
                     >
-                      <Icon
-                        size={20}
-                        color="white"
-                      />
-                      <Text
-                        className={`ml-3 ${
-                          isSelected
-                            ? "text-[#191E29] font-medium"
-                            : "text-gray-300"
-                        }`}
-                      >
-                        {method.name}
-                      </Text>
+                      <View className="flex-row items-center gap-2">
+                        <View
+                          className={`w-8 h-8 rounded-lg items-center justify-center ${
+                            isSelected
+                              ? "bg-green-500/10"
+                              : "bg-red-500/10"
+                          }`}
+                        >
+                          <Icon
+                            size={16}
+                            color="white"
+                          />
+                        </View>
+                        <Text
+                          className={`text-xs ${
+                            isSelected ? "font-semibold text-white" : "font-medium text-white"
+                          }`}
+                        >
+                          {method.name}
+                        </Text>
+                      </View>
                       {method.id === "pix" && (
-                        <View className="ml-auto bg-card-bg px-2 py-1 rounded-md">
-                          <Text className="text-xs text-gray-300">
+                        <View className="bg-accent/10 px-2 py-1 rounded-md">
+                          <Text className="text-[10px] text-gray-400">
                             Instantâneo
                           </Text>
                         </View>
                       )}
                     </Pressable>
-                  );
-                })}
-              </View>
+                  </View>
+                );
+              })}
             </View>
           </Card>
 
           {/* Date and Options */}
           <Card className="mb-6">
-            <View className="p-4">
-              <Text className="text-white text-sm font-semibold mb-4">
+            <View>
+              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
                 Data e Opções
               </Text>
               <View className="gap-4">
                 <View>
-                  <Text className="text-gray-400 text-sm mb-2">
+                  <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
                     Data da Transação
                   </Text>
                   <View className="relative">
                     <Calendar
                       size={20}
-                      color="white"
+                      color={colors.textPrimary}
                     />
                     <TextInput
                       value={date}
                       onChangeText={setDate}
                       placeholder="YYYY-MM-DD"
                       placeholderTextColor="#9CA3AF"
-                      className="pl-10 bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      className="mt-2 pl-4 bg-card-bg border border-border-default rounded-xl py-3"
+                      style={{ color: colors.textPrimary }}
                     />
                   </View>
                 </View>
@@ -541,7 +567,7 @@ export default function AddExpense() {
                         </Text>
                       )}
                     </View>
-                    <Text className="text-gray-300">
+                    <Text style={{ color: colors.textGray }}>
                       Receita recorrente (mensal)
                     </Text>
                   </Pressable>
@@ -556,7 +582,7 @@ export default function AddExpense() {
               onPress={() => navigation.goBack()}
               className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"
             >
-              <Text className="text-gray-300 font-medium">Cancelar</Text>
+              <Text style={{ color: colors.textGray, fontWeight: '500' }}>Cancelar</Text>
             </Pressable>
             <Pressable
               onPress={handleSubmit}
