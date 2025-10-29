@@ -1,12 +1,5 @@
 import { logger } from "../utils/logger";
 import { supabaseAdmin } from "../config/supabase";
-import { 
-  createStripeCustomer, 
-  createStripeSubscription, 
-  cancelStripeSubscription,
-  STRIPE_CONFIG,
-  isStripeEnabled
-} from "../config/stripe";
 import type { Request, Response, NextFunction } from "express";
 
 interface AuthenticatedRequest extends Request {
@@ -107,18 +100,9 @@ export default class SubscriptionController {
 
   async createSubscription(req: AuthenticatedRequest, res: Response) {
     const userId = req.user.id;
-    const { planId, paymentMethodId } = req.body;
+    const { planId } = req.body;
 
     try {
-      // Verificar se Stripe está habilitado
-      if (!isStripeEnabled) {
-        logger.warn("Stripe not configured", { userId, planId });
-        return res.status(503).json({ 
-          success: false, 
-          error: "Payment system is not available at the moment" 
-        });
-      }
-
       // Validações de entrada
       if (planId !== "premium") {
         logger.warn("Invalid plan selected", { userId, planId });
@@ -128,18 +112,10 @@ export default class SubscriptionController {
         });
       }
 
-      if (!paymentMethodId) {
-        logger.warn("Payment method missing", { userId });
-        return res.status(400).json({ 
-          success: false, 
-          error: "Payment method is required" 
-        });
-      }
-
       // Verificar se o usuário já tem uma subscription ativa
       const { data: existingProfile } = await supabaseAdmin
         .from("profiles")
-        .select("subscription_tier, stripe_customer_id, stripe_subscription_id")
+        .select("subscription_tier")
         .eq("id", userId)
         .single();
 
@@ -151,33 +127,16 @@ export default class SubscriptionController {
         });
       }
 
-      let customerId = existingProfile?.stripe_customer_id;
-
-      // Criar customer no Stripe se não existir
-      if (!customerId) {
-        logger.info("Creating new Stripe customer", { userId, email: req.user.email });
-        const customer = await createStripeCustomer(req.user.email, userId);
-        customerId = customer.id;
-      } else {
-        logger.info("Using existing Stripe customer", { userId, customerId });
-      }
-
-      // Criar subscription no Stripe
-      logger.info("Creating Stripe subscription", { userId, customerId, paymentMethodId });
-      const subscription = await createStripeSubscription(
-        customerId,
-        paymentMethodId,
-        STRIPE_CONFIG.PREMIUM_PRICE_ID
-      );
+      // Simular assinatura - definir expiração para 1 mês
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
 
       // Atualizar perfil do usuário no banco
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
         .update({
           subscription_tier: "premium",
-          subscription_expires_at: new Date((subscription as any).current_period_end * 1000).toISOString(),
-          stripe_customer_id: customerId,
-          stripe_subscription_id: subscription.id,
+          subscription_expires_at: expiresAt.toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq("id", userId);
@@ -192,20 +151,18 @@ export default class SubscriptionController {
 
       logger.info("User upgraded to premium successfully", { 
         userId, 
-        planId, 
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscription.id,
-        periodEnd: (subscription as any).current_period_end
+        planId,
+        periodEnd: expiresAt.toISOString()
       });
 
       res.json({ 
         success: true, 
         data: {
           subscription: {
-            id: subscription.id,
-            status: subscription.status,
-            current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
-            current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
+            id: `sub_${Date.now()}`,
+            status: "active",
+            current_period_start: new Date().toISOString(),
+            current_period_end: expiresAt.toISOString(),
           },
           message: "Assinatura premium ativada com sucesso!"
         }
@@ -228,19 +185,10 @@ export default class SubscriptionController {
     const userId = req.user.id;
 
     try {
-      // Verificar se Stripe está habilitado
-      if (!isStripeEnabled) {
-        logger.warn("Stripe not configured for cancellation", { userId });
-        return res.status(503).json({ 
-          success: false, 
-          error: "Payment system is not available at the moment" 
-        });
-      }
-
       // Obter dados da subscription do usuário
       const { data: profile, error: profileError } = await supabaseAdmin
         .from("profiles")
-        .select("subscription_tier, stripe_subscription_id")
+        .select("subscription_tier")
         .eq("id", userId)
         .single();
 
@@ -255,18 +203,12 @@ export default class SubscriptionController {
         });
       }
 
-      // Cancelar subscription no Stripe se existir
-      if (profile.stripe_subscription_id) {
-        await cancelStripeSubscription(profile.stripe_subscription_id);
-      }
-
       // Atualizar perfil do usuário para free
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
         .update({
           subscription_tier: "free",
           subscription_expires_at: null,
-          stripe_subscription_id: null,
           updated_at: new Date().toISOString()
         })
         .eq("id", userId);
@@ -276,8 +218,7 @@ export default class SubscriptionController {
       }
 
       logger.info("User subscription cancelled", { 
-        userId, 
-        stripeSubscriptionId: profile.stripe_subscription_id 
+        userId
       });
 
       res.json({ 
