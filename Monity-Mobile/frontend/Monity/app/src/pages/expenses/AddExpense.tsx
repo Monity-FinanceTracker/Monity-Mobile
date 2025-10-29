@@ -577,7 +577,7 @@ export default function AddExpense() {
           </Card>
 
           {/* Submit Buttons */}
-          <View className="flex-row gap-3">
+          <View className="mt-3 flex-row gap-3">
             <Pressable
               onPress={() => navigation.goBack()}
               className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"

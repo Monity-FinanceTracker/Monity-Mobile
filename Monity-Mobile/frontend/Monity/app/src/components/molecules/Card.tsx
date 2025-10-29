@@ -19,7 +19,8 @@ export default function Card({
   const getVariantStyle = () => {
     const baseStyle = {
       borderRadius: 16,
-      padding: 16,
+      padding: 13,
+      marginBottom: 8, // mb-3 equivalent
     };
 
     switch (variant) {

@@ -233,7 +233,7 @@ export default function Dashboard() {
           </View>
 
           {/* Balance Card */}
-          <Card className="bg-gradient-to-r from-[#01C38D] to-[#01C38D]/80 border-0 mb-6">
+          <Card className="bg-gradient-to-r from-[#01C38D] to-[#01C38D]/80 border-0 mb-3">
             <View className="p-6">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-white text-xs">Saldo Total</Text>
@@ -277,7 +277,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Quick Stats */}
-          <View className="gap-4 mb-6 mt-6">
+          <View className="gap-4 mt-3">
             <View className="flex-1">
               <Card>
                 <View className="p-4">
@@ -328,7 +328,7 @@ export default function Dashboard() {
           </View>
 
           {/* Recent Transactions */}
-          <View className="mb-6">
+          <View className="mt-3">
             <View className="flex-row items-center justify-between mb-4">
               <Text className="text-sm font-semibold text-white">
                 Transações Recentes
