@@ -228,7 +228,17 @@ export default function Chat() {
         {/* Input */}
         <View className="bg-background px-6 py-4 border-t border-border-default" style={{ paddingBottom: Platform.OS === "android" ? 100 : 90 }}>
           <View className="flex-row items-center space-x-3">
-            <View className="flex-1 bg-card-bg rounded-2xl px-4 border border-border-default" style={{ paddingVertical: 8, minHeight: 48, justifyContent: 'center' }}>
+            <View className="flex-1 bg-card-bg rounded-2xl px-4 border border-border-default" style={{ 
+              paddingVertical: 8, 
+              minHeight: 48, 
+              justifyContent: 'center',
+              // Soft white glow effect for borders
+              shadowColor: COLORS.borderGlow,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 1,
+              shadowRadius: 4,
+              elevation: 1,
+            }}>
               <TextInput
                 value={inputText}
                 onChangeText={setInputText}

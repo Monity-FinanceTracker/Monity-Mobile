@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Pressable,
   Text,
@@ -25,15 +25,79 @@ const Button = ({
   children,
   ...rest
 }: ButtonProps) => {
-  // Define variant-specific styles using design system colors
-  const variantStyles = {
-    primary: "bg-accent border-accent active:bg-accent-hover",
-    secondary: "bg-card-bg border-border-default active:bg-border-default",
-    danger: "bg-error border-error active:opacity-90",
-    ghost: "bg-transparent border-transparent active:bg-accent-light",
-    outline: "bg-transparent border-accent active:bg-accent-light",
+  const [isPressed, setIsPressed] = useState(false);
+
+  // Get border color based on variant and state
+  const getBorderColor = () => {
+    if (disabled) return COLORS.border;
+    if (isPressed) {
+      switch (variant) {
+        case "primary":
+          return COLORS.accent;
+        case "secondary":
+          return COLORS.accent;
+        case "danger":
+          return COLORS.error;
+        case "ghost":
+          return COLORS.border;
+        case "outline":
+          return COLORS.accent;
+        default:
+          return COLORS.border;
+      }
+    }
+    switch (variant) {
+      case "primary":
+        return COLORS.accent;
+      case "secondary":
+        return COLORS.border;
+      case "danger":
+        return COLORS.error;
+      case "ghost":
+        return COLORS.border;
+      case "outline":
+        return COLORS.accent;
+      default:
+        return COLORS.border;
+    }
   };
 
+
+  // Define variant-specific background styles
+  const getBackgroundColor = () => {
+    if (disabled) {
+      switch (variant) {
+        case "primary":
+          return COLORS.textMuted;
+        case "secondary":
+          return COLORS.cardBg;
+        case "danger":
+          return COLORS.error + "80";
+        case "ghost":
+          return "transparent";
+        case "outline":
+          return "transparent";
+        default:
+          return COLORS.cardBg;
+      }
+    }
+    switch (variant) {
+      case "primary":
+        return COLORS.accent;
+      case "secondary":
+        return COLORS.cardBg;
+      case "danger":
+        return COLORS.error;
+      case "ghost":
+        return "transparent";
+      case "outline":
+        return "transparent";
+      default:
+        return COLORS.cardBg;
+    }
+  };
+
+  // Define variant-specific text styles
   const textStyles = {
     primary: "text-[#232323]",
     secondary: "text-text-primary",
@@ -43,28 +107,57 @@ const Button = ({
   };
 
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      className={`w-full rounded-xl border items-center justify-center px-6 py-3 mt-2 mb-5 ${
-        variantStyles[variant]
-      } ${disabled ? "opacity-50" : ""} ${className || ""}`}
-      {...rest}
-    >
-      {disabled ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === "primary" ? "#232323" : COLORS.accent}
+    <View className="relative">
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => setIsPressed(true)}
+        onPressOut={() => setIsPressed(false)}
+        disabled={disabled}
+        className={`w-full rounded-xl border-2 items-center justify-center px-6 py-3 mt-2 mb-5 overflow-hidden ${
+          disabled ? "opacity-50" : ""
+        } ${className || ""}`}
+        style={{
+          backgroundColor: getBackgroundColor(),
+          borderColor: getBorderColor(),
+        }}
+      >
+        {/* Efeito de profundidade - borda superior esquerda mais clara */}
+        <View
+          className="absolute top-0 left-0 w-8 h-8"
+          style={{
+            borderTopWidth: 1.5,
+            borderLeftWidth: 1.5,
+            borderTopColor: "rgba(255, 255, 255, 0.15)",
+            borderLeftColor: "rgba(255, 255, 255, 0.15)",
+            borderTopLeftRadius: 12,
+          }}
         />
-      ) : // Render children if they exist, otherwise render the title
-      children ? (
-        children
-      ) : (
-        <Text className={`text-center font-semibold text-base ${textStyles[variant]}`}>
-          {title}
-        </Text>
-      )}
-    </Pressable>
+        {/* Efeito de profundidade - borda inferior direita mais clara */}
+        <View
+          className="absolute bottom-0 right-0 w-8 h-8"
+          style={{
+            borderBottomWidth: 1.5,
+            borderRightWidth: 1.5,
+            borderBottomColor: "rgba(255, 255, 255, 0.15)",
+            borderRightColor: "rgba(255, 255, 255, 0.15)",
+            borderBottomRightRadius: 12,
+          }}
+        />
+        {disabled ? (
+          <ActivityIndicator
+            size="small"
+            color={variant === "primary" ? "#232323" : COLORS.accent}
+          />
+        ) : // Render children if they exist, otherwise render the title
+        children && typeof children !== 'function' ? (
+          children
+        ) : (
+          <Text className={`text-center font-semibold text-base ${textStyles[variant]}`}>
+            {title}
+          </Text>
+        )}
+      </Pressable>
+    </View>
   );
 };
 

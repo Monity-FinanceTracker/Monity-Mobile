@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react-native";
@@ -30,39 +29,25 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
   const { login } = useAuth();
 
   const handleSubmit = async () => {
-    console.log("🔐 Login form submitted with:", { email, password: "***" });
-    
     if (!email || !password) {
-      console.log("❌ Missing email or password");
       setError("Please fill in all fields");
       return;
     }
 
     if (!isValidEmail(email)) {
-      console.log("❌ Invalid email format");
       setError("Please enter a valid email address");
       return;
     }
 
-    console.log("✅ Form validation passed, starting login...");
     setLoading(true);
     setError("");
 
     try {
-      console.log("📡 Calling login function...");
-      Alert.alert("Debug", "Iniciando login...");
       await login(email, password);
-      console.log("✅ Login completed successfully");
-      Alert.alert("Sucesso", "Login realizado com sucesso!");
     } catch (err: any) {
-      console.error("❌ Login failed with error:", err);
-      console.error("❌ Error message:", err.message);
-      console.error("❌ Error stack:", err.stack);
       const errorMessage = err.message || "Invalid credentials";
       setError(errorMessage);
-      Alert.alert("Erro", `Login falhou: ${errorMessage}`);
     } finally {
-      console.log("🏁 Login process finished");
       setLoading(false);
     }
   };
@@ -176,9 +161,10 @@ export default function Login({ onNavigateToSignup }: LoginProps) {
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={loading}
-                className="w-full py-3.5 rounded-xl mt-5"
+                className="w-full py-3.5 rounded-xl mt-5 border-2"
                 style={{
-                  backgroundColor: loading ? COLORS.textMuted : COLORS.accent
+                  backgroundColor: loading ? COLORS.textMuted : COLORS.accent,
+                  borderColor: loading ? COLORS.border : COLORS.accent,
                 }}
               >
                 {loading ? (

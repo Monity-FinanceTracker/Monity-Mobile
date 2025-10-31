@@ -215,10 +215,10 @@ export default function Dashboard() {
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
             <View>
-              <Text className="text-white text-lg font-bold">
+              <Text className="text-white text-2xl font-bold">
                 Olá, {user?.name || "Usuário"}!
               </Text>
-              <Text className="text-gray-400 text-xs">
+              <Text className="text-gray-400 text-lg">
                 Bem-vindo de volta ao Monity
               </Text>
             </View>
@@ -226,7 +226,7 @@ export default function Dashboard() {
               onPress={() => navigation.navigate("Profile" as never)}
               className="w-10 h-10 bg-accent rounded-full items-center justify-center"
             >
-              <Text className="text-[#191E29] font-semibold text-sm">
+              <Text className="text-[#191E29] font-semibold text-lg">
                 {getInitials(user?.name || "")}
               </Text>
             </Pressable>
@@ -236,7 +236,7 @@ export default function Dashboard() {
           <Card className="bg-gradient-to-r from-[#01C38D] to-[#01C38D]/80 border-0 mb-3">
             <View className="p-6">
               <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-white text-xs">Saldo Total</Text>
+                <Text className="text-white text-lg">Saldo Total</Text>
                 <Pressable onPress={() => setShowBalance(!showBalance)}>
                   {showBalance ? (
                     <Eye size={20} color="white" />
@@ -246,7 +246,7 @@ export default function Dashboard() {
                 </Pressable>
               </View>
               <View className="flex-row items-center gap-2">
-                <Text className="text-xl font-bold text-white">
+                <Text className="text-3xl font-bold text-white">
                   {showBalance
                     ? balance
                       ? formatCurrency(balance?.total)
@@ -261,7 +261,7 @@ export default function Dashboard() {
                       <TrendingDown size={16} color="white" />
                     )}
                     <Text
-                      className={`text-xs ${
+                      className={`text-3xs ${
                         (balance.changePercentage || 0) >= 0
                           ? "text-green-400"
                           : "text-red-400"
@@ -364,7 +364,10 @@ export default function Dashboard() {
                   </Text>
                   <Pressable
                     onPress={() => navigation.navigate("AddExpense" as never)}
-                    className="bg-accent px-6 py-3 rounded-xl"
+                    className="bg-accent px-6 py-3 rounded-xl border-2"
+                    style={{
+                      borderColor: COLORS.accent,
+                    }}
                   >
                     <Text className="text-white font-semibold">
                       Adicionar Transação
@@ -372,33 +375,6 @@ export default function Dashboard() {
                   </Pressable>
                 </View>
               )}
-            </View>
-          </View>
-
-          {/* Quick Actions */}
-          <View className="mb-6">
-            <Text className="text-sm font-semibold text-white mb-4">
-              Ações Rápidas
-            </Text>
-            <View className="flex-row gap-4">
-              <Pressable
-                onPress={() => navigation.navigate("AddExpense" as never)}
-                className="flex-1 h-12 bg-accent rounded-lg items-center justify-center flex-row gap-2"
-              >
-                <Plus size={20} color="#232323" />
-                <Text className="text-[#232323] font-semibold text-xs">
-                  Adicionar Despesa
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => navigation.navigate("AddExpense" as never)}
-                className="flex-1 h-12 bg-card-bg border border-border-default rounded-lg items-center justify-center flex-row gap-2"
-              >
-                <Plus size={20} color="#FFFFFF" />
-                <Text className="text-text-primary font-semibold text-xs">
-                  Adicionar Receita
-                </Text>
-              </Pressable>
             </View>
           </View>
         </View>

@@ -22,6 +22,7 @@ const Input = (props: InputProps) => {
     return "border-border-default";
   };
 
+
   return (
     <View className="relative">
       <TextInput

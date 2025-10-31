@@ -7,9 +7,9 @@
 export const COLORS = {
   // Backgrounds
   background: '#0A0A0A',           // Main background (deep black)
-  primaryBg: '#191E29',            // Primary background
-  secondaryBg: '#23263a',          // Secondary background
-  cardBg: '#171717',               // Card/component background
+  primaryBg: '#0A0A0A',            // Primary background
+  secondaryBg: '#0A0A0A',          // Secondary background
+  cardBg: '#0A0A0A',               // Card/component background
 
   // Borders & Dividers
   border: '#262626',               // Borders and dividers
@@ -81,7 +81,7 @@ export const SEMANTIC_COLORS = {
   buttonGhostText: COLORS.accent,
 
   // Input States
-  inputBackground: 'rgba(42, 50, 64, 0.8)',
+  inputBackground: '#0A0A0A',
   inputBorder: COLORS.border,
   inputBorderFocus: COLORS.accent,
   inputBorderError: COLORS.error,

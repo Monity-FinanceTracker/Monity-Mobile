@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  FlatList,
   TextInput,
   ScrollView,
   Pressable,
@@ -167,6 +166,30 @@ export default function Transactions() {
     }
   };
 
+  const getDateKey = (dateString: string): string => {
+    // Get a consistent date key for grouping
+    let date: Date;
+    if (dateString.includes("-") && !dateString.includes("T")) {
+      const [year, month, day] = dateString.split("-").map(Number);
+      date = new Date(year, month - 1, day);
+    } else {
+      date = new Date(dateString);
+    }
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  };
+
+  const groupTransactionsByDate = (transactions: Transaction[]) => {
+    const grouped: { [key: string]: Transaction[] } = {};
+    transactions.forEach((transaction) => {
+      const dateKey = getDateKey(transaction.date);
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(transaction);
+    });
+    return grouped;
+  };
+
   const totalIncome = transactions
     .filter((t) => {
       const transactionType =
@@ -225,7 +248,7 @@ export default function Transactions() {
     );
   };
 
-  const renderTransaction = ({ item }: { item: Transaction }) => {
+  const renderTransaction = (item: Transaction, isFirstInGroup: boolean = false) => {
     // Handle both old and new data formats
     const title = item.title || item.description || "Transação sem título";
     const categoryName =
@@ -236,46 +259,66 @@ export default function Transactions() {
 
     const Icon = getTransactionIcon(categoryName as string);
     return (
-      <View style={{ marginBottom: 12 }}>
-        <Pressable onPress={() => handleTransactionPress(item)}>
-          <Card>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2">
-                <View
-                  className={`w-8 h-8 rounded-lg items-center justify-center ${
-                    transactionType === "income"
-                      ? "bg-green-500/10"
-                      : "bg-red-500/10"
-                  }`}
-                >
-                  <Icon
-                    size={16}
-                    color="white"
-                  />
-                </View>
-                <View>
-                  <Text className="font-medium text-white text-xs">{title}</Text>
-                  <Text className="text-[10px] text-gray-400">
-                    {categoryName as string}
-                  </Text>
-                </View>
-              </View>
-              <View className="items-end">
-                <Text
-                  className={`font-semibold text-xs ${
-                    transactionType === "income" ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {transactionType === "income" ? "+" : "-"}
-                  R$ {Math.abs(amount).toFixed(2)}
-                </Text>
-                <Text className="text-[10px] text-gray-400">
-                  {formatDate(item.date)}
-                </Text>
-              </View>
+      <Pressable 
+        onPress={() => handleTransactionPress(item)}
+        className="py-3"
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-3 flex-1">
+            <View
+              className={`w-8 h-8 rounded-lg items-center justify-center ${
+                transactionType === "income"
+                  ? "bg-green-500/10"
+                  : "bg-red-500/10"
+              }`}
+            >
+              <Icon
+                size={16}
+                color="white"
+              />
             </View>
-          </Card>
-        </Pressable>
+            <View className="flex-1">
+              <Text className="font-medium text-white text-xs">{title}</Text>
+              <Text className="text-[10px] text-gray-400">
+                {categoryName as string}
+              </Text>
+            </View>
+          </View>
+          <View className="items-end">
+            <Text
+              className={`font-semibold text-xs ${
+                transactionType === "income" ? "text-green-400" : "text-red-400"
+              }`}
+            >
+              {transactionType === "income" ? "+" : "-"}
+              R$ {Math.abs(amount).toFixed(2)}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  };
+
+  const renderTransactionGroup = (dateKey: string, transactions: Transaction[], index: number, allKeys: string[]) => {
+    const firstTransaction = transactions[0];
+    const formattedDate = formatDate(firstTransaction.date);
+    const isFirstGroup = index === 0;
+
+    return (
+      <View key={dateKey}>
+        {!isFirstGroup && (
+          <View className="h-px bg-border-default my-3" />
+        )}
+        <View className="mb-2">
+          <Text className="text-[14px] text-gray-400 mb-2">
+            {formattedDate}
+          </Text>
+          {transactions.map((transaction, idx) => (
+            <View key={transaction.id}>
+              {renderTransaction(transaction, idx === 0)}
+            </View>
+          ))}
+        </View>
       </View>
     );
   };
@@ -378,13 +421,18 @@ export default function Transactions() {
               <Text style={{ color: colors.textMuted }}>Carregando transações...</Text>
             </View>
           ) : filteredTransactions.length > 0 ? (
-            <FlatList
-              data={filteredTransactions}
-              keyExtractor={(item) => item.id}
-              renderItem={renderTransaction}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
+            <View>
+              {(() => {
+                const grouped = groupTransactionsByDate(filteredTransactions);
+                const sortedKeys = Object.keys(grouped).sort((a, b) => {
+                  // Sort by date descending (most recent first)
+                  return b.localeCompare(a);
+                });
+                return sortedKeys.map((dateKey, index) =>
+                  renderTransactionGroup(dateKey, grouped[dateKey], index, sortedKeys)
+                );
+              })()}
+            </View>
           ) : (
             <View className="items-center py-12">
               <View className="w-16 h-16 bg-card-bg rounded-full items-center justify-center mb-4">

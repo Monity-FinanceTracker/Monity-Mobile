@@ -200,6 +200,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                       paddingLeft: 15,
                       fontSize: 16,
                       color: "#ffffff",
+                      // Soft white glow effect for borders
                     }}
                   />
                   {email && isValidEmail(email) && (
@@ -360,7 +361,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                 disabled={
                   loading || !passwordsMatch || passwordStrength.score < 2
                 }
-                className={`w-full py-3.5 rounded-xl mt-6 ${
+                className={`w-full py-3.5 rounded-xl mt-6 border-2 ${
                   loading || !passwordsMatch || passwordStrength.score < 2
                     ? "bg-gray-400"
                     : "bg-accent"
@@ -368,8 +369,12 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                 style={{
                   backgroundColor:
                     loading || !passwordsMatch || passwordStrength.score < 2
-                      ? "#9CA3AF"
-                      : "#01C38D",
+                      ? COLORS.textMuted
+                      : COLORS.accent,
+                  borderColor:
+                    loading || !passwordsMatch || passwordStrength.score < 2
+                      ? COLORS.border
+                      : COLORS.accent,
                 }}
               >
                 {loading ? (
