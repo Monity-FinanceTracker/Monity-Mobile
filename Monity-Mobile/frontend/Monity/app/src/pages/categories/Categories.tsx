@@ -703,7 +703,7 @@ export default function Categories() {
         }}
       >
         <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-primary-bg rounded-t-3xl max-h-[90%]">
+          <View className="bg-background rounded-t-3xl max-h-[90%]">
             <ScrollView showsVerticalScrollIndicator={false}>
               <View className="p-6">
                 {/* Modal Header */}
