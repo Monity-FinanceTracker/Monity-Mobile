@@ -1,8 +1,9 @@
 /// <reference types="nativewind/types" />
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { StatusBar, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
+import * as Font from "expo-font";
 import "@/global.css";
 import AppNavigation from "./src/navigation";
 import ErrorBoundary from "./src/components/ErrorBoundary";
@@ -13,23 +14,44 @@ import { COLORS } from "./src/constants/colors";
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
   useEffect(() => {
-    // Esconder o splash screen após o app carregar
-    const hideSplash = async () => {
+    // Carregar fontes customizadas
+    async function loadFonts() {
       try {
-        await SplashScreen.hideAsync();
-      } catch (e) {
-        // Ignorar erros ao esconder splash screen
+        await Font.loadAsync({
+          EmonaRegular: require("../assets/fonts/EmonaRegular.ttf"),
+        });
+        setFontsLoaded(true);
+      } catch (error) {
+        console.warn("Error loading fonts:", error);
+        setFontsLoaded(true); // Continuar mesmo se falhar
       }
-    };
+    }
 
-    // Aguardar um pouco para garantir que tudo carregou
-    const timer = setTimeout(() => {
-      hideSplash();
-    }, 500);
-
-    return () => clearTimeout(timer);
+    loadFonts();
   }, []);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      // Esconder o splash screen após o app carregar
+      const hideSplash = async () => {
+        try {
+          await SplashScreen.hideAsync();
+        } catch (e) {
+          // Ignorar erros ao esconder splash screen
+        }
+      };
+
+      // Aguardar um pouco para garantir que tudo carregou
+      const timer = setTimeout(() => {
+        hideSplash();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [fontsLoaded]);
 
   return (
     <SafeAreaProvider>
