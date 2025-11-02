@@ -150,10 +150,77 @@ class ApiService {
       }
 
       if (!response.ok) {
+        // Handle rate limiting
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('retry-after');
+          const rateLimitReset = response.headers.get('ratelimit-reset');
+          const errorMsg = data.message || data.error || "Too many requests. Please try again later.";
+          console.error(`⚠️ Rate limit exceeded! status: ${response.status}`);
+          console.error("Rate limit info:", { retryAfter, rateLimitReset, message: errorMsg });
+          return {
+            success: false,
+            data: null as T,
+            error: errorMsg,
+            errorCode: "RATE_LIMIT_EXCEEDED",
+            errorDetails: retryAfter ? `Please try again after ${retryAfter} seconds (${Math.ceil(parseInt(retryAfter) / 60)} minutes)` : undefined,
+          };
+        }
+        
         console.error(`❌ HTTP error! status: ${response.status}`);
-        throw new Error(
-          data.message || `HTTP error! status: ${response.status}`
-        );
+        console.error("❌ Response data:", JSON.stringify(data, null, 2));
+        console.error("❌ Response headers:", Object.fromEntries(response.headers.entries()));
+        console.error("❌ Full error object:", {
+          error: data.error,
+          errorCode: data.errorCode,
+          errorDetails: data.errorDetails,
+          debug: data.debug,
+          allKeys: Object.keys(data),
+        });
+        return {
+          success: false,
+          data: null as T,
+          error: data.error || data.message || `HTTP error! status: ${response.status}`,
+          errorCode: data.errorCode,
+          errorDetails: data.errorDetails,
+          debug: data.debug,
+        };
+      }
+
+      // Check if response has success: false (some endpoints return this format)
+      if (data.success === false) {
+        console.error("❌ API returned success: false", {
+          error: data.error,
+          message: data.message,
+          errorCode: data.errorCode,
+          errorDetails: data.errorDetails,
+          fullData: data,
+        });
+        return {
+          success: false,
+          data: null as T,
+          error: data.error || data.message || "Request failed",
+          errorCode: data.errorCode,
+          errorDetails: data.errorDetails,
+        };
+      }
+      
+      // Handle rate limiting specifically
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('retry-after');
+        const rateLimitReset = response.headers.get('ratelimit-reset');
+        const errorMsg = data.message || data.error || "Too many requests. Please try again later.";
+        console.error("⚠️ Rate limit exceeded", {
+          retryAfter,
+          rateLimitReset,
+          message: errorMsg,
+        });
+        return {
+          success: false,
+          data: null as T,
+          error: errorMsg,
+          errorCode: "RATE_LIMIT_EXCEEDED",
+          errorDetails: retryAfter ? `Please try again after ${retryAfter} seconds` : undefined,
+        };
       }
 
       console.log("✅ Request successful");
@@ -264,10 +331,17 @@ class ApiService {
   }
 
   async updateProfile(profileData: Partial<User>): Promise<ApiResponse<User>> {
-    return this.request<User>("/auth/profile", {
+    console.log("🔄 apiService.updateProfile called with:", profileData);
+    const result = await this.request<User>("/auth/profile", {
       method: "PUT",
       body: JSON.stringify(profileData),
     });
+    console.log("📊 apiService.updateProfile result:", {
+      success: result.success,
+      hasData: !!result.data,
+      error: result.error,
+    });
+    return result;
   }
 
   async changePassword(

@@ -122,15 +122,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateProfile = useCallback(async (profileData: Partial<User>) => {
+    console.log("🔐 AuthContext.updateProfile called with:", profileData);
     try {
+      console.log("📡 Calling apiService.updateProfile...");
       const response = await apiService.updateProfile(profileData);
+      console.log("📡 AuthContext received response:", {
+        success: response.success,
+        hasData: !!response.data,
+        error: response.error,
+        responseKeys: response.data ? Object.keys(response.data) : [],
+      });
+      
       if (response.success && response.data) {
+        console.log("✅ Profile update successful, updating user state");
         setUser(response.data);
+        console.log("✅ User state updated");
       } else {
-        throw new Error(response.error || "Profile update failed");
+        const errorMsg = response.error || "Profile update failed";
+        console.error("❌ Profile update failed:", errorMsg);
+        throw new Error(errorMsg);
       }
-    } catch (error) {
-      console.error("Profile update error:", error);
+    } catch (error: any) {
+      console.error("❌ Profile update error in AuthContext:", {
+        message: error?.message,
+        error: error,
+        stack: error?.stack,
+      });
       throw error;
     }
   }, []);

@@ -328,36 +328,219 @@ class AuthController {
     const userId = req.user.id;
     const { name, email } = req.body;
 
-    try {
-      // Update profile in Supabase profiles table using admin client to bypass RLS
-      const { data, error } = await supabaseAdmin
-        .from("profiles")
-        .update({
-          name: name,
-          email: email,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId)
-        .select()
-        .single();
+    console.log("=".repeat(80));
+    console.log("📝 UPDATE PROFILE - START");
+    console.log("=".repeat(80));
+    logger.info("📝 updateProfile called", {
+      userId,
+      body: { name, email },
+      hasName: !!name,
+      hasEmail: !!email,
+      userObject: req.user,
+    });
+    console.log("📝 Request body:", JSON.stringify(req.body, null, 2));
+    console.log("📝 User ID:", userId);
 
-      if (error) {
-        logger.error("Failed to update user profile", {
-          userId,
-          error: error.message,
-        });
-        return res.status(500).json({ error: "Failed to update profile" });
+    // Validate input
+    if (!name && !email) {
+      logger.warn("❌ Validation failed: No name or email provided", { userId });
+      return res.status(400).json({ 
+        success: false,
+        error: "At least one field (name or email) is required" 
+      });
+    }
+
+    // Declare updateData outside try block so it's accessible in catch
+    let updateData: any = {};
+    
+    try {
+      // Build update object with only provided fields
+      updateData = {};
+
+      if (name !== undefined && name !== null && name.trim()) {
+        updateData.name = name.trim();
+        logger.info("✅ Name field will be updated", { name: name.trim() });
+      } else {
+        logger.info("⏭️ Name field skipped", { name, isUndefined: name === undefined, isNull: name === null });
       }
 
-      logger.info("Profile updated successfully", { userId });
-      res.json({ success: true, data });
-    } catch (error) {
-      logger.error("An unexpected error occurred while updating profile", {
+      if (email !== undefined && email !== null && email.trim()) {
+        // Validate email format if provided
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          logger.warn("❌ Invalid email format", { email });
+          return res.status(400).json({ 
+            success: false,
+            error: "Invalid email format" 
+          });
+        }
+        updateData.email = email.trim();
+        logger.info("✅ Email field will be updated", { email: email.trim() });
+      } else {
+        logger.info("⏭️ Email field skipped", { email, isUndefined: email === undefined, isNull: email === null });
+      }
+
+      // Ensure we have at least one field to update
+      if (Object.keys(updateData).length === 0) {
+        logger.warn("❌ No valid fields to update after processing", {
+          userId,
+          originalBody: { name, email },
+        });
+        return res.status(400).json({ 
+          success: false,
+          error: "No valid fields to update" 
+        });
+      }
+
+      logger.info("🔄 Attempting to update profile in database", {
         userId,
-        error: error as Error["message"],
+        updateData,
+        updateDataKeys: Object.keys(updateData),
       });
-      res.status(500).json({ error: "Internal Server Error" });
+
+      // Update profile directly (no encryption needed for profiles table)
+      // Note: updated_at will be handled by database triggers if configured
+      console.log("🔄 Calling Supabase update...");
+      console.log("Table: profiles");
+      console.log("Where: id =", userId);
+      console.log("Update data:", JSON.stringify(updateData, null, 2));
+      
+      const { data, error } = await supabaseAdmin
+        .from("profiles")
+        .update(updateData)
+        .eq("id", userId)
+        .select("*")
+        .single();
+      
+      console.log("Supabase response received");
+      console.log("Has data:", !!data);
+      console.log("Has error:", !!error);
+
+      if (error) {
+        console.log("=".repeat(80));
+        console.log("❌ SUPABASE ERROR DETECTED");
+        console.log("=".repeat(80));
+        
+        // Log all available error properties
+        const errorInfo = {
+          userId,
+          errorMessage: error.message,
+          errorCode: error.code,
+          errorDetails: error.details,
+          errorHint: error.hint,
+          updateData,
+          fullErrorObject: error,
+        };
+        
+        console.error("Error object:", error);
+        console.error("Error message:", error.message);
+        console.error("Error code:", error.code);
+        console.error("Error details:", error.details);
+        console.error("Error hint:", error.hint);
+        console.error("Update data:", updateData);
+        
+        logger.error("❌ Supabase error occurred", errorInfo);
+        
+        // Try to stringify error for complete details
+        let fullErrorString = "Unknown error";
+        try {
+          fullErrorString = JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
+        } catch (e) {
+          fullErrorString = String(error);
+        }
+        
+        console.error("Full error string:", fullErrorString);
+        logger.error("❌ Full error details:", { fullErrorString });
+        
+        const errorResponse = { 
+          success: false,
+          error: error.message || "Failed to update profile",
+          errorCode: error.code || "UNKNOWN",
+          errorDetails: error.details || error.hint || fullErrorString,
+          debug: {
+            updateData,
+            userId,
+          },
+        };
+        
+        console.log("Sending error response:", JSON.stringify(errorResponse, null, 2));
+        
+        return res.status(500).json(errorResponse);
+      }
+
+      if (!data) {
+        logger.error("❌ Profile not found after update", { userId });
+        return res.status(404).json({ 
+          success: false,
+          error: "Profile not found" 
+        });
+      }
+
+      logger.info("✅ Profile data retrieved from database", {
+        userId,
+        hasData: !!data,
+        dataKeys: data ? Object.keys(data) : [],
+      });
+
+      // Format response to match frontend expectations (same as getProfile)
+      const userData = {
+        ...data,
+        subscriptionTier: data.subscription_tier || "free",
+      };
+
+      logger.info("✅ Profile updated successfully", {
+        userId,
+        updatedFields: Object.keys(updateData),
+        responseKeys: Object.keys(userData),
+      });
+      
+      res.json({ success: true, data: userData });
+    } catch (error: any) {
+      console.log("=".repeat(80));
+      console.log("❌ CATCH BLOCK - Unexpected error in updateProfile");
+      console.log("=".repeat(80));
+      console.error("Error object:", error);
+      console.error("Error message:", error?.message);
+      console.error("Error stack:", error?.stack);
+      console.error("Error name:", error?.name);
+      
+      // Try to stringify the full error
+      let errorString = "Unknown error";
+      try {
+        errorString = JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
+      } catch (e) {
+        errorString = String(error);
+      }
+      console.error("Full error string:", errorString);
+      
+      logger.error("❌ Unexpected error in updateProfile", {
+        userId,
+        errorMessage: error?.message || "Unknown error",
+        errorStack: error?.stack,
+        errorName: error?.name,
+        fullError: errorString,
+      });
+      
+      // Make sure we haven't already sent a response
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          success: false,
+          error: error?.message || "Internal Server Error",
+          errorDetails: errorString,
+          errorCode: error?.code || "UNKNOWN_ERROR",
+          debug: {
+            userId,
+            updateData: updateData || "N/A",
+          },
+        });
+      } else {
+        console.error("⚠️ Response already sent, cannot send error response");
+      }
     }
+    
+    console.log("=".repeat(80));
+    console.log("📝 UPDATE PROFILE - END");
+    console.log("=".repeat(80));
   }
 
   async changePassword(req: AuthenticatedRequest, res: Response) {

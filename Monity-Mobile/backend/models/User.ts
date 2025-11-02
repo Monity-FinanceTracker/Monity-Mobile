@@ -20,16 +20,24 @@ export default class User {
 
   static async update(id: string, updates: any) {
     const encryptedUpdates = encryptObject(User.TABLE_NAME, updates);
+    
+    // Add updated_at timestamp
+    encryptedUpdates.updated_at = new Date().toISOString();
 
     const { data, error } = await supabaseAdmin
       .from(User.TABLE_NAME)
       .update(encryptedUpdates)
       .eq("id", id)
-      .select()
+      .select("id, name, email, subscription_tier, created_at, updated_at")
       .single();
 
     if (error) {
+      if (error.code === "PGRST116") return null;
       throw new Error(`Error updating user: ${error.message}`);
+    }
+
+    if (!data) {
+      return null;
     }
 
     return decryptObject(User.TABLE_NAME, data);

@@ -93,18 +93,28 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
-    if (!profileData.name.trim() || !profileData.email.trim()) {
-      Alert.alert("Erro", "Nome e email são obrigatórios");
+    if (!profileData.name.trim()) {
+      Alert.alert("Erro", "Nome é obrigatório");
       return;
     }
 
     try {
       setIsLoading(true);
-      await updateProfile(profileData);
+      // Only update name, email cannot be changed
+      await updateProfile({
+        name: profileData.name.trim(),
+      });
       Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
       setIsEditing(false);
-    } catch (error) {
-      Alert.alert("Erro", "Falha ao atualizar perfil");
+    } catch (error: any) {
+      let errorMessage = error?.message || "Falha ao atualizar perfil";
+      
+      // Handle rate limiting error specifically
+      if (errorMessage.includes("Too many") || errorMessage.includes("rate limit") || errorMessage.includes("authentication attempts")) {
+        errorMessage = "Muitas tentativas. Por favor, aguarde alguns minutos antes de tentar novamente.";
+      }
+      
+      Alert.alert("Erro", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -409,15 +419,16 @@ export default function Profile() {
                   <TextInput
                     value={profileData.email}
                     onChangeText={(text) => handleUpdateProfile("email", text)}
-                    editable={isEditing}
-                    className={`bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 ${
-                      !isEditing ? "opacity-50" : ""
-                    }`}
+                    editable={false}
+                    className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 opacity-50"
                     placeholder="Digite seu email"
                     placeholderTextColor="#6B7280"
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
+                  <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>
+                    O email não pode ser alterado
+                  </Text>
                 </View>
               </View>
             </View>
