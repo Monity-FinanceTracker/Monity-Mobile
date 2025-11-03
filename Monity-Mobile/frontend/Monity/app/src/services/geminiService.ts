@@ -1,11 +1,17 @@
 // Gemini AI Service for chat functionality
 // This service will handle communication with Google's Gemini AI API
 
+interface GeminiPart {
+  text?: string;
+  inlineData?: {
+    mimeType: string;
+    data: string; // base64
+  };
+}
+
 interface GeminiRequest {
   contents: {
-    parts: {
-      text: string;
-    }[];
+    parts: GeminiPart[];
   }[];
   systemInstruction?: {
     parts: {
@@ -24,7 +30,17 @@ interface GeminiResponse {
   }[];
 }
 
+export interface ExtractedTransactionData {
+  name: string;
+  amount: number;
+  date: string;
+  type: "expense" | "income";
+  description?: string;
+  categoryName?: string;
+}
+
 import Constants from "expo-constants";
+import * as FileSystem from "expo-file-system/legacy";
 
 export class GeminiService {
   private apiKey: string;
@@ -150,6 +166,259 @@ export class GeminiService {
       return true;
     } catch (error) {
       return false;
+    }
+  }
+
+  /**
+   * Process image and extract transaction data from receipt/invoice
+   * @param imageUri - URI of the image file
+   * @returns Promise<ExtractedTransactionData> - Extracted transaction information
+   */
+  async processReceiptImage(imageUri: string): Promise<ExtractedTransactionData> {
+    if (!this.apiKey) {
+      throw new Error("Gemini API key not configured");
+    }
+
+    try {
+      // Read image as base64 using legacy API
+      const base64Data = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Get mime type from URI
+      const mimeType = imageUri.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+      const systemPrompt = `
+        Você é um assistente especializado em extrair informações de notas fiscais e comprovantes brasileiros.
+        Analise a imagem fornecida e extraia as seguintes informações:
+        1. Nome/Descrição da transação (produto ou serviço principal)
+        2. Valor total (em reais, apenas números)
+        3. Data da transação (formato YYYY-MM-DD)
+        4. Tipo: "expense" (despesa) ou "income" (receita)
+        
+        IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato, sem explicações adicionais:
+        {
+          "name": "nome da transação",
+          "amount": valor_numérico,
+          "date": "YYYY-MM-DD",
+          "type": "expense" ou "income",
+          "description": "descrição adicional se houver",
+          "categoryName": "categoria sugerida se possível identificar"
+        }
+        
+        Se não conseguir identificar alguma informação, use valores padrão:
+        - date: data de hoje no formato YYYY-MM-DD
+        - type: "expense" (a menos que claramente seja uma receita)
+        - amount: 0 se não conseguir identificar
+      `;
+
+      const requestData: GeminiRequest = {
+        systemInstruction: {
+          parts: [
+            {
+              text: systemPrompt,
+            },
+          ],
+        },
+        contents: [
+          {
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
+                },
+              },
+              {
+                text: "Extraia as informações desta nota fiscal ou comprovante.",
+              },
+            ],
+          },
+        ],
+      };
+
+      const response = await fetch(
+        `${this.baseUrl}/models/gemini-2.0-flash-001:generateContent?key=${this.apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Gemini API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: GeminiResponse = await response.json();
+
+      if (data.candidates && data.candidates.length > 0) {
+        const candidate = data.candidates[0];
+        if (
+          candidate.content &&
+          candidate.content.parts &&
+          candidate.content.parts.length > 0
+        ) {
+          const responseText = candidate.content.parts[0].text.trim();
+          
+          // Try to extract JSON from response
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const extractedData = JSON.parse(jsonMatch[0]);
+            
+            // Validate and format the data
+            const transactionData: ExtractedTransactionData = {
+              name: extractedData.name || "Transação",
+              amount: parseFloat(extractedData.amount) || 0,
+              date: extractedData.date || new Date().toISOString().split('T')[0],
+              type: extractedData.type === "income" ? "income" : "expense",
+              description: extractedData.description,
+              categoryName: extractedData.categoryName,
+            };
+
+            return transactionData;
+          } else {
+            throw new Error("Não foi possível extrair dados estruturados da resposta");
+          }
+        }
+      }
+
+      throw new Error("No response received from Gemini API");
+    } catch (error) {
+      console.error("Error processing receipt image:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process audio and extract transaction data from voice recording
+   * @param audioUri - URI of the audio file
+   * @returns Promise<ExtractedTransactionData> - Extracted transaction information
+   */
+  async processTransactionAudio(audioUri: string): Promise<ExtractedTransactionData> {
+    if (!this.apiKey) {
+      throw new Error("Gemini API key not configured");
+    }
+
+    try {
+      // Read audio as base64 using legacy API
+      const base64Data = await FileSystem.readAsStringAsync(audioUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Determine mime type (assuming m4a for iOS, mp3/3gp for Android)
+      const mimeType = audioUri.toLowerCase().endsWith('.m4a') 
+        ? 'audio/m4a' 
+        : audioUri.toLowerCase().endsWith('.mp3')
+        ? 'audio/mp3'
+        : 'audio/webm'; // default for expo-av
+
+      const systemPrompt = `
+        Você é um assistente especializado em transcrever e extrair informações de transações financeiras em português brasileiro.
+        Transcreva o áudio e extraia as seguintes informações:
+        1. Nome/Descrição da transação
+        2. Valor total (em reais, apenas números)
+        3. Data da transação mencionada (se não mencionada, use hoje - formato YYYY-MM-DD)
+        4. Tipo: "expense" (despesa) ou "income" (receita)
+        
+        IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato, sem explicações adicionais:
+        {
+          "name": "nome da transação",
+          "amount": valor_numérico,
+          "date": "YYYY-MM-DD",
+          "type": "expense" ou "income",
+          "description": "descrição adicional se houver",
+          "categoryName": "categoria sugerida se mencionada"
+        }
+        
+        Exemplos:
+        - "Comprei comida no supermercado por 150 reais" -> {"name": "Supermercado", "amount": 150, "type": "expense", ...}
+        - "Recebi 5000 de salário hoje" -> {"name": "Salário", "amount": 5000, "type": "income", ...}
+      `;
+
+      const requestData: GeminiRequest = {
+        systemInstruction: {
+          parts: [
+            {
+              text: systemPrompt,
+            },
+          ],
+        },
+        contents: [
+          {
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
+                },
+              },
+              {
+                text: "Transcreva e extraia as informações de transação deste áudio.",
+              },
+            ],
+          },
+        ],
+      };
+
+      const response = await fetch(
+        `${this.baseUrl}/models/gemini-2.0-flash-001:generateContent?key=${this.apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Gemini API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: GeminiResponse = await response.json();
+
+      if (data.candidates && data.candidates.length > 0) {
+        const candidate = data.candidates[0];
+        if (
+          candidate.content &&
+          candidate.content.parts &&
+          candidate.content.parts.length > 0
+        ) {
+          const responseText = candidate.content.parts[0].text.trim();
+          
+          // Try to extract JSON from response
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const extractedData = JSON.parse(jsonMatch[0]);
+            
+            // Validate and format the data
+            const transactionData: ExtractedTransactionData = {
+              name: extractedData.name || "Transação",
+              amount: parseFloat(extractedData.amount) || 0,
+              date: extractedData.date || new Date().toISOString().split('T')[0],
+              type: extractedData.type === "income" ? "income" : "expense",
+              description: extractedData.description,
+              categoryName: extractedData.categoryName,
+            };
+
+            return transactionData;
+          } else {
+            throw new Error("Não foi possível extrair dados estruturados da resposta");
+          }
+        }
+      }
+
+      throw new Error("No response received from Gemini API");
+    } catch (error) {
+      console.error("Error processing transaction audio:", error);
+      throw error;
     }
   }
 }
