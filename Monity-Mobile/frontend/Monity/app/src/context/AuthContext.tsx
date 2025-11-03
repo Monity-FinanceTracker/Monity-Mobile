@@ -49,9 +49,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (response.success && response.data) {
             setUser(response.data);
           } else {
-            // Profile fetch failed, clear auth state
-            setUser(null);
-            await apiService.clearToken();
+            // Profile fetch failed, check if it's an unauthorized error
+            if (response.errorCode === "UNAUTHORIZED") {
+              // Token expired, clear auth state
+              setUser(null);
+              await apiService.clearToken();
+            } else {
+              // Other error, clear auth state
+              setUser(null);
+              await apiService.clearToken();
+            }
           }
         } else {
           setUser(null);
@@ -196,6 +203,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(response.data);
         console.log("✅ User state updated");
       } else {
+        // Check if it's an unauthorized error
+        if (response.errorCode === "UNAUTHORIZED") {
+          // Token expired, logout user
+          setUser(null);
+          await apiService.clearToken();
+          throw new Error("Sua sessão expirou. Por favor, faça login novamente.");
+        }
         const errorMsg = response.error || "Profile update failed";
         console.error("❌ Profile update failed:", errorMsg);
         throw new Error(errorMsg);
@@ -248,6 +262,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiService.getProfile();
       if (response.success && response.data) {
         setUser(response.data);
+      } else if (response.errorCode === "UNAUTHORIZED") {
+        // Token expired, logout user
+        setUser(null);
+        await apiService.clearToken();
       }
     } catch (error) {
       console.error("Refresh user error:", error);

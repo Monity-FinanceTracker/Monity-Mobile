@@ -8,6 +8,10 @@ import {
   Alert,
   Switch,
   ActivityIndicator,
+  Modal,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -28,6 +32,7 @@ import {
   LogOut,
   Crown,
   Star,
+  X,
 } from "lucide-react-native";
 
 export default function Profile() {
@@ -39,6 +44,14 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [biometric, setBiometric] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState("");
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -136,57 +149,50 @@ export default function Profile() {
   };
 
   const handleChangePassword = () => {
-    Alert.prompt(
-      "Alterar Senha",
-      "Digite sua senha atual:",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Continuar",
-          onPress: (currentPassword?: string) => {
-            if (!currentPassword) {
-              Alert.alert("Erro", "Senha atual é obrigatória");
-              return;
-            }
+    setShowChangePasswordModal(true);
+  };
 
-            Alert.prompt(
-              "Nova Senha",
-              "Digite sua nova senha:",
-              [
-                { text: "Cancelar", style: "cancel" },
-                {
-                  text: "Alterar",
-                  onPress: async (newPassword?: string) => {
-                    if (!newPassword || newPassword.length < 6) {
-                      Alert.alert(
-                        "Erro",
-                        "Nova senha deve ter pelo menos 6 caracteres"
-                      );
-                      return;
-                    }
+  const handleClosePasswordModal = () => {
+    setShowChangePasswordModal(false);
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  };
 
-                    try {
-                      setIsLoading(true);
-                      await changePassword(currentPassword, newPassword);
-                      Alert.alert("Sucesso", "Senha alterada com sucesso!");
-                    } catch (error) {
-                      Alert.alert(
-                        "Erro",
-                        "Falha ao alterar senha. Verifique sua senha atual."
-                      );
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  },
-                },
-              ],
-              "secure-text"
-            );
-          },
-        },
-      ],
-      "secure-text"
-    );
+  const handleSubmitPasswordChange = async () => {
+    if (!passwordData.currentPassword) {
+      Alert.alert("Erro", "Senha atual é obrigatória");
+      return;
+    }
+
+    if (!passwordData.newPassword || passwordData.newPassword.length < 6) {
+      Alert.alert(
+        "Erro",
+        "Nova senha deve ter pelo menos 6 caracteres"
+      );
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      Alert.alert("Erro", "As senhas não coincidem");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await changePassword(passwordData.currentPassword, passwordData.newPassword);
+      Alert.alert("Sucesso", "Senha alterada com sucesso!");
+      handleClosePasswordModal();
+    } catch (error: any) {
+      Alert.alert(
+        "Erro",
+        error?.message || "Falha ao alterar senha. Verifique sua senha atual."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -199,48 +205,38 @@ export default function Profile() {
           text: "Excluir",
           style: "destructive",
           onPress: () => {
-            Alert.prompt(
-              "Confirmar Exclusão",
-              "Digite sua senha para confirmar a exclusão da conta:",
-              [
-                { text: "Cancelar", style: "cancel" },
-                {
-                  text: "Excluir Conta",
-                  style: "destructive",
-                  onPress: async (password?: string) => {
-                    if (!password) {
-                      Alert.alert(
-                        "Erro",
-                        "Senha é obrigatória para excluir a conta"
-                      );
-                      return;
-                    }
-
-                    try {
-                      setIsLoading(true);
-                      await deleteAccount(password);
-                      Alert.alert(
-                        "Conta Excluída",
-                        "Sua conta foi excluída com sucesso"
-                      );
-                      // Navigation will be handled by AuthContext
-                    } catch (error) {
-                      Alert.alert(
-                        "Erro",
-                        "Falha ao excluir conta. Verifique sua senha."
-                      );
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  },
-                },
-              ],
-              "secure-text"
-            );
+            setShowDeleteAccountModal(true);
           },
         },
       ]
     );
+  };
+
+  const handleCloseDeleteAccountModal = () => {
+    setShowDeleteAccountModal(false);
+    setDeleteAccountPassword("");
+  };
+
+  const handleSubmitDeleteAccount = async () => {
+    if (!deleteAccountPassword) {
+      Alert.alert("Erro", "Senha é obrigatória para excluir a conta");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await deleteAccount(deleteAccountPassword);
+      Alert.alert("Conta Excluída", "Sua conta foi excluída com sucesso");
+      // Navigation will be handled by AuthContext
+    } catch (error: any) {
+      Alert.alert(
+        "Erro",
+        error?.message || "Falha ao excluir conta. Verifique sua senha."
+      );
+    } finally {
+      setIsLoading(false);
+      handleCloseDeleteAccountModal();
+    }
   };
 
   const handleUpgradeToPremium = () => {
@@ -300,20 +296,6 @@ export default function Profile() {
                 </Text>
                 <Text style={{ color: colors.textMuted, textAlign: 'center', marginBottom: 4 }}>{profileData.email}</Text>
               </View>
-              <Pressable
-                onPress={isEditing ? handleSave : () => setIsEditing(true)}
-                disabled={isLoading}
-                className="bg-card-bg border border-border-default px-4 py-2 rounded-lg flex-row items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small"  />
-                ) : (
-                  <Edit3 size={16} color={colors.textPrimary} />
-                )}
-                <Text style={{ color: colors.textGray, fontSize: 14 }}>
-                  {isEditing ? "Salvar" : "Editar"}
-                </Text>
-              </Pressable>
             </View>
           </Card>
 
@@ -382,11 +364,27 @@ export default function Profile() {
           {/* Profile Information */}
           <Card className="mb-6">
             <View className="p-4">
-              <View className="flex-row items-center gap-2 mb-4">
-                <User size={20} color={colors.textPrimary} />
-                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600' }}>
-                  Informações Pessoais
-                </Text>
+              <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center gap-2">
+                  <User size={20} color={colors.textPrimary} />
+                  <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600' }}>
+                    Informações Pessoais
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={isEditing ? handleSave : () => setIsEditing(true)}
+                  disabled={isLoading}
+                  className="bg-card-bg border border-border-default px-3 py-1.5 rounded-lg flex-row items-center gap-2"
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color={colors.textPrimary} />
+                  ) : (
+                    <Edit3 size={14} color={colors.textPrimary} />
+                  )}
+                  <Text style={{ color: colors.textGray, fontSize: 12 }}>
+                    {isEditing ? "Salvar" : "Editar"}
+                  </Text>
+                </Pressable>
               </View>
               <View className="gap-4">
                 <View>
@@ -532,6 +530,205 @@ export default function Profile() {
           </Card>
         </View>
       </ScrollView>
+
+      {/* Change Password Modal */}
+      <Modal
+        visible={showChangePasswordModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleClosePasswordModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1"
+        >
+          <View className="flex-1 bg-black/50 justify-end">
+            <TouchableOpacity
+              className="flex-1"
+              activeOpacity={1}
+              onPress={handleClosePasswordModal}
+            />
+            <View className="bg-background rounded-t-3xl" style={{ maxHeight: '80%', minHeight: '60%' }}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ padding: 24 }}
+              >
+                <View className="flex-row items-center justify-between mb-6">
+                  <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold' }}>
+                    Alterar Senha
+                  </Text>
+                  <Pressable onPress={handleClosePasswordModal}>
+                    <X size={24} color={colors.textPrimary} />
+                  </Pressable>
+                </View>
+
+                <View className="gap-4">
+                  <View>
+                    <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                      Senha Atual
+                    </Text>
+                    <TextInput
+                      value={passwordData.currentPassword}
+                      onChangeText={(text) =>
+                        setPasswordData({ ...passwordData, currentPassword: text })
+                      }
+                      secureTextEntry
+                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      placeholder="Digite sua senha atual"
+                      placeholderTextColor="#6B7280"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View>
+                    <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                      Nova Senha
+                    </Text>
+                    <TextInput
+                      value={passwordData.newPassword}
+                      onChangeText={(text) =>
+                        setPasswordData({ ...passwordData, newPassword: text })
+                      }
+                      secureTextEntry
+                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      placeholder="Digite sua nova senha (mín. 6 caracteres)"
+                      placeholderTextColor="#6B7280"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View>
+                    <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                      Confirmar Nova Senha
+                    </Text>
+                    <TextInput
+                      value={passwordData.confirmPassword}
+                      onChangeText={(text) =>
+                        setPasswordData({ ...passwordData, confirmPassword: text })
+                      }
+                      secureTextEntry
+                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      placeholder="Confirme sua nova senha"
+                      placeholderTextColor="#6B7280"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View className="flex-row gap-3 mt-4">
+                    <Pressable
+                      onPress={handleClosePasswordModal}
+                      disabled={isLoading}
+                      className="flex-1 bg-card-bg border border-border-default py-3 rounded-xl items-center"
+                    >
+                      <Text style={{ color: colors.textGray, fontSize: 14, fontWeight: '600' }}>
+                        Cancelar
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={handleSubmitPasswordChange}
+                      disabled={isLoading}
+                      className="flex-1 bg-accent py-3 rounded-xl items-center"
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator size="small" color="#191E29" />
+                      ) : (
+                        <Text style={{ color: '#191E29', fontSize: 14, fontWeight: '600' }}>
+                          Alterar Senha
+                        </Text>
+                      )}
+                    </Pressable>
+                  </View>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Delete Account Modal */}
+      <Modal
+        visible={showDeleteAccountModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleCloseDeleteAccountModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1"
+        >
+          <View className="flex-1 bg-black/50 justify-end">
+            <TouchableOpacity
+              className="flex-1"
+              activeOpacity={1}
+              onPress={handleCloseDeleteAccountModal}
+            />
+            <View className="bg-background rounded-t-3xl" style={{ maxHeight: '70%', minHeight: '50%' }}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ padding: 24 }}
+              >
+                <View className="flex-row items-center justify-between mb-6">
+                  <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold' }}>
+                    Confirmar Exclusão
+                  </Text>
+                  <Pressable onPress={handleCloseDeleteAccountModal}>
+                    <X size={24} color={colors.textPrimary} />
+                  </Pressable>
+                </View>
+
+                <View className="gap-4">
+                  <Text style={{ color: colors.textGray, fontSize: 14, marginBottom: 8 }}>
+                    Digite sua senha para confirmar a exclusão da conta:
+                  </Text>
+
+                  <View>
+                    <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                      Senha
+                    </Text>
+                    <TextInput
+                      value={deleteAccountPassword}
+                      onChangeText={setDeleteAccountPassword}
+                      secureTextEntry
+                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      placeholder="Digite sua senha"
+                      placeholderTextColor="#6B7280"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View className="flex-row gap-3 mt-4">
+                    <Pressable
+                      onPress={handleCloseDeleteAccountModal}
+                      disabled={isLoading}
+                      className="flex-1 bg-card-bg border border-border-default py-3 rounded-xl items-center"
+                    >
+                      <Text style={{ color: colors.textGray, fontSize: 14, fontWeight: '600' }}>
+                        Cancelar
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={handleSubmitDeleteAccount}
+                      disabled={isLoading}
+                      className="flex-1 py-3 rounded-xl items-center"
+                      style={{ backgroundColor: colors.error }}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator size="small" color={colors.textPrimary} />
+                      ) : (
+                        <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600' }}>
+                          Excluir Conta
+                        </Text>
+                      )}
+                    </Pressable>
+                  </View>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }

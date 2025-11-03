@@ -169,6 +169,20 @@ class ApiService {
       }
 
       if (!response.ok) {
+        // Handle unauthorized (token expired or invalid)
+        if (response.status === 401) {
+          console.warn("⚠️ Unauthorized (401): Token expired or invalid. Clearing token...");
+          // Clear token from memory and storage
+          await this.clearToken();
+          return {
+            success: false,
+            data: null as T,
+            error: data.message || data.error || "Sua sessão expirou. Por favor, faça login novamente.",
+            errorCode: "UNAUTHORIZED",
+            errorDetails: "Token expired or invalid",
+          };
+        }
+
         // Handle rate limiting
         if (response.status === 429) {
           const retryAfter = response.headers.get('retry-after');

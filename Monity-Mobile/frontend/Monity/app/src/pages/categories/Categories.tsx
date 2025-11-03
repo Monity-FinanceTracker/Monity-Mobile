@@ -293,7 +293,20 @@ export default function Categories() {
     });
   };
 
-  const handleDeleteCategory = (categoryId: number) => {
+  const handleDeleteCategory = (category: Category) => {
+    // Verificar se a categoria tem transações
+    const transactionCount = category.transactionCount || 0;
+    
+    if (transactionCount > 0) {
+      Alert.alert(
+        "Não é possível excluir",
+        `Esta categoria possui ${transactionCount} ${transactionCount === 1 ? 'transação' : 'transações'} associada${transactionCount === 1 ? '' : 's'}. Por favor, remova ou altere as transações antes de excluir a categoria.`,
+        [{ text: "OK", style: "default" }]
+      );
+      return;
+    }
+
+    // Se não houver transações, mostrar confirmação
     Alert.alert(
       "Confirmar Exclusão",
       "Tem certeza que deseja excluir esta categoria?",
@@ -305,7 +318,7 @@ export default function Categories() {
           onPress: async () => {
             try {
               const response = await apiService.deleteCategory(
-                categoryId.toString()
+                category.id
               );
               if (response.success) {
                 Alert.alert("Sucesso", "Categoria excluída com sucesso!");
@@ -393,7 +406,7 @@ export default function Categories() {
                     <Edit size={14} color="white" />
                   </Pressable>
                   <Pressable
-                    onPress={() => handleDeleteCategory(parseInt(category.id))}
+                    onPress={() => handleDeleteCategory(category)}
                     className="bg-card-bg rounded-lg p-2 items-center justify-center"
                   >
                     <Trash2 size={14} color="white" />
@@ -550,11 +563,20 @@ export default function Categories() {
           )}
 
           {/* Filter and View Toggle */}
-          <View className="flex-row items-center justify-between mb-6">
-            <View className="flex-row gap-2">
+          <View className="flex-row items-center justify-between mb-6 gap-2">
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              className="flex-1"
+              contentContainerStyle={{ 
+                flexDirection: 'row', 
+                alignItems: 'center',
+                paddingRight: 8 
+              }}
+            >
               <Pressable
                 onPress={() => setFilterType("all")}
-                className={`px-4 py-2 rounded-lg ${
+                className={`px-4 py-2 rounded-lg mr-2 ${
                   filterType === "all"
                     ? "bg-accent"
                     : "bg-card-bg border border-border-default"
@@ -572,7 +594,7 @@ export default function Categories() {
               </Pressable>
               <Pressable
                 onPress={() => setFilterType("income")}
-                className={`px-4 py-2 rounded-lg ${
+                className={`px-4 py-2 rounded-lg mr-2 ${
                   filterType === "income"
                     ? "bg-accent"
                     : "bg-card-bg border border-border-default"
@@ -590,7 +612,7 @@ export default function Categories() {
               </Pressable>
               <Pressable
                 onPress={() => setFilterType("expense")}
-                className={`px-4 py-2 rounded-lg ${
+                className={`px-4 py-2 rounded-lg mr-2 ${
                   filterType === "expense"
                     ? "bg-accent"
                     : "bg-card-bg border border-border-default"
@@ -608,7 +630,7 @@ export default function Categories() {
               </Pressable>
               <Pressable
                 onPress={() => setFilterType("savings")}
-                className={`px-4 py-2 rounded-lg ${
+                className={`px-4 py-2 rounded-lg mr-2 ${
                   filterType === "savings"
                     ? "bg-accent"
                     : "bg-card-bg border border-border-default"
@@ -624,8 +646,8 @@ export default function Categories() {
                   Poupança
                 </Text>
               </Pressable>
-            </View>
-            <View className="flex-row gap-1">
+            </ScrollView>
+            <View className="flex-row gap-1 flex-shrink-0">
               <Pressable
                 onPress={() => setViewMode("list")}
                 className={`p-2 rounded-lg ${
