@@ -27,6 +27,7 @@ import {
   Edit,
   Trash2,
   X,
+  Star,
 } from "lucide-react-native";
 import { apiService, Transaction } from "../../services/apiService";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
@@ -49,6 +50,7 @@ const filterOptions = [
   { value: "all", label: "Todas" },
   { value: "income", label: "Receitas" },
   { value: "expense", label: "Despesas" },
+  { value: "favorites", label: "Favoritas" },
 ];
 
 const periodOptions = [
@@ -116,8 +118,16 @@ export default function Transactions() {
       )
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      selectedFilter === "all" || transactionType === selectedFilter;
+    
+    let matchesFilter = false;
+    if (selectedFilter === "all") {
+      matchesFilter = true;
+    } else if (selectedFilter === "favorites") {
+      matchesFilter = transaction.isFavorite === true;
+    } else {
+      matchesFilter = transactionType === selectedFilter;
+    }
+    
     return matchesSearch && matchesFilter;
   });
 
@@ -167,7 +177,7 @@ export default function Transactions() {
   };
 
   const getDateKey = (dateString: string): string => {
-    // Get a consistent date key for grouping
+    // Get a consistent date key for grouping (format: YYYY-MM-DD for proper sorting)
     let date: Date;
     if (dateString.includes("-") && !dateString.includes("T")) {
       const [year, month, day] = dateString.split("-").map(Number);
@@ -175,12 +185,39 @@ export default function Transactions() {
     } else {
       date = new Date(dateString);
     }
-    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    // Return in YYYY-MM-DD format for proper string sorting
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
   const groupTransactionsByDate = (transactions: Transaction[]) => {
+    // Sort transactions by date descending (most recent first) before grouping
+    const sortedTransactions = [...transactions].sort((a, b) => {
+      let dateA: Date;
+      let dateB: Date;
+      
+      if (a.date.includes("-") && !a.date.includes("T")) {
+        const [year, month, day] = a.date.split("-").map(Number);
+        dateA = new Date(year, month - 1, day);
+      } else {
+        dateA = new Date(a.date);
+      }
+      
+      if (b.date.includes("-") && !b.date.includes("T")) {
+        const [year, month, day] = b.date.split("-").map(Number);
+        dateB = new Date(year, month - 1, day);
+      } else {
+        dateB = new Date(b.date);
+      }
+      
+      // Sort descending (most recent first)
+      return dateB.getTime() - dateA.getTime();
+    });
+
     const grouped: { [key: string]: Transaction[] } = {};
-    transactions.forEach((transaction) => {
+    sortedTransactions.forEach((transaction) => {
       const dateKey = getDateKey(transaction.date);
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
@@ -248,6 +285,40 @@ export default function Transactions() {
     );
   };
 
+  const handleToggleFavorite = async () => {
+    if (!selectedTransaction) return;
+    
+    try {
+      const newFavoriteStatus = !selectedTransaction.isFavorite;
+      const response = await apiService.updateTransaction(selectedTransaction.id, {
+        isFavorite: newFavoriteStatus,
+      });
+      
+      if (response.success) {
+        // Update the transaction in the list
+        setTransactions((prev) =>
+          prev.map((t) =>
+            t.id === selectedTransaction.id
+              ? { ...t, isFavorite: newFavoriteStatus }
+              : t
+          )
+        );
+        // Update selected transaction
+        setSelectedTransaction({
+          ...selectedTransaction,
+          isFavorite: newFavoriteStatus,
+        });
+        // Reload transactions to ensure we have the latest data
+        await loadTransactions();
+      } else {
+        Alert.alert("Erro", response.error || "Falha ao atualizar favorito");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      Alert.alert("Erro", "Falha ao atualizar favorito");
+    }
+  };
+
   const renderTransaction = (item: Transaction, isFirstInGroup: boolean = false) => {
     // Handle both old and new data formats
     const title = item.title || item.description || "Transação sem título";
@@ -256,6 +327,7 @@ export default function Transactions() {
     const transactionType =
       item.type || (item.categoryId === "1" ? "expense" : "income");
     const amount = item.amount || 0;
+    const isFavorite = item.isFavorite === true;
 
     const Icon = getTransactionIcon(categoryName as string);
     return (
@@ -278,7 +350,12 @@ export default function Transactions() {
               />
             </View>
             <View className="flex-1">
-              <Text className="font-medium text-white text-xs">{title}</Text>
+              <View className="flex-row items-center gap-2">
+                <Text className="font-medium text-white text-xs">{title}</Text>
+                {isFavorite && (
+                  <Star size={12} color={colors.accent} fill={colors.accent} />
+                )}
+              </View>
               <Text className="text-[10px] text-gray-400">
                 {categoryName as string}
               </Text>
@@ -426,6 +503,7 @@ export default function Transactions() {
                 const grouped = groupTransactionsByDate(filteredTransactions);
                 const sortedKeys = Object.keys(grouped).sort((a, b) => {
                   // Sort by date descending (most recent first)
+                  // Since dateKey is in YYYY-MM-DD format, string comparison works correctly
                   return b.localeCompare(a);
                 });
                 return sortedKeys.map((dateKey, index) =>
@@ -509,11 +587,37 @@ export default function Transactions() {
                   {/* Action Buttons */}
                   <View className="gap-3">
                     <Pressable
+                      onPress={handleToggleFavorite}
+                      className={`${
+                        selectedTransaction.isFavorite
+                          ? "bg-accent/20 border border-accent"
+                          : "bg-card-bg border border-border-default"
+                      } rounded-xl p-4 flex-row items-center justify-center gap-3`}
+                    >
+                      <Star
+                        size={20}
+                        color={selectedTransaction.isFavorite ? colors.accent : colors.textGray}
+                        fill={selectedTransaction.isFavorite ? colors.accent : "transparent"}
+                      />
+                      <Text
+                        style={{
+                          color: selectedTransaction.isFavorite ? colors.accent : colors.textGray,
+                          fontWeight: "600",
+                          fontSize: 16,
+                        }}
+                      >
+                        {selectedTransaction.isFavorite
+                          ? "Remover dos Favoritos"
+                          : "Adicionar aos Favoritos"}
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
                       onPress={handleEditTransaction}
                       className="bg-accent rounded-xl p-4 flex-row items-center justify-center gap-3"
                     >
                       <Edit size={20} color="#191E29" />
-                      <Text style={{ color: '#191E29', fontWeight: '600', fontSize: 16 }}>
+                      <Text style={{ color: "#191E29", fontWeight: "600", fontSize: 16 }}>
                         Editar Transação
                       </Text>
                     </Pressable>
@@ -523,7 +627,7 @@ export default function Transactions() {
                       className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex-row items-center justify-center gap-3"
                     >
                       <Trash2 size={20} color={colors.error} />
-                      <Text style={{ color: colors.error, fontWeight: '600', fontSize: 16 }}>
+                      <Text style={{ color: colors.error, fontWeight: "600", fontSize: 16 }}>
                         Excluir Transação
                       </Text>
                     </Pressable>

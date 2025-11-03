@@ -1,274 +1,184 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   Pressable,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import Card from "../../components/molecules/Card";
-import Button from "../../components/atoms/Button";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { COLORS } from "../../constants/colors";
-import { usePullToRefresh } from "../../hooks/usePullToRefresh";
-import { apiService, Category } from "../../services/apiService";
+import { apiService, Transaction } from "../../services/apiService";
 import {
   TrendingDown,
   TrendingUp,
+  Tag,
+  Repeat,
+  HelpCircle,
+  ChevronRight,
+  Star,
   ShoppingCart,
   Car,
   Home,
   Coffee,
   Gamepad2,
-  Heart,
-  GraduationCap,
-  Briefcase,
-  Calendar,
-  CreditCard,
-  Smartphone,
-  Banknote,
-  ArrowLeft,
 } from "lucide-react-native";
 
-const paymentMethods = [
-  { id: "pix", name: "PIX", icon: Smartphone },
-  { id: "credito", name: "Cartão de Crédito", icon: CreditCard },
-  { id: "debito", name: "Cartão de Débito", icon: CreditCard },
-  { id: "dinheiro", name: "Dinheiro", icon: Banknote },
-  { id: "transferencia", name: "Transferência", icon: Smartphone },
+// Quick actions for the carousel
+const quickActions = [
+  {
+    id: "create-category",
+    title: "Criar Categoria",
+    icon: Tag,
+    onPress: (navigation: any) => {
+      // Navigate to Categories tab
+      navigation.navigate("Categories" as never);
+    },
+  },
+  {
+    id: "recurring",
+    title: "Recorrente",
+    icon: Repeat,
+    onPress: (navigation: any) => {
+      // TODO: Navigate to Recurring page (to be created)
+      console.log("Navigate to Recurring page");
+    },
+  },
+  {
+    id: "help",
+    title: "Ajuda",
+    icon: HelpCircle,
+    onPress: (navigation: any) => {
+      // TODO: Navigate to Help page (to be created)
+      console.log("Navigate to Help page");
+    },
+  },
 ];
+
+const getTransactionIcon = (categoryName: string) => {
+  const categoryMap: { [key: string]: any } = {
+    Alimentação: ShoppingCart,
+    Transporte: Car,
+    Moradia: Home,
+    Entretenimento: Gamepad2,
+    Saúde: TrendingUp,
+    Educação: TrendingUp,
+    Trabalho: TrendingUp,
+    Receita: TrendingUp,
+  };
+  return categoryMap[categoryName] || ShoppingCart;
+};
 
 export default function AddExpense() {
   const navigation = useNavigation();
   const colors = COLORS;
-  const [transactionType, setTransactionType] = useState<"expense" | "income">(
-    "expense"
-  );
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
-  const [date, setDate] = useState(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  });
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [favoriteTransactions, setFavoriteTransactions] = useState<Transaction[]>([]);
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
 
-  const loadCategories = async () => {
+  const loadFavorites = async () => {
     try {
-      setIsLoading(true);
-      const response = await apiService.getCategories();
+      setIsLoadingFavorites(true);
+      const response = await apiService.getTransactions();
       if (response.success && response.data) {
-        setCategories(response.data);
-      } else {
-        Alert.alert("Erro", "Falha ao carregar categorias");
+        // Debug: Log all transactions to check isFavorite values
+        console.log("🔍 AddExpense.loadFavorites - Total transactions:", response.data.length);
+        console.log("🔍 AddExpense.loadFavorites - Sample transactions:", 
+          response.data.slice(0, 5).map((t: any) => ({ 
+            id: t.id, 
+            description: t.description, 
+            isFavorite: t.isFavorite, 
+            is_favorite: (t as any).is_favorite,
+            typeof_isFavorite: typeof t.isFavorite,
+            typeof_is_favorite: typeof (t as any).is_favorite
+          }))
+        );
+        
+        // Filter only favorite transactions
+        // Check both isFavorite (camelCase) and is_favorite (snake_case) for compatibility
+        const favorites = response.data.filter((t) => {
+          const isFavoriteValue = t.isFavorite === true || (t as any).is_favorite === true || 
+                                  (t as any).is_favorite === "true" || (t as any).is_favorite === 1;
+          if (isFavoriteValue) {
+            console.log("✅ Found favorite transaction:", { 
+              id: t.id, 
+              description: t.description, 
+              isFavorite: t.isFavorite, 
+              is_favorite: (t as any).is_favorite 
+            });
+          }
+          return isFavoriteValue;
+        });
+        
+        console.log("🔍 AddExpense.loadFavorites - Favorites found:", favorites.length);
+        
+        // Sort by date descending (most recent first)
+        favorites.sort((a, b) => {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateB - dateA;
+        });
+        // Limit to last 5 favorites
+        setFavoriteTransactions(favorites.slice(0, 5));
       }
     } catch (error) {
-      console.error("Error loading categories:", error);
-      Alert.alert("Erro", "Falha ao carregar categorias");
+      console.error("Error loading favorites:", error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingFavorites(false);
     }
   };
 
-  const refreshData = async () => {
-    console.log("Refreshing AddExpense data...");
-    await loadCategories();
+  // Load favorites when component mounts and when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      loadFavorites();
+    }, [])
+  );
+
+  const handleNavigateToExpense = () => {
+    navigation.navigate("AddExpenseForm" as never);
   };
 
-  const { refreshControl } = usePullToRefresh({
-    onRefresh: refreshData,
-  });
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  // Reset selected category when transaction type changes
-  useEffect(() => {
-    setSelectedCategory("");
-  }, [transactionType]);
-
-  // Filter categories based on transaction type
-  const filteredCategories = categories.filter((category) => {
-    if (transactionType === "expense") {
-      return category.typeId === 1; // Expense categories
-    } else {
-      return category.typeId === 2; // Income categories
-    }
-  });
-
-  const getCategoryIcon = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      Coffee: Coffee,
-      Car: Car,
-      Home: Home,
-      ShoppingCart: ShoppingCart,
-      Gamepad2: Gamepad2,
-      Heart: Heart,
-      GraduationCap: GraduationCap,
-      Briefcase: Briefcase,
-      TrendingUp: TrendingUp,
-      TrendingDown: TrendingDown,
-    };
-    return iconMap[iconName] || Coffee;
+  const handleNavigateToIncome = () => {
+    navigation.navigate("AddIncomeForm" as never);
   };
 
-  const handleAmountChange = (value: string) => {
-    // Format as Brazilian currency
-    const numericValue = value.replace(/\D/g, "");
-    const formattedValue = (Number(numericValue) / 100).toLocaleString(
-      "pt-BR",
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }
+  const handleFavoritePress = (transaction: Transaction) => {
+    // Navigate to Transactions tab with favorites filter
+    navigation.navigate("Transactions" as never);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const compareDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
     );
-    setAmount(formattedValue);
-  };
+    const compareToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const compareYesterday = new Date(
+      yesterday.getFullYear(),
+      yesterday.getMonth(),
+      yesterday.getDate()
+    );
 
-  const handleSubmit = async () => {
-    if (
-      !amount ||
-      !description ||
-      !selectedCategory ||
-      !selectedPaymentMethod
-    ) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios");
-      return;
+    if (compareDate.getTime() === compareToday.getTime()) {
+      return "Hoje";
+    } else if (compareDate.getTime() === compareYesterday.getTime()) {
+      return "Ontem";
+    } else {
+      return date.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short",
+      });
     }
-
-    try {
-      // Convert amount to proper format
-      const numericAmount = Number.parseFloat(
-        amount.replace(/\./g, "").replace(",", ".")
-      );
-
-      // Find the selected category to get its name
-      const selectedCategoryData = categories.find(
-        (cat) => cat.id === selectedCategory
-      );
-      if (!selectedCategoryData) {
-        Alert.alert("Erro", "Categoria selecionada não encontrada");
-        return;
-      }
-
-      const transactionData = {
-        description,
-        amount: transactionType === "expense" ? -numericAmount : numericAmount, // Store expenses as negative values
-        category: selectedCategoryData.name, // Use category name instead of ID
-        date,
-        paymentMethod: selectedPaymentMethod,
-        isRecurring,
-      };
-
-      console.log("Saving transaction:", transactionData);
-
-      // Call the appropriate API method based on transaction type
-      const response =
-        transactionType === "expense"
-          ? await apiService.addExpense(transactionData)
-          : await apiService.addIncome(transactionData);
-
-      if (response.success) {
-        console.log("Transaction saved successfully:", response.data);
-        Alert.alert(
-          "Sucesso",
-          `${transactionType === "expense" ? "Despesa" : "Receita"} salva com sucesso!`,
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.goBack(),
-            },
-          ]
-        );
-      } else {
-        console.error("Failed to save transaction:", response.error);
-        Alert.alert(
-          "Erro",
-          `Falha ao salvar ${transactionType === "expense" ? "despesa" : "receita"}: ${response.error}`
-        );
-      }
-    } catch (error) {
-      console.error("Error saving transaction:", error);
-      Alert.alert(
-        "Erro",
-        `Erro inesperado ao salvar ${transactionType === "expense" ? "despesa" : "receita"}. Tente novamente.`
-      );
-    }
-  };
-
-  const suggestCategory = (desc: string) => {
-    const lowerDesc = desc.toLowerCase();
-    if (
-      lowerDesc.includes("uber") ||
-      lowerDesc.includes("taxi") ||
-      lowerDesc.includes("gasolina")
-    ) {
-      return "transporte";
-    }
-    if (
-      lowerDesc.includes("mercado") ||
-      lowerDesc.includes("restaurante") ||
-      lowerDesc.includes("comida")
-    ) {
-      return "alimentacao";
-    }
-    if (
-      lowerDesc.includes("aluguel") ||
-      lowerDesc.includes("condominio") ||
-      lowerDesc.includes("luz")
-    ) {
-      return "moradia";
-    }
-    return "";
-  };
-
-  const handleDescriptionChange = (value: string) => {
-    setDescription(value);
-    if (transactionType === "expense" && value.length > 3) {
-      const suggested = suggestCategory(value);
-      if (suggested && !selectedCategory) {
-        setSelectedCategory(suggested);
-      }
-    }
-  };
-
-  const getColorClass = (color: string) => {
-    const colorMap: { [key: string]: string } = {
-      "bg-orange-500": "#F97316",
-      "bg-blue-500": "#3B82F6",
-      "bg-green-500": "#22C55E",
-      "bg-purple-500": "#A855F7",
-      "bg-pink-500": "#EC4899",
-      "bg-red-500": "#EF4444",
-      "bg-indigo-500": "#6366F1",
-      "bg-gray-500": "#6B7280",
-      "bg-yellow-500": "#EAB308",
-    };
-    return colorMap[color] || "#6B7280";
-  };
-
-  const getBackgroundColorClass = (color: string) => {
-    const colorMap: { [key: string]: string } = {
-      "bg-orange-500": "bg-orange-500/20",
-      "bg-blue-500": "bg-blue-500/20",
-      "bg-green-500": "bg-green-500/20",
-      "bg-purple-500": "bg-purple-500/20",
-      "bg-pink-500": "bg-pink-500/20",
-      "bg-red-500": "bg-red-500/20",
-      "bg-indigo-500": "bg-indigo-500/20",
-      "bg-gray-500": "bg-gray-500/20",
-      "bg-yellow-500": "bg-yellow-500/20",
-    };
-    return colorMap[color] || "bg-gray-500/20";
   };
 
   return (
@@ -278,342 +188,309 @@ export default function AddExpense() {
     >
       <ScrollView 
         className="flex-1" 
-        refreshControl={refreshControl}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
-          <View className="flex-row items-center gap-4 mb-6">
-            <Pressable onPress={() => navigation.goBack()} className="p-2">
-              <ArrowLeft size={20} color={colors.textPrimary} />
-            </Pressable>
-            <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
+          <View className="mb-6">
+            <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>
               Adicionar Transação
             </Text>
           </View>
 
-          {/* Transaction Type Toggle */}
-          <View className="flex-row gap-2 mb-6">
-            <Pressable
-              onPress={() => setTransactionType("expense")}
-              className={`flex-1 h-12 rounded-lg items-center justify-center flex-row gap-2 ${
-                transactionType === "expense"
-                  ? "bg-accent"
-                  : "bg-card-bg border border-border-default"
-              }`}
+          {/* Expense Box */}
+          <Pressable
+            onPress={handleNavigateToExpense}
+            className="mb-2"
+          >
+            <View
+              style={{
+                backgroundColor: colors.cardBg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 16,
+                padding: 16,
+              }}
             >
-              <TrendingDown
-                size={20}
-                color={transactionType === "expense" ? "#191E29" : colors.textPrimary}
-              />
-              <Text
-                style={{
-                  fontWeight: '500',
-                  color: transactionType === "expense"
-                    ? "#191E29"
-                    : colors.textGray
-                }}
-              >
-                Despesa
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setTransactionType("income")}
-              className={`flex-1 h-12 rounded-lg items-center justify-center flex-row gap-2 ${
-                transactionType === "income"
-                  ? "bg-accent"
-                  : "bg-card-bg border border-border-default"
-              }`}
-            >
-              <TrendingUp
-                size={20}
-                color={transactionType === "income" ? "#191E29" : colors.textPrimary}
-              />
-              <Text
-                style={{
-                  fontWeight: '500',
-                  color: transactionType === "income"
-                    ? "#191E29"
-                    : colors.textGray
-                }}
-              >
-                Receita
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Amount Input */}
-          <Card className="mb-4">
-            <View >
-              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
-                Valor
-              </Text>
-              <View className="flex-row bg-card-bg border border-border-default rounded-xl px-4" style={{ height: 48, alignItems: 'center' }}>
-                <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textMuted, marginRight: 8, lineHeight: 22 }}>
-                  R$
-                </Text>
-                <TextInput
-                  value={amount}
-                  onChangeText={handleAmountChange}
-                  placeholder="0,00"
-                  placeholderTextColor="#9CA3AF"
-                  className="flex-1 text-lg font-bold text-white"
-                  keyboardType="numeric"
-                  style={{ 
-                    paddingVertical: 0,
-                    paddingTop: 0,
-                    paddingBottom: 0,
-                    marginVertical: 0,
-                    lineHeight: 22
-                  }}
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-4 flex-1">
+                  <View
+                    style={{
+                      backgroundColor: colors.expenseBg,
+                      borderRadius: 12,
+                      padding: 12,
+                    }}
+                  >
+                    <TrendingDown
+                      size={24}
+                      color={colors.expense}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text
+                      style={{
+                        color: colors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: '600',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Despesas
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.textMuted,
+                        fontSize: 14,
+                      }}
+                    >
+                      Adicionar nova despesa
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight
+                  size={20}
+                  color={colors.accent}
                 />
               </View>
             </View>
-          </Card>
+          </Pressable>
 
-          {/* Description */}
-          <Card className="mb-4">
-            <View>
-              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
-                Descrição
-              </Text>
-              <TextInput
-                value={description}
-                onChangeText={handleDescriptionChange}
-                placeholder={
-                  transactionType === "expense"
-                    ? "Ex: Supermercado Extra, Uber Centro..."
-                    : "Ex: Salário Janeiro, Freelance Design..."
-                }
-                placeholderTextColor="#9CA3AF"
-                className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 h-20 text-left"
-                multiline
-                textAlignVertical="top"
-              />
-            </View>
-          </Card>
-
-          {/* Category Selection */}
-          <Card className="mb-4">
-            <View>
-              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
-                Categoria
-              </Text>
-              {isLoading ? (
-                <View className="items-center py-8">
-                  <Text style={{ color: colors.textMuted }}>
-                    Carregando categorias...
-                  </Text>
-                </View>
-              ) : filteredCategories.length > 0 ? (
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 12 }}
-                >
-                  {filteredCategories.map((category) => {
-                    const Icon = getCategoryIcon(category.icon);
-                    const isSelected = selectedCategory === category.id;
-                    return (
-                      <Pressable
-                        key={category.id}
-                        onPress={() => setSelectedCategory(category.id)}
-                        className={`w-24 h-24 rounded-xl items-center justify-center flex-col gap-2 ${
-                          isSelected
-                            ? "bg-accent"
-                            : "bg-card-bg border border-border-default"
-                        }`}
-                      >
-                        <View
-                          className={`w-10 h-10 rounded-lg items-center justify-center ${getBackgroundColorClass(category.color)}`}
-                        >
-                          <Icon
-                            size={20}
-                            color={colors.textPrimary}
-                          />
-                        </View>
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            textAlign: 'center',
-                            paddingHorizontal: 4,
-                            color: isSelected ? "#191E29" : colors.textGray,
-                            fontWeight: isSelected ? '500' : 'normal'
-                          }}
-                          numberOfLines={2}
-                        >
-                          {category.name}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              ) : (
-                <View className="items-center py-8">
-                  <Text style={{ color: colors.textMuted, textAlign: 'center', marginBottom: 16 }}>
-                    Nenhuma categoria encontrada para{" "}
-                    {transactionType === "expense" ? "despesas" : "receitas"}
-                  </Text>
-                  <Text style={{ color: colors.textGray, fontSize: 14, textAlign: 'center' }}>
-                    Crie categorias na seção de Categorias primeiro
-                  </Text>
-                </View>
-              )}
-            </View>
-          </Card>
-
-          {/* Payment Method */}
-          <Card className="mb-4">
-            <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
-              Método de Pagamento
-            </Text>
-            <View style={{ gap: 12 }}>
-              {paymentMethods.map((method) => {
-                const Icon = method.icon;
-                const isSelected = selectedPaymentMethod === method.id;
-                return (
+          {/* Income Box */}
+          <Pressable
+            onPress={handleNavigateToIncome}
+            className="mb-6"
+          >
+            <View
+              style={{
+                backgroundColor: colors.cardBg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 16,
+                padding: 16,
+              }}
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-4 flex-1">
                   <View
-                    key={method.id}
                     style={{
-                      backgroundColor: colors.cardBg,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 16,
-                      padding: 8,
+                      backgroundColor: colors.incomeBg,
+                      borderRadius: 12,
+                      padding: 12,
                     }}
                   >
-                    <Pressable
-                      onPress={() => setSelectedPaymentMethod(method.id)}
-                      className="flex-row items-center justify-between"
-                    >
-                      <View className="flex-row items-center gap-2">
-                        <View
-                          className={`w-8 h-8 rounded-lg items-center justify-center ${
-                            isSelected
-                              ? "bg-green-500/10"
-                              : "bg-red-500/10"
-                          }`}
-                        >
-                          <Icon
-                            size={16}
-                            color="white"
-                          />
-                        </View>
-                        <Text
-                          className={`text-xs ${
-                            isSelected ? "font-semibold text-white" : "font-medium text-white"
-                          }`}
-                        >
-                          {method.name}
-                        </Text>
-                      </View>
-                      {method.id === "pix" && (
-                        <View className="bg-accent/10 px-2 py-1 rounded-md">
-                          <Text className="text-[10px] text-gray-400">
-                            Instantâneo
-                          </Text>
-                        </View>
-                      )}
-                    </Pressable>
+                    <TrendingUp
+                      size={24}
+                      color={colors.income}
+                    />
                   </View>
-                );
-              })}
-            </View>
-          </Card>
-
-          {/* Date and Options */}
-          <Card className="mb-6">
-            <View>
-              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 16 }}>
-                Data e Opções
-              </Text>
-              <View className="gap-4">
-                <View>
-                  <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
-                    Data da Transação
-                  </Text>
-                  <View className="relative">
-                    <Calendar
-                      size={20}
-                      color={colors.textPrimary}
-                    />
-                    <TextInput
-                      value={date}
-                      onChangeText={setDate}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#9CA3AF"
-                      className="mt-2 pl-4 bg-card-bg border border-border-default rounded-xl py-3"
-                      style={{ color: colors.textPrimary }}
-                    />
+                  <View className="flex-1">
+                    <Text
+                      style={{
+                        color: colors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: '600',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Receitas
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.textMuted,
+                        fontSize: 14,
+                      }}
+                    >
+                      Adicionar nova receita
+                    </Text>
                   </View>
                 </View>
-
-                {transactionType === "income" && (
-                  <Pressable
-                    onPress={() => setIsRecurring(!isRecurring)}
-                    className="flex-row items-center gap-3"
-                  >
-                    <View
-                      className={`w-4 h-4 rounded border-2 items-center justify-center ${
-                        isRecurring
-                          ? "bg-accent border-accent"
-                          : "border-border-default"
-                      }`}
-                    >
-                      {isRecurring && (
-                        <Text className="text-[#191E29] text-xs font-bold">
-                          ✓
-                        </Text>
-                      )}
-                    </View>
-                    <Text style={{ color: colors.textGray }}>
-                      Receita recorrente (mensal)
-                    </Text>
-                  </Pressable>
-                )}
+                <ChevronRight
+                  size={20}
+                  color={colors.accent}
+                />
               </View>
             </View>
-          </Card>
+          </Pressable>
 
-          {/* Submit Buttons */}
-          <View className="mt-3 flex-row gap-3">
-            <Pressable
-              onPress={() => navigation.goBack()}
-              className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"
+          {/* Quick Actions Carousel */}
+          <View className="mb-6">
+            <Text
+              style={{
+                color: colors.textPrimary,
+                fontSize: 16,
+                fontWeight: '600',
+                marginBottom: 12,
+              }}
             >
-              <Text style={{ color: colors.textGray, fontWeight: '500' }}>Cancelar</Text>
-            </Pressable>
-            <Pressable
-              onPress={handleSubmit}
-              disabled={
-                !amount ||
-                !description ||
-                !selectedCategory ||
-                !selectedPaymentMethod
-              }
-              className={`flex-1 h-12 rounded-lg items-center justify-center ${
-                !amount ||
-                !description ||
-                !selectedCategory ||
-                !selectedPaymentMethod
-                  ? "bg-[#4B5563]"
-                  : "bg-accent"
-              }`}
+              Ações Rápidas
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 12, paddingRight: 24 }}
             >
-              <Text
-                className={`font-medium ${
-                  !amount ||
-                  !description ||
-                  !selectedCategory ||
-                  !selectedPaymentMethod
-                    ? "text-gray-500"
-                    : "text-[#191E29]"
-                }`}
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Pressable
+                    key={action.id}
+                    onPress={() => action.onPress(navigation)}
+                    style={{
+                      width: 80,
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 30,
+                        backgroundColor: colors.cardBg,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Icon
+                        size={24}
+                        color={colors.accent}
+                      />
+                    </View>
+                    <Text
+                      style={{
+                        color: colors.textGray,
+                        fontSize: 12,
+                        textAlign: 'center',
+                      }}
+                      numberOfLines={2}
+                    >
+                      {action.title}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Favorites List */}
+          <View className="mb-6">
+            <Text
+              style={{
+                color: colors.textPrimary,
+                fontSize: 16,
+                fontWeight: '600',
+                marginBottom: 12,
+              }}
+            >
+              Favoritos
+            </Text>
+            {isLoadingFavorites ? (
+              <View className="py-8 items-center">
+                <Text style={{ color: colors.textMuted }}>Carregando favoritos...</Text>
+              </View>
+            ) : favoriteTransactions.length > 0 ? (
+              <View className="gap-3">
+                {favoriteTransactions.map((transaction) => {
+                  const title = transaction.title || transaction.description || "Transação sem título";
+                  const categoryName =
+                    transaction.category?.name || transaction.category || "Sem categoria";
+                  const transactionType =
+                    transaction.type || (transaction.categoryId === "1" ? "expense" : "income");
+                  const amount = transaction.amount || 0;
+                  const Icon = getTransactionIcon(categoryName as string);
+
+                  return (
+                    <Pressable
+                      key={transaction.id}
+                      onPress={() => handleFavoritePress(transaction)}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: colors.cardBg,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          borderRadius: 16,
+                          padding: 16,
+                        }}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-row items-center gap-3 flex-1">
+                            <View
+                              className={`w-10 h-10 rounded-lg items-center justify-center ${
+                                transactionType === "income"
+                                  ? "bg-green-500/10"
+                                  : "bg-red-500/10"
+                              }`}
+                            >
+                              <Icon size={18} color="white" />
+                            </View>
+                            <View className="flex-1">
+                              <View className="flex-row items-center gap-2">
+                                <Text
+                                  style={{
+                                    color: colors.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                  }}
+                                  numberOfLines={1}
+                                >
+                                  {title}
+                                </Text>
+                              </View>
+                              <Text
+                                style={{
+                                  color: colors.textMuted,
+                                  fontSize: 12,
+                                  marginTop: 2,
+                                }}
+                              >
+                                {categoryName as string} • {formatDate(transaction.date)}
+                              </Text>
+                            </View>
+                          </View>
+                          <View className="items-end">
+                            <Text
+                              style={{
+                                fontSize: 16,
+                                fontWeight: '600',
+                                color: transactionType === "income" ? colors.income : colors.expense,
+                              }}
+                            >
+                              {transactionType === "income" ? "+" : "-"}
+                              R$ {Math.abs(amount).toFixed(2)}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : (
+              <View
+                style={{
+                  backgroundColor: colors.cardBg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 16,
+                  padding: 24,
+                  alignItems: 'center',
+                }}
               >
-                Salvar {transactionType === "expense" ? "Despesa" : "Receita"}
-              </Text>
-            </Pressable>
+                <Text
+                  style={{
+                    color: colors.textGray,
+                    fontSize: 14,
+                    textAlign: 'center',
+                  }}
+                >
+                  Você ainda não tem nenhum favorito
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
