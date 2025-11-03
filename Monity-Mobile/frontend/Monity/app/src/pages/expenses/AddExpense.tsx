@@ -143,12 +143,34 @@ export default function AddExpense() {
   };
 
   const handleFavoritePress = (transaction: Transaction) => {
-    // Navigate to Transactions tab with favorites filter
-    navigation.navigate("Transactions" as never);
+    // Determine transaction type
+    const transactionType = transaction.type || (transaction.categoryId === "1" ? "expense" : "income");
+    
+    // Prepare favoriteData object with transaction information
+    const favoriteData = {
+      name: transaction.title || transaction.description || "",
+      amount: transaction.amount || 0,
+      description: transaction.description || "",
+      date: transaction.date || new Date().toISOString(),
+      isFavorite: transaction.isFavorite || false,
+      categoryName: transaction.category?.name || "",
+    };
+
+    // Navigate to the appropriate form based on transaction type
+    if (transactionType === "income") {
+      (navigation as any).navigate("AddIncomeForm", { favoriteData });
+    } else {
+      (navigation as any).navigate("AddExpenseForm", { favoriteData });
+    }
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Extract date parts from string (handles both ISO format and YYYY-MM-DD)
+    const datePart = dateString.split('T')[0]; // Get YYYY-MM-DD part
+    const [year, month, day] = datePart.split('-').map(Number);
+    
+    // Create date in local timezone to avoid timezone conversion issues
+    const date = new Date(year, month - 1, day);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
