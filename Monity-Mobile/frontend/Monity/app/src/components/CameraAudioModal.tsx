@@ -7,25 +7,25 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
 import { X, Camera as CameraIcon, Mic } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
-
-interface CameraAudioModalProps {
-  visible: boolean;
-  onClose: () => void;
-}
+import { useNavigation } from "@react-navigation/native";
+import { geminiService } from "../services/geminiService";
 
 export default function CameraAudioModal({
   visible,
   onClose,
 }: CameraAudioModalProps) {
+  const navigation = useNavigation();
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
   const [audioPermission, setAudioPermission] = useState<boolean | null>(null);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     // Solicitar permissões ao montar o componente
@@ -40,6 +40,46 @@ export default function CameraAudioModal({
     })();
   }, [visible]);
 
+  const processImageAndNavigate = async (imageUri: string) => {
+    try {
+      setIsProcessing(true);
+      
+      // Process image with Gemini AI
+      const extractedData = await geminiService.processReceiptImage(imageUri);
+      
+      // Prepare favoriteData object
+      const favoriteData = {
+        name: extractedData.name,
+        amount: extractedData.amount,
+        description: extractedData.description || extractedData.name,
+        date: extractedData.date,
+        categoryName: extractedData.categoryName,
+        isFavorite: false,
+      };
+
+      // Navigate to appropriate form based on transaction type
+      onClose(); // Close modal first
+      
+      if (extractedData.type === "income") {
+        (navigation as any).navigate("AddIncomeForm", { favoriteData });
+      } else {
+        (navigation as any).navigate("AddExpenseForm", { favoriteData });
+      }
+    } catch (error: any) {
+      console.error("Erro ao processar imagem:", error);
+      Alert.alert(
+        "Erro ao Processar",
+        error.message || "Não foi possível processar a imagem. Tente novamente.",
+        [
+          {
+            text: "OK",
+            onPress: () => setIsProcessing(false),
+          },
+        ]
+      );
+    }
+  };
+
   const handleCameraPress = async () => {
     if (!cameraPermission) {
       Alert.alert(
@@ -48,6 +88,8 @@ export default function CameraAudioModal({
       );
       return;
     }
+
+    if (isProcessing) return;
 
     try {
       const result = await ImagePicker.launchCameraAsync({
@@ -60,12 +102,58 @@ export default function CameraAudioModal({
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const photo = result.assets[0];
         console.log("Foto tirada:", photo.uri);
-        Alert.alert("Sucesso", "Foto capturada com sucesso!");
-        onClose();
+        // Process image with AI
+        await processImageAndNavigate(photo.uri);
       }
     } catch (error) {
       console.error("Erro ao tirar foto:", error);
       Alert.alert("Erro", "Não foi possível tirar a foto.");
+      setIsProcessing(false);
+    }
+  };
+
+  const processAudioAndNavigate = async (audioUri: string | null) => {
+    if (!audioUri) {
+      Alert.alert("Erro", "URI do áudio não disponível.");
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      
+      // Process audio with Gemini AI
+      const extractedData = await geminiService.processTransactionAudio(audioUri);
+      
+      // Prepare favoriteData object
+      const favoriteData = {
+        name: extractedData.name,
+        amount: extractedData.amount,
+        description: extractedData.description || extractedData.name,
+        date: extractedData.date,
+        categoryName: extractedData.categoryName,
+        isFavorite: false,
+      };
+
+      // Navigate to appropriate form based on transaction type
+      onClose(); // Close modal first
+      
+      if (extractedData.type === "income") {
+        (navigation as any).navigate("AddIncomeForm", { favoriteData });
+      } else {
+        (navigation as any).navigate("AddExpenseForm", { favoriteData });
+      }
+    } catch (error: any) {
+      console.error("Erro ao processar áudio:", error);
+      Alert.alert(
+        "Erro ao Processar",
+        error.message || "Não foi possível processar o áudio. Tente novamente.",
+        [
+          {
+            text: "OK",
+            onPress: () => setIsProcessing(false),
+          },
+        ]
+      );
     }
   };
 
@@ -78,6 +166,8 @@ export default function CameraAudioModal({
       return;
     }
 
+    if (isProcessing) return;
+
     try {
       if (isRecording) {
         // Parar gravação
@@ -87,8 +177,11 @@ export default function CameraAudioModal({
           console.log("Áudio gravado:", uri);
           setIsRecording(false);
           setRecording(null);
-          Alert.alert("Sucesso", "Áudio gravado com sucesso!");
-          onClose();
+          
+          // Process audio with AI
+          if (uri) {
+            await processAudioAndNavigate(uri);
+          }
         }
       } else {
         // Iniciar gravação
@@ -109,15 +202,19 @@ export default function CameraAudioModal({
       Alert.alert("Erro", "Não foi possível gravar o áudio.");
       setIsRecording(false);
       setRecording(null);
+      setIsProcessing(false);
     }
   };
 
   // Limpar ao fechar o modal
   useEffect(() => {
-    if (!visible && recording) {
-      recording.stopAndUnloadAsync();
-      setRecording(null);
-      setIsRecording(false);
+    if (!visible) {
+      if (recording) {
+        recording.stopAndUnloadAsync();
+        setRecording(null);
+        setIsRecording(false);
+      }
+      setIsProcessing(false);
     }
   }, [visible]);
 
@@ -195,7 +292,7 @@ export default function CameraAudioModal({
             {/* Câmera */}
             <Pressable
               onPress={handleCameraPress}
-              disabled={!cameraPermission}
+              disabled={!cameraPermission || isProcessing}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -204,7 +301,7 @@ export default function CameraAudioModal({
                 backgroundColor: COLORS.accentLight,
                 borderWidth: 1,
                 borderColor: COLORS.accent,
-                opacity: cameraPermission ? 1 : 0.5,
+                opacity: cameraPermission && !isProcessing ? 1 : 0.5,
               }}
             >
               <View
@@ -240,12 +337,15 @@ export default function CameraAudioModal({
                   Capturar comprovante ou nota fiscal
                 </Text>
               </View>
+              {isProcessing && (
+                <ActivityIndicator size="small" color={COLORS.accent} style={{ marginLeft: 8 }} />
+              )}
             </Pressable>
 
             {/* Áudio */}
             <Pressable
               onPress={handleAudioPress}
-              disabled={!audioPermission}
+              disabled={!audioPermission || isProcessing}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -254,7 +354,7 @@ export default function CameraAudioModal({
                 backgroundColor: COLORS.accentLight,
                 borderWidth: 1,
                 borderColor: COLORS.accent,
-                opacity: audioPermission ? 1 : 0.5,
+                opacity: audioPermission && !isProcessing ? 1 : 0.5,
               }}
             >
               <View
@@ -303,8 +403,37 @@ export default function CameraAudioModal({
                   }}
                 />
               )}
+              {isProcessing && !isRecording && (
+                <ActivityIndicator size="small" color={COLORS.accent} style={{ marginLeft: 8 }} />
+              )}
             </Pressable>
           </View>
+
+          {/* Processing indicator */}
+          {isProcessing && (
+            <View
+              style={{
+                marginTop: 16,
+                padding: 12,
+                borderRadius: 12,
+                backgroundColor: COLORS.accentLight,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ActivityIndicator size="small" color={COLORS.accent} style={{ marginRight: 8 }} />
+              <Text
+                style={{
+                  color: COLORS.textPrimary,
+                  fontSize: 14,
+                  fontWeight: "500",
+                }}
+              >
+                Processando com IA...
+              </Text>
+            </View>
+          )}
 
         </View>
       </View>

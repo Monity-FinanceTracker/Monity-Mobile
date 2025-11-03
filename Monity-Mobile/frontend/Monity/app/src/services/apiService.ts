@@ -83,6 +83,9 @@ export interface ApiResponse<T> {
   data: T;
   message?: string;
   error?: string;
+  errorCode?: string;
+  errorDetails?: string;
+  debug?: any;
 }
 
 // API Service Class
@@ -139,15 +142,30 @@ class ApiService {
       console.log("📊 Content-Type:", contentType);
       
       let data;
+      let rawResponse: string | null = null;
+      
+      // Get the response as text first so we can use it if JSON parsing fails
+      const responseClone = response.clone();
+      rawResponse = await responseClone.text();
+      
       try {
-        data = await response.json();
+        data = JSON.parse(rawResponse);
         console.log("📊 Response data:", data);
       } catch (jsonError) {
         console.error("❌ JSON Parse Error:", jsonError);
-        // Try to get text response for debugging
-        const textResponse = await response.text();
-        console.error("❌ Raw response:", textResponse.substring(0, 500));
-        throw new Error(`JSON Parse error: ${jsonError instanceof Error ? jsonError.message : 'Unknown error'}. Response: ${textResponse.substring(0, 200)}`);
+        console.error("❌ Raw response:", rawResponse?.substring(0, 500));
+        
+        // If it's a 404, it's probably an HTML page from the server
+        if (response.status === 404) {
+          return {
+            success: false,
+            data: null as T,
+            error: `Endpoint not found: ${endpoint}. The server may need to be restarted or the route may not be configured.`,
+            errorCode: "NOT_FOUND",
+          };
+        }
+        
+        throw new Error(`JSON Parse error: ${jsonError instanceof Error ? jsonError.message : 'Unknown error'}. Response: ${rawResponse?.substring(0, 200)}`);
       }
 
       if (!response.ok) {
@@ -278,6 +296,20 @@ class ApiService {
     } else {
       console.error("❌ Login request failed:", response.error);
     }
+
+    return response;
+  }
+
+  async checkEmailExists(
+    email: string
+  ): Promise<ApiResponse<{ exists: boolean }>> {
+    const response = await this.request<{ exists: boolean }>(
+      "/auth/check-email",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }
+    );
 
     return response;
   }

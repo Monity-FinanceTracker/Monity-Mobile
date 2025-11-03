@@ -6,6 +6,7 @@ import { Home, Receipt, MessageCircle, Tag } from "lucide-react-native";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import LoginScreen from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
+import PasswordLogin from "../pages/auth/PasswordLogin";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Transactions from "../pages/transactions/Transactions";
 import AddExpense from "../pages/expenses/AddExpense";
@@ -23,6 +24,7 @@ import CameraAudioModal from "../components/CameraAudioModal";
 
 export type RootStackParamList = {
   Login: undefined;
+  PasswordLogin: { email: string };
   Signup: undefined;
   Main: undefined;
   Profile: undefined;
@@ -332,6 +334,18 @@ function Gate() {
                 onNavigateToSignup={() =>
                   navigation.navigate("Signup" as never)
                 }
+                onNavigateToPassword={(email: string) =>
+                  navigation.navigate("PasswordLogin" as never, { email })
+                }
+              />
+            )}
+          />
+          <RootStack.Screen
+            name="PasswordLogin"
+            children={({ navigation, route }) => (
+              <PasswordLogin
+                email={route.params.email}
+                onNavigateBack={() => navigation.navigate("Login" as never)}
               />
             )}
           />

@@ -7,6 +7,10 @@ import React, {
   useState,
 } from "react";
 import { apiService, User } from "../services/apiService";
+import {
+  signInWithGoogle,
+  signInWithApple,
+} from "../services/socialAuthService";
 
 type AuthUser = User | null;
 
@@ -15,6 +19,8 @@ type AuthContextValue = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  loginWithApple: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<User>) => Promise<void>;
   changePassword: (
@@ -112,6 +118,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const loginWithGoogle = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const result = await signInWithGoogle();
+      
+      if (result.success && result.session) {
+        // Token já foi salvo pelo socialAuthService
+        // Agora buscar o perfil do usuário
+        const profileResponse = await apiService.getProfile();
+        
+        if (profileResponse.success && profileResponse.data) {
+          setUser(profileResponse.data);
+        } else {
+          throw new Error("Failed to fetch user profile: " + profileResponse.error);
+        }
+      } else {
+        throw new Error(result.error || "Google login failed");
+      }
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loginWithApple = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const result = await signInWithApple();
+      
+      if (result.success && result.session) {
+        // Token já foi salvo pelo socialAuthService
+        // Agora buscar o perfil do usuário
+        const profileResponse = await apiService.getProfile();
+        
+        if (profileResponse.success && profileResponse.data) {
+          setUser(profileResponse.data);
+        } else {
+          throw new Error("Failed to fetch user profile: " + profileResponse.error);
+        }
+      } else {
+        throw new Error(result.error || "Apple login failed");
+      }
+    } catch (error: any) {
+      console.error("Apple login error:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await apiService.logout();
@@ -202,6 +260,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       login,
       signup,
+      loginWithGoogle,
+      loginWithApple,
       logout,
       updateProfile,
       changePassword,
@@ -213,6 +273,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       login,
       signup,
+      loginWithGoogle,
+      loginWithApple,
       logout,
       updateProfile,
       changePassword,
