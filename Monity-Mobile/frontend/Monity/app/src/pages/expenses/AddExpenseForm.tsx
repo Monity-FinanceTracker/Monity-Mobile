@@ -26,6 +26,7 @@ import {
   Calendar,
   Star,
 } from "lucide-react-native";
+import { triggerHaptic } from "../../utils/haptics";
 
 type AddExpenseFormRouteProp = RouteProp<RootStackParamList, "AddExpenseForm">;
 
@@ -177,6 +178,7 @@ export default function AddExpenseForm() {
       Alert.alert("Erro", "Por favor, preencha Nome, Valor e Categoria");
       return;
     }
+    triggerHaptic();
 
     try {
       // Convert amount to proper format
@@ -478,7 +480,10 @@ export default function AddExpenseForm() {
           {/* Submit Buttons */}
           <View className="mt-3 flex-row gap-3">
             <Pressable
-              onPress={() => navigation.goBack()}
+              onPress={() => {
+                triggerHaptic();
+                navigation.goBack();
+              }}
               className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"
             >
               <Text style={{ color: colors.textGray, fontWeight: "500" }}>

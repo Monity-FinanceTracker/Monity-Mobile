@@ -22,6 +22,7 @@ export default function App() {
       try {
         await Font.loadAsync({
           EmonaRegular: require("../assets/fonts/EmonaRegular.ttf"),
+          EmonaBold: require("../assets/fonts/Emona Bold.ttf"),
         });
         setFontsLoaded(true);
       } catch (error) {

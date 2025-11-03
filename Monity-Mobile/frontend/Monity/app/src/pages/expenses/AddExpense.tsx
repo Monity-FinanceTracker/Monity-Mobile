@@ -23,6 +23,7 @@ import {
   Coffee,
   Gamepad2,
 } from "lucide-react-native";
+import { triggerHaptic } from "../../utils/haptics";
 
 // Quick actions for the carousel
 const quickActions = [
@@ -135,14 +136,17 @@ export default function AddExpense() {
   );
 
   const handleNavigateToExpense = () => {
+    triggerHaptic();
     navigation.navigate("AddExpenseForm" as never);
   };
 
   const handleNavigateToIncome = () => {
+    triggerHaptic();
     navigation.navigate("AddIncomeForm" as never);
   };
 
   const handleFavoritePress = (transaction: Transaction) => {
+    triggerHaptic();
     // Determine transaction type
     const transactionType = transaction.type || (transaction.categoryId === "1" ? "expense" : "income");
     

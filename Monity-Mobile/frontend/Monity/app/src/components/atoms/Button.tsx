@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { COLORS } from "../../constants/colors";
+import { triggerHaptic } from "../../utils/haptics";
 
 interface ButtonProps extends PressableProps {
   title: string;
@@ -106,10 +107,17 @@ const Button = ({
     outline: "text-accent",
   };
 
+  const handlePress = () => {
+    if (!disabled) {
+      triggerHaptic();
+      onPress();
+    }
+  };
+
   return (
     <View className="relative">
       <Pressable
-        onPress={onPress}
+        onPress={handlePress}
         onPressIn={() => setIsPressed(true)}
         onPressOut={() => setIsPressed(false)}
         disabled={disabled}

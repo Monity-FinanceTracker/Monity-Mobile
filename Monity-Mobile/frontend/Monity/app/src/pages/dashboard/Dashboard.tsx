@@ -215,11 +215,17 @@ export default function Dashboard() {
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
             <View>
-              <Text className="text-white text-2xl font-bold">
+              <Text 
+                className="text-white text-2xl font-bold"
+                style={{ fontFamily: "EmonaBold" }}
+              >
                 Olá, {user?.name || "Usuário"}!
               </Text>
-              <Text className="text-gray-400 text-lg">
-                Bem-vindo de volta ao Monity
+              <Text 
+                className="text-gray-400 text-lg"
+                style={{ fontFamily: "EmonaBold" }}
+              >
+                Bem-vindo de volta a Monity
               </Text>
             </View>
             <Pressable

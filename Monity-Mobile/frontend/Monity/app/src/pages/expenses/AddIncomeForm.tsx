@@ -26,6 +26,7 @@ import {
   Calendar,
   Star,
 } from "lucide-react-native";
+import { triggerHaptic } from "../../utils/haptics";
 
 type AddIncomeFormRouteProp = RouteProp<RootStackParamList, "AddIncomeForm">;
 
@@ -177,6 +178,7 @@ export default function AddIncomeForm() {
       Alert.alert("Erro", "Por favor, preencha Nome, Valor e Categoria");
       return;
     }
+    triggerHaptic();
 
     try {
       // Convert amount to proper format
@@ -243,7 +245,10 @@ export default function AddIncomeForm() {
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
           <View className="flex-row items-center gap-4 mb-6">
-            <Pressable onPress={() => navigation.goBack()} className="p-2">
+            <Pressable onPress={() => {
+              triggerHaptic();
+              navigation.goBack();
+            }} className="p-2">
               <ArrowLeft size={20} color={colors.textPrimary} />
             </Pressable>
             <Text
@@ -478,7 +483,10 @@ export default function AddIncomeForm() {
           {/* Submit Buttons */}
           <View className="mt-3 flex-row gap-3">
             <Pressable
-              onPress={() => navigation.goBack()}
+              onPress={() => {
+                triggerHaptic();
+                navigation.goBack();
+              }}
               className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"
             >
               <Text style={{ color: colors.textGray, fontWeight: "500" }}>

@@ -8,13 +8,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MessageCircle, Send, Bot, User, Loader } from "lucide-react-native";
+import { ArrowUp, Bot, Loader } from "lucide-react-native";
 import { COLORS } from "../../constants/colors";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 import { geminiService } from "../../services/geminiService";
 import { apiService, Balance, Transaction, Category } from "../../services/apiService";
+import * as Font from "expo-font";
+import { triggerHaptic } from "../../utils/haptics";
 
 interface Message {
   id: string;
@@ -38,6 +41,22 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const [userContext, setUserContext] = useState<string | null>(null);
+  const [fontLoaded, setFontLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadFont = async () => {
+      try {
+        await Font.loadAsync({
+          EmonaRegular: require("../../../../assets/fonts/EmonaRegular.ttf"),
+        });
+        setFontLoaded(true);
+      } catch (error) {
+        console.warn("Error loading Emona font:", error);
+        setFontLoaded(true); // Continuar mesmo se falhar
+      }
+    };
+    loadFont();
+  }, []);
 
   const { refreshControl, isRefreshing, handleRefresh } = usePullToRefresh({
     onRefresh: async () => {
@@ -254,6 +273,7 @@ export default function Chat() {
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
+    triggerHaptic();
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -323,21 +343,6 @@ export default function Chat() {
             isUser ? "bg-accent rounded-br-md" : "bg-card-bg border border-border-default rounded-bl-md"
           }`}
         >
-          <View className={`flex-row items-start mb-1`}>
-            {!isUser && (
-              <Bot size={16} color={COLORS.accent} className="mr-2 mt-0.5" />
-            )}
-            {isUser && (
-              <User size={16} color="#232323" className="mr-2 mt-0.5" />
-            )}
-            <Text
-              className={`text-sm font-medium ${
-                isUser ? "text-[#232323]" : "text-text-primary"
-              }`}
-            >
-              {isUser ? "Você" : "IA Assistente"}
-            </Text>
-          </View>
           <Text
             className={`text-sm leading-5 ${
               isUser ? "text-[#232323]" : "text-text-primary"
@@ -357,34 +362,8 @@ export default function Chat() {
     );
   };
 
-  const suggestedQuestions = [
-    "Quanto eu tenho de saldo?",
-    "Qual é minha situação financeira atual?",
-    "Como posso economizar mais dinheiro?",
-    "Dicas para controlar gastos",
-  ];
-
-  const handleSuggestedQuestion = (question: string) => {
-    setInputText(question);
-  };
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "left", "right"]}>
-      {/* Header */}
-      <View style={{ backgroundColor: colors.background, paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-        <View className="flex-row items-center">
-          <MessageCircle size={24} color={COLORS.accent} className="mr-3" />
-          <View>
-            <Text className="text-text-primary text-base font-semibold ml-2">
-              Chat com IA
-            </Text>
-            <Text className="text-text-muted text-xs ml-2">
-              Seu assistente financeiro inteligente
-            </Text>
-          </View>
-        </View>
-      </View>
-
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -396,9 +375,32 @@ export default function Chat() {
           className="flex-1 px-6 py-4"
           refreshControl={refreshControl}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 20, flexGrow: 1 }}
         >
-          {messages.map(renderMessage)}
+          {messages.length === 1 ? (
+            <View className="flex-1 justify-center items-center" style={{ minHeight: 400 }}>
+              <Image
+                source={require("../../../../assets/images/LOGO_MONITY_512px512px.png")}
+                style={{
+                  width: 80,
+                  height: 100
+                }}
+                resizeMode="contain"
+              />
+              <Text
+                style={{
+                  fontFamily: fontLoaded ? "EmonaRegular" : undefined,
+                  color: COLORS.textSecondary,
+                  fontSize: 40,
+                  textAlign: "center",
+                }}
+              >
+                Como posso ajudar você hoje?
+              </Text>
+            </View>
+          ) : (
+            messages.map(renderMessage)
+          )}
 
           {isLoading && (
             <View className="flex-row justify-start mb-4">
@@ -413,30 +415,10 @@ export default function Chat() {
               </View>
             </View>
           )}
-
-          {/* Suggested Questions */}
-          {messages.length === 1 && (
-            <View className="mt-4">
-              <Text className="text-text-muted text-sm font-medium mb-3 ml-2 ">
-                Perguntas sugeridas:
-              </Text>
-              <View className="space-y-2">
-                {suggestedQuestions.map((question, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => handleSuggestedQuestion(question)}
-                    className="bg-card-bg rounded-xl p-3 border border-border-default mt-2"
-                  >
-                    <Text className="text-text-primary text-sm">{question}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
         </ScrollView>
 
         {/* Input */}
-        <View className="bg-background px-6 py-4 border-t border-border-default" style={{ paddingBottom: Platform.OS === "android" ? 100 : 90 }}>
+        <View className="bg-background px-4 py-4 border-t border-border-default" style={{ paddingBottom: Platform.OS === "android" ? 120 : 110 }}>
           <View className="flex-row items-center space-x-3">
             <View className="flex-1 bg-card-bg rounded-2xl px-4 border border-border-default" style={{ 
               paddingVertical: 8, 
@@ -446,7 +428,7 @@ export default function Chat() {
               <TextInput
                 value={inputText}
                 onChangeText={setInputText}
-                placeholder="Digite sua pergunta..."
+                placeholder="Converse com a Monity..."
                 placeholderTextColor={COLORS.textMuted}
                 className="text-text-primary text-base max-h-20"
                 multiline
@@ -463,7 +445,7 @@ export default function Chat() {
                 !inputText.trim() || isLoading ? "opacity-50" : ""
               }`}
             >
-              <Send size={20} color="#232323" />
+              <ArrowUp size={20} color="#232323" />
             </TouchableOpacity>
           </View>
         </View>

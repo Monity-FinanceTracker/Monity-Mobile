@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { COLORS } from "../constants/colors";
 import CameraAudioModal from "../components/CameraAudioModal";
+import { triggerHaptic } from "../utils/haptics";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -98,6 +99,22 @@ function AnimatedTabIcon({
   );
 }
 
+// Componente wrapper para adicionar haptics nas tabs de navegação
+function HapticTabButton({ children, onPress, ...props }: any) {
+  const handlePress = (e: any) => {
+    triggerHaptic();
+    if (onPress) {
+      onPress(e);
+    }
+  };
+
+  return (
+    <Pressable onPress={handlePress} {...props}>
+      {children}
+    </Pressable>
+  );
+}
+
 // Componente para detectar duplo toque no botão AddExpense
 function DoubleTapTabButton({
   children,
@@ -112,6 +129,7 @@ function DoubleTapTabButton({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handlePress = () => {
+    triggerHaptic();
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300; // 300ms para considerar duplo toque
 
@@ -121,6 +139,7 @@ function DoubleTapTabButton({
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
+      triggerHaptic();
       onDoublePress();
       lastTap.current = 0;
     } else {
@@ -217,6 +236,9 @@ function MainTabs() {
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
+          tabBarButton: (props) => (
+            <HapticTabButton {...props} />
+          ),
         }}
       />
       <Tab.Screen
@@ -229,6 +251,9 @@ function MainTabs() {
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
+          tabBarButton: (props) => (
+            <HapticTabButton {...props} />
+          ),
         }}
       />
       <Tab.Screen
@@ -240,8 +265,8 @@ function MainTabs() {
               <Image
                 source={require("../../../assets/images/MONITY_LOGO.png")}
                 style={{
-                  width: 70,
-                  height: 70,
+                  width: 50,
+                  height: 55,
                   tintColor: color,
                 }}
                 resizeMode="contain"
@@ -281,6 +306,9 @@ function MainTabs() {
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
+          tabBarButton: (props) => (
+            <HapticTabButton {...props} />
+          ),
         }}
       />
       <Tab.Screen
@@ -293,6 +321,9 @@ function MainTabs() {
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
+          tabBarButton: (props) => (
+            <HapticTabButton {...props} />
+          ),
         }}
       />
     </Tab.Navigator>

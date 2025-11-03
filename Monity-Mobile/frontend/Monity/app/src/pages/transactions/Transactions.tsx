@@ -31,6 +31,7 @@ import {
 } from "lucide-react-native";
 import { apiService, Transaction } from "../../services/apiService";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
+import { triggerHaptic } from "../../utils/haptics";
 
 const getTransactionIcon = (categoryName: string) => {
   const categoryMap: { [key: string]: any } = {
@@ -249,6 +250,7 @@ export default function Transactions() {
   };
 
   const handleEditTransaction = () => {
+    triggerHaptic();
     setShowActionModal(false);
     // TODO: Navigate to edit screen or show edit modal
     Alert.alert("Editar", "Funcionalidade de edição será implementada em breve");
@@ -256,6 +258,7 @@ export default function Transactions() {
 
   const handleDeleteTransaction = () => {
     if (!selectedTransaction) return;
+    triggerHaptic();
     
     Alert.alert(
       "Confirmar Exclusão",
@@ -287,6 +290,7 @@ export default function Transactions() {
 
   const handleToggleFavorite = async () => {
     if (!selectedTransaction) return;
+    triggerHaptic();
     
     try {
       const newFavoriteStatus = !selectedTransaction.isFavorite;

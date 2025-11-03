@@ -22,6 +22,7 @@ import {
   Zap,
   CreditCard,
 } from "lucide-react-native";
+import { triggerHaptic } from "../../utils/haptics";
 
 export default function SubscriptionPlans() {
   const navigation = useNavigation();
@@ -55,6 +56,7 @@ export default function SubscriptionPlans() {
       Alert.alert("Informação", "Você já está no plano gratuito");
       return;
     }
+    triggerHaptic();
 
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
