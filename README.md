@@ -391,8 +391,9 @@ Este projeto está sob a licença ISC. Veja o arquivo `LICENSE` para mais detalh
 - **Luca G. Lodi** – [https://github.com/LucaLodii](#) • [https://www.linkedin.com/in/luca-guimarães-lodi-752981356](#)
 - **Fabio Brugnara** – [https://github.com/fabiobrug](#) • [https://www.linkedin.com/in/fabio-brugnara-b32307324](#)
 
+## 👥 Empresa
 
-- **From Wide Chain & Co** 
+**Wide Chain & Co** 
 
 ## 🙏 Agradecimentos
 
