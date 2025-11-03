@@ -9,6 +9,9 @@ export default (controllers: any, middleware: any) => {
   router.post("/register", (req: Request, res: Response, next: NextFunction) =>
     authController.register(req, res, next)
   );
+  router.post("/check-email", (req: Request, res: Response, next: NextFunction) =>
+    authController.checkEmailExists(req, res, next)
+  );
   router.post("/login", (req: Request, res: Response, next: NextFunction) =>
     authController.login(req, res, next)
   );

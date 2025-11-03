@@ -14,3 +14,4 @@ COMMENT ON COLUMN transactions.is_favorite IS 'Flag indicating if transaction is
 
 
 
+

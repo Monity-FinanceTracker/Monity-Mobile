@@ -70,6 +70,66 @@ class AuthController {
     }
   }
 
+  async checkEmailExists(req: Request, res: Response, next?: NextFunction) {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: "Email is required",
+      });
+    }
+
+    try {
+      // Buscar por email (case-insensitive)
+      const normalizedEmail = email.toLowerCase().trim();
+      let emailExists = false;
+      let page = 0;
+      const pageSize = 1000; // Supabase retorna até 1000 usuários por vez
+
+      while (true) {
+        const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: pageSize,
+        });
+
+        if (listError) {
+          logger.error("Error listing users", { error: listError.message });
+          return res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+          });
+        }
+
+        emailExists = usersData.users.some(
+          (user: any) => user.email?.toLowerCase() === normalizedEmail
+        );
+
+        // Se encontrou o email ou não há mais páginas, parar
+        if (emailExists || usersData.users.length < pageSize) {
+          break;
+        }
+
+        page++;
+      }
+
+      res.json({
+        success: true,
+        data: {
+          exists: emailExists,
+        },
+      });
+    } catch (error) {
+      logger.error("An unexpected error occurred while checking email", {
+        error: error as Error["message"],
+      });
+      res.status(500).json({
+        success: false,
+        error: "Internal Server Error",
+      });
+    }
+  }
+
   async login(req: Request, res: Response) {
     const { email, password } = req.body;
 
