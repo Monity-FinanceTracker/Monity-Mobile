@@ -55,6 +55,7 @@ export interface Transaction {
   paymentMethod?: string;
   description?: string;
   isRecurring?: boolean;
+  isFavorite?: boolean;
 }
 
 export interface Category {
@@ -424,6 +425,7 @@ class ApiService {
     date: string;
     paymentMethod?: string;
     isRecurring?: boolean;
+    isFavorite?: boolean;
   }): Promise<ApiResponse<Transaction>> {
     return this.request<Transaction>("/transactions/add-expense", {
       method: "POST",
@@ -438,6 +440,7 @@ class ApiService {
     date: string;
     paymentMethod?: string;
     isRecurring?: boolean;
+    isFavorite?: boolean;
   }): Promise<ApiResponse<Transaction>> {
     return this.request<Transaction>("/transactions/add-income", {
       method: "POST",

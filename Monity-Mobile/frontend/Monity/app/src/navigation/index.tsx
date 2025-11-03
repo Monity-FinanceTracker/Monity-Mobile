@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,14 +9,17 @@ import Signup from "../pages/auth/Signup";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Transactions from "../pages/transactions/Transactions";
 import AddExpense from "../pages/expenses/AddExpense";
+import AddExpenseForm from "../pages/expenses/AddExpenseForm";
+import AddIncomeForm from "../pages/expenses/AddIncomeForm";
 import Categories from "../pages/categories/Categories";
 import Profile from "../pages/profile/Profile";
 import Chat from "../pages/chat/Chat";
 import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
-import { Platform, View, Text, Dimensions, Image } from "react-native";
+import { Platform, View, Text, Dimensions, Image, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { COLORS } from "../constants/colors";
+import CameraAudioModal from "../components/CameraAudioModal";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -24,6 +27,8 @@ export type RootStackParamList = {
   Main: undefined;
   Profile: undefined;
   SubscriptionPlans: undefined;
+  AddExpenseForm: { favoriteData?: any } | undefined;
+  AddIncomeForm: { favoriteData?: any } | undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -91,11 +96,68 @@ function AnimatedTabIcon({
   );
 }
 
-function MainTabs() {
-  const insets = useSafeAreaInsets();
+// Componente para detectar duplo toque no botão AddExpense
+function DoubleTapTabButton({
+  children,
+  onPress,
+  onDoublePress,
+}: {
+  children: React.ReactNode;
+  onPress: (e?: any) => void;
+  onDoublePress: () => void;
+}) {
+  const lastTap = useRef<number>(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handlePress = () => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300; // 300ms para considerar duplo toque
+
+    if (lastTap.current && now - lastTap.current < DOUBLE_TAP_DELAY) {
+      // Duplo toque detectado
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      onDoublePress();
+      lastTap.current = 0;
+    } else {
+      // Primeiro toque - aguardar para ver se há segundo toque
+      lastTap.current = now;
+      timeoutRef.current = setTimeout(() => {
+        // Se não houver segundo toque, executar ação de toque único
+        onPress();
+        lastTap.current = 0;
+        timeoutRef.current = null;
+      }, DOUBLE_TAP_DELAY);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <Tab.Navigator
+    <Pressable 
+      onPress={handlePress} 
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+function MainTabs() {
+  const insets = useSafeAreaInsets();
+  const [showCameraAudioModal, setShowCameraAudioModal] = useState(false);
+
+  return (
+    <>
+      <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,
@@ -170,7 +232,7 @@ function MainTabs() {
       <Tab.Screen
         name="AddExpense"
         component={AddExpense}
-        options={{
+        options={({ navigation }) => ({
           tabBarIcon: ({ focused, color }) => (
             <AnimatedTabIcon focused={focused} activeColor={focused ? COLORS.accent : color}>
               <Image
@@ -185,7 +247,27 @@ function MainTabs() {
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
-        }}
+          tabBarButton: (props) => {
+            // Criar um novo handler que intercepta o onPress original
+            const originalOnPress = props.onPress;
+            return (
+              <DoubleTapTabButton
+                onPress={(e?: any) => {
+                  if (originalOnPress) {
+                    originalOnPress(e);
+                  }
+                }}
+                onDoublePress={() => {
+                  setShowCameraAudioModal(true);
+                }}
+              >
+                <View style={props.style} {...props.accessibilityState}>
+                  {props.children}
+                </View>
+              </DoubleTapTabButton>
+            );
+          },
+        })}
       />
       <Tab.Screen
         name="Chat"
@@ -212,6 +294,11 @@ function MainTabs() {
         }}
       />
     </Tab.Navigator>
+    <CameraAudioModal
+      visible={showCameraAudioModal}
+      onClose={() => setShowCameraAudioModal(false)}
+    />
+    </>
   );
 }
 
@@ -233,6 +320,8 @@ function Gate() {
           <RootStack.Screen name="Main" component={MainTabs} />
           <RootStack.Screen name="Profile" component={Profile} />
           <RootStack.Screen name="SubscriptionPlans" component={SubscriptionPlans} />
+          <RootStack.Screen name="AddExpenseForm" component={AddExpenseForm} />
+          <RootStack.Screen name="AddIncomeForm" component={AddIncomeForm} />
         </>
       ) : (
         <>

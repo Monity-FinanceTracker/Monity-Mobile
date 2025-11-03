@@ -53,6 +53,9 @@ const createServer = (supabaseClient?: SupabaseClient): Express => {
 
   const controllers = initializeControllers(supabaseClient || supabase);
 
+  // Trust proxy for Railway/production (needed for rate limiting behind proxies)
+  app.set('trust proxy', true);
+
   app.use(cors(corsOptions));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
