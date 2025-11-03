@@ -8,7 +8,8 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { RootStackParamList } from "../../navigation";
 import { COLORS } from "../../constants/colors";
 import { apiService, Category } from "../../services/apiService";
 import {
@@ -26,9 +27,14 @@ import {
   Star,
 } from "lucide-react-native";
 
+type AddExpenseFormRouteProp = RouteProp<RootStackParamList, "AddExpenseForm">;
+
 export default function AddExpenseForm() {
   const navigation = useNavigation();
+  const route = useRoute<AddExpenseFormRouteProp>();
   const colors = COLORS;
+
+  const favoriteData = route.params?.favoriteData;
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -70,6 +76,58 @@ export default function AddExpenseForm() {
   const filteredCategories = categories.filter(
     (category) => category.typeId === 1
   );
+
+  // Populate form fields when favoriteData is available
+  useEffect(() => {
+    if (favoriteData && categories.length > 0) {
+      // Set name
+      if (favoriteData.name) {
+        setName(favoriteData.name);
+      }
+      
+      // Set amount (format as Brazilian currency)
+      if (favoriteData.amount) {
+        const formattedValue = (Number(favoriteData.amount) / 1).toLocaleString(
+          "pt-BR",
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }
+        );
+        setAmount(formattedValue);
+      }
+      
+      // Set description
+      if (favoriteData.description) {
+        setDescription(favoriteData.description);
+      }
+      
+      // Set date
+      if (favoriteData.date) {
+        // Format date to YYYY-MM-DD if needed
+        const dateStr = favoriteData.date.split('T')[0];
+        setDate(dateStr);
+      }
+      
+      // Set isFavorite
+      if (favoriteData.isFavorite !== undefined) {
+        setIsFavorite(favoriteData.isFavorite);
+      }
+      
+      // Find and set category by name
+      if (favoriteData.categoryName) {
+        const expenseCategories = categories.filter(
+          (category) => category.typeId === 1
+        );
+        const matchingCategory = expenseCategories.find(
+          (cat) => cat.name === favoriteData.categoryName
+        );
+        if (matchingCategory) {
+          setSelectedCategory(matchingCategory.id);
+        }
+      }
+    }
+  }, [favoriteData, categories]);
 
   const getCategoryIcon = (iconName: string) => {
     const iconMap: { [key: string]: any } = {

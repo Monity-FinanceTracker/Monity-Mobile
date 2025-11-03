@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -118,10 +119,17 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
         <View className="flex-1 justify-center px-6">
           <View className="w-full max-w-sm mx-auto">
             {/* Logo Section */}
-            <View className="mb-8 items-center">
-              <Text className="text-5xl font-bold text-accent mb-2">
-                Monity
-              </Text>
+            <View className="mb-6 items-center">
+              <View className="flex-row items-center justify-center mb-2">
+                <Image
+                  source={require("../../../../assets/images/BANNER_MONITY.png")}
+                  style={{
+                    width: 200,
+                    height: 60,
+                  }}
+                  resizeMode="contain"
+                />
+              </View>
               <Text className="text-text-gray text-lg">Create your account</Text>
             </View>
 

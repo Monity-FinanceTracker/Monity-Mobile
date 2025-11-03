@@ -4,22 +4,137 @@ import { supabaseAdmin } from "../config";
 export default class Transaction {
   private static readonly TABLE_NAME = "transactions";
   static async create(transactionData: any) {
-    const encryptedData = encryptObject(Transaction.TABLE_NAME, {
+    // Preserve is_favorite explicitly before encryption (it's not a sensitive field)
+    // Handle both camelCase and snake_case
+    const rawIsFavorite = transactionData.is_favorite !== undefined 
+      ? transactionData.is_favorite 
+      : (transactionData.isFavorite !== undefined ? transactionData.isFavorite : false);
+    
+    // Convert to proper boolean - handle all possible truthy values
+    let finalIsFavorite: boolean;
+    if (rawIsFavorite === false || rawIsFavorite === "false" || rawIsFavorite === 0 || rawIsFavorite === "0") {
+      finalIsFavorite = false;
+    } else if (rawIsFavorite === true || rawIsFavorite === "true" || rawIsFavorite === 1 || rawIsFavorite === "1") {
+      finalIsFavorite = true;
+    } else {
+      // For undefined or null, default to false
+      finalIsFavorite = false;
+    }
+    
+    console.log("🔍 Transaction.create - Input data:", {
+      "transactionData.is_favorite": transactionData.is_favorite,
+      "transactionData.isFavorite": transactionData.isFavorite,
+      "rawIsFavorite": rawIsFavorite,
+      "finalIsFavorite": finalIsFavorite,
+      "typeof finalIsFavorite": typeof finalIsFavorite,
+      "fullDataKeys": Object.keys(transactionData),
+    });
+    
+    // Create the data object with all fields
+    const dataToEncrypt = {
       ...transactionData,
       createdAt: new Date().toISOString(),
+    };
+    
+    const encryptedData = encryptObject(Transaction.TABLE_NAME, dataToEncrypt);
+    
+    console.log("🔍 Transaction.create - After encryption:", {
+      "hasIsFavorite": "is_favorite" in encryptedData,
+      "is_favorite": encryptedData.is_favorite,
+      "encryptedKeys": Object.keys(encryptedData),
+    });
+    
+    // CRITICAL: Set is_favorite AFTER encryption to ensure it's never removed
+    // The encryption only handles 'description', so is_favorite should pass through
+    // But we'll set it explicitly after encryption to be 100% sure
+    encryptedData.is_favorite = finalIsFavorite === true ? true : false;
+    
+    // Create insert object - explicitly include is_favorite at the end
+    const insertData: any = {
+      ...encryptedData,
+      // Force include is_favorite as the LAST property to ensure it's not overwritten
+      is_favorite: finalIsFavorite === true ? true : false,
+    };
+    
+    console.log("🔍 Transaction.create - Before Supabase insert:", {
+      "hasIsFavorite": "is_favorite" in insertData,
+      "is_favorite": insertData.is_favorite,
+      "typeof": typeof insertData.is_favorite,
+      "isTrue": insertData.is_favorite === true,
+      "isFalse": insertData.is_favorite === false,
+      "insertDataKeys": Object.keys(insertData),
+      "is_favorite_value": insertData.is_favorite,
+      "sample_keys": Object.keys(insertData).slice(0, 5),
+      "total_keys": Object.keys(insertData).length,
+    });
+    
+    // Triple check - log the exact value being sent
+    console.log("🔍🔍🔍 FINAL CHECK - is_favorite value:", {
+      "value": insertData.is_favorite,
+      "type": typeof insertData.is_favorite,
+      "stringified": JSON.stringify(insertData.is_favorite),
+      "in_object": "is_favorite" in insertData,
+    });
+
+    // Final verification before insert
+    // CRITICAL: Always explicitly set is_favorite as a boolean to avoid NULL
+    const finalInsertValue = {
+      ...insertData,
+      is_favorite: finalIsFavorite === true ? true : false, // Always set as explicit boolean
+    };
+    
+    // Remove any undefined/null values that might interfere
+    Object.keys(finalInsertValue).forEach(key => {
+      if (finalInsertValue[key] === undefined || finalInsertValue[key] === null) {
+        if (key === 'is_favorite') {
+          finalInsertValue[key] = false; // Never allow NULL for is_favorite
+        }
+      }
+    });
+    
+    console.log("🚀 FINAL INSERT - Sending to Supabase:", {
+      "is_favorite": finalInsertValue.is_favorite,
+      "typeof": typeof finalInsertValue.is_favorite,
+      "has_field": "is_favorite" in finalInsertValue,
+      "all_keys_count": Object.keys(finalInsertValue).length,
+      "is_favorite_explicit": finalInsertValue.is_favorite === true || finalInsertValue.is_favorite === false,
     });
 
     const { data, error } = await supabaseAdmin
       .from(Transaction.TABLE_NAME)
-      .insert([encryptedData])
-      .select()
+      .insert([finalInsertValue])
+      .select("*, is_favorite") // Explicitly select is_favorite to ensure it's returned
       .single();
 
     if (error) {
+      console.error("❌ Transaction.create - Supabase error:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        "sent_data": JSON.stringify(finalInsertValue, null, 2),
+      });
       throw new Error(`Error creating transaction: ${error.message}`);
     }
+    
+    console.log("✅ Transaction.create - Supabase response:", {
+      id: data?.id,
+      "is_favorite": data?.is_favorite,
+      "typeof": typeof data?.is_favorite,
+      "is_null": data?.is_favorite === null,
+      "is_undefined": data?.is_favorite === undefined,
+      "fullData_is_favorite": data ? (data as any).is_favorite : "no data",
+    });
 
-    return decryptObject(Transaction.TABLE_NAME, data);
+    // Decrypt sensitive fields but preserve is_favorite
+    const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
+    
+    // Ensure is_favorite is preserved from the database response
+    if (data && data.is_favorite !== undefined) {
+      decryptedData.is_favorite = data.is_favorite === true;
+    }
+    
+    return decryptedData;
   }
 
   static async getById(id: string, userId: string) {
@@ -35,7 +150,15 @@ export default class Transaction {
       throw new Error(`Error fetching transaction: ${error.message}`);
     }
 
-    return decryptObject(Transaction.TABLE_NAME, data);
+    // Decrypt sensitive fields but preserve is_favorite
+    const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
+    
+    // Ensure is_favorite is preserved
+    if (data && data.is_favorite !== undefined) {
+      decryptedData.is_favorite = data.is_favorite === true;
+    }
+    
+    return decryptedData;
   }
 
   static async getAll(userId: string) {
@@ -49,7 +172,41 @@ export default class Transaction {
       throw new Error(`Error fetching transactions for user: ${error.message}`);
     }
 
-    return decryptObject(Transaction.TABLE_NAME, data);
+    // Preserve original data before decryption to access is_favorite
+    const originalData = Array.isArray(data) ? [...data] : data;
+    
+    // Debug: Log original data to check is_favorite values
+    if (Array.isArray(originalData) && originalData.length > 0) {
+      console.log("🔍 Transaction.getAll - Sample original data:", 
+        originalData.slice(0, 3).map((item: any) => ({ 
+          id: item.id, 
+          is_favorite: item.is_favorite, 
+          typeof: typeof item.is_favorite 
+        }))
+      );
+    }
+    
+    // Decrypt sensitive fields but preserve is_favorite
+    const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
+    
+    // Ensure is_favorite is preserved for all transactions
+    if (Array.isArray(decryptedData) && Array.isArray(originalData)) {
+      return decryptedData.map((item: any, index: number) => {
+        // Preserve is_favorite from the original data (before decryption)
+        const originalItem = originalData[index];
+        if (originalItem) {
+          // Explicitly set is_favorite, handling null, true, false, and undefined
+          if (originalItem.is_favorite !== undefined && originalItem.is_favorite !== null) {
+            item.is_favorite = originalItem.is_favorite === true || originalItem.is_favorite === "true" || originalItem.is_favorite === 1;
+          } else {
+            item.is_favorite = false;
+          }
+        }
+        return item;
+      });
+    }
+    
+    return decryptedData;
   }
 
   static async getRecent(userId: string, limit: number = 5) {
@@ -66,25 +223,158 @@ export default class Transaction {
       );
     }
 
-    return decryptObject(Transaction.TABLE_NAME, data);
+    // Preserve original data before decryption to access is_favorite
+    const originalData = Array.isArray(data) ? [...data] : data;
+    
+    // Decrypt sensitive fields but preserve is_favorite
+    const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
+    
+    // Ensure is_favorite is preserved for all transactions
+    if (Array.isArray(decryptedData) && Array.isArray(originalData)) {
+      return decryptedData.map((item: any, index: number) => {
+        // Preserve is_favorite if it exists in the original data
+        const originalItem = originalData[index];
+        if (originalItem && originalItem.is_favorite !== undefined) {
+          item.is_favorite = originalItem.is_favorite === true;
+        }
+        return item;
+      });
+    }
+    
+    return decryptedData;
   }
 
   static async update(id: string, userId: string, updates: any) {
+    console.log("🔍 Transaction.update - Input:", {
+      id,
+      userId,
+      updates,
+      updateKeys: Object.keys(updates),
+      "hasIsFavorite": "is_favorite" in updates,
+      "is_favorite": updates.is_favorite,
+    });
+    
+    // Preserve is_favorite explicitly before encryption (it's not a sensitive field)
+    // Handle both camelCase and snake_case
+    const rawIsFavorite = updates.is_favorite !== undefined 
+      ? updates.is_favorite 
+      : (updates.isFavorite !== undefined ? updates.isFavorite : undefined);
+    
+    // Convert to proper boolean if provided - handle all possible values
+    let finalIsFavorite: boolean | undefined = undefined;
+    if (rawIsFavorite !== undefined && rawIsFavorite !== null) {
+      if (rawIsFavorite === false || rawIsFavorite === "false" || rawIsFavorite === 0 || rawIsFavorite === "0") {
+        finalIsFavorite = false;
+      } else if (rawIsFavorite === true || rawIsFavorite === "true" || rawIsFavorite === 1 || rawIsFavorite === "1") {
+        finalIsFavorite = true;
+      } else {
+        // For unknown values, default to false
+        finalIsFavorite = false;
+      }
+    }
+    
+    console.log("🔍 Transaction.update - After conversion:", {
+      rawIsFavorite,
+      finalIsFavorite,
+      "typeof finalIsFavorite": typeof finalIsFavorite,
+    });
+    
     const encryptedUpdates = encryptObject(Transaction.TABLE_NAME, updates);
+    
+    // Ensure is_favorite is included even if encryptObject removed it
+    if (finalIsFavorite !== undefined) {
+      encryptedUpdates.is_favorite = finalIsFavorite;
+    }
 
+    // Remove any undefined or null values from encryptedUpdates (except is_favorite which can be false)
+    const cleanUpdates: any = {};
+    Object.keys(encryptedUpdates).forEach(key => {
+      const value = encryptedUpdates[key];
+      // Include the field if it's not undefined/null, OR if it's is_favorite (which can be false)
+      if (value !== undefined && value !== null) {
+        cleanUpdates[key] = value;
+      } else if (key === 'is_favorite' && value === false) {
+        // Explicitly include is_favorite even if it's false
+        cleanUpdates[key] = false;
+      }
+    });
+    
+    // Ensure is_favorite is explicitly set if it was provided
+    if (finalIsFavorite !== undefined) {
+      cleanUpdates.is_favorite = finalIsFavorite;
+    }
+
+    console.log("🔍 Transaction.update - Before Supabase update:", {
+      encryptedUpdates,
+      cleanUpdates,
+      "hasIsFavorite": "is_favorite" in cleanUpdates,
+      "is_favorite": cleanUpdates.is_favorite,
+      "encryptedKeys": Object.keys(encryptedUpdates),
+      "cleanKeys": Object.keys(cleanUpdates),
+    });
+
+    // Validate that we have something to update
+    if (Object.keys(cleanUpdates).length === 0) {
+      throw new Error("No valid fields to update");
+    }
+
+    // First, verify the transaction exists and belongs to the user
+    const { data: existingTransaction, error: checkError } = await supabaseAdmin
+      .from(Transaction.TABLE_NAME)
+      .select("id")
+      .eq("id", id)
+      .eq("userId", userId)
+      .single();
+
+    if (checkError) {
+      console.error("❌ Transaction.update - Transaction not found or access denied:", {
+        message: checkError.message,
+        code: checkError.code,
+        id,
+        userId,
+      });
+      throw new Error(`Transaction not found or you do not have permission to update it: ${checkError.message}`);
+    }
+
+    if (!existingTransaction) {
+      throw new Error(`Transaction not found or you do not have permission to update it`);
+    }
+
+    // Now perform the update
     const { data, error } = await supabaseAdmin
       .from(Transaction.TABLE_NAME)
-      .update(encryptedUpdates)
+      .update(cleanUpdates)
       .eq("id", id)
       .eq("userId", userId)
       .select()
-      .single();
+      .maybeSingle(); // Use maybeSingle() instead of single() to handle cases where no rows are returned
 
     if (error) {
-      throw new Error(`Error updating transaction: ${error.message}`);
+      console.error("❌ Transaction.update - Supabase update error:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        cleanUpdates,
+        id,
+        userId,
+      });
+      throw new Error(`Error updating transaction: ${error.message} (Code: ${error.code}, Details: ${error.details || error.hint || 'No additional details'})`);
     }
 
-    return decryptObject(Transaction.TABLE_NAME, data);
+    if (!data) {
+      throw new Error(`Transaction was not updated - no data returned`);
+    }
+
+    // Decrypt sensitive fields but preserve is_favorite
+    const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
+    
+    // Ensure is_favorite is preserved
+    if (data && data.is_favorite !== undefined) {
+      decryptedData.is_favorite = data.is_favorite === true;
+    }
+    
+    return decryptedData;
   }
 
   static async delete(id: string, userId: string) {

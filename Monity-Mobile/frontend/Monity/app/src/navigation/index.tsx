@@ -27,8 +27,8 @@ export type RootStackParamList = {
   Main: undefined;
   Profile: undefined;
   SubscriptionPlans: undefined;
-  AddExpenseForm: undefined;
-  AddIncomeForm: undefined;
+  AddExpenseForm: { favoriteData?: any } | undefined;
+  AddIncomeForm: { favoriteData?: any } | undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();

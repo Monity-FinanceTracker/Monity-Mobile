@@ -55,6 +55,7 @@ const schemas = {
     category: Joi.string().min(1).max(100).custom(sanitize).required(),
     date: Joi.date().iso().max("now").required(),
     typeId: Joi.number().integer().valid(1, 2, 3).required(),
+    isFavorite: Joi.boolean().optional(),
   }),
   category: Joi.object({
     name: Joi.string().min(1).max(100).custom(sanitize).required(),

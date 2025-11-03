@@ -439,7 +439,6 @@ export default function AddExpense() {
                                 >
                                   {title}
                                 </Text>
-                                <Star size={14} color={colors.accent} fill={colors.accent} />
                               </View>
                               <Text
                                 style={{
@@ -481,7 +480,6 @@ export default function AddExpense() {
                   alignItems: 'center',
                 }}
               >
-                <Star size={32} color={colors.textMuted} style={{ marginBottom: 12 }} />
                 <Text
                   style={{
                     color: colors.textGray,
