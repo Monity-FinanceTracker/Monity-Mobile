@@ -49,3 +49,8 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Google OAuth credentials
+ids/
+**/client_secret_*.json
+**/client_*.plist

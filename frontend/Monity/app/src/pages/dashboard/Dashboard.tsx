@@ -14,20 +14,14 @@ import {
   Plus,
   Eye,
   EyeOff,
-  ShoppingCart,
-  Car,
-  Home,
-  Coffee,
-  Gamepad2,
-  Heart,
-  GraduationCap,
-  Briefcase,
   Calendar,
   CreditCard,
   Smartphone,
   Banknote,
   User,
   Mail,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react-native";
 
 export default function Dashboard() {
@@ -86,19 +80,6 @@ export default function Dashboard() {
     loadDashboardData();
   }, []);
 
-  const getTransactionIcon = (categoryName: string) => {
-    const categoryMap: { [key: string]: any } = {
-      Alimentação: ShoppingCart,
-      Transporte: Car,
-      Moradia: Home,
-      Entretenimento: Gamepad2,
-      Saúde: Heart,
-      Educação: GraduationCap,
-      Trabalho: Briefcase,
-      Receita: TrendingUp,
-    };
-    return categoryMap[categoryName] || ShoppingCart;
-  };
 
   const formatTransactionDate = (dateString: string) => {
     // Handle YYYY-MM-DD format dates correctly
@@ -156,7 +137,10 @@ export default function Dashboard() {
       ((transaction.categoryId as string) === "1" ? "expense" : "income");
     const amount = transaction.amount || 0;
 
-    const Icon = getTransactionIcon(categoryName as string);
+    // Use arrows instead of category icons
+    const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
+    const arrowColor = transactionType === "income" ? "#4ADE80" : "#FFFFFF"; // Green-400 for income, white for expense
+    
     return (
       <View key={transaction.id} style={{ marginBottom: 12 }}>
         <Card>
@@ -166,12 +150,12 @@ export default function Dashboard() {
                 className={`w-8 h-8 rounded-lg items-center justify-center ${
                   transactionType === "income"
                     ? "bg-green-500/10"
-                    : "bg-red-500/10"
+                    : "bg-white/10"
                 }`}
               >
-                <Icon
+                <ArrowIcon
                   size={16}
-                  color="white"
+                  color={arrowColor}
                 />
               </View>
               <View>
@@ -184,7 +168,7 @@ export default function Dashboard() {
             <View className="items-end">
               <Text
                 className={`font-semibold text-xs ${
-                  transactionType === "income" ? "text-green-400" : "text-red-400"
+                  transactionType === "income" ? "text-green-400" : "text-white"
                 }`}
               >
                 {transactionType === "income" ? "+" : "-"}
@@ -217,13 +201,11 @@ export default function Dashboard() {
             <View>
               <Text 
                 className="text-white text-2xl font-bold"
-                style={{ fontFamily: "EmonaBold" }}
               >
                 Olá, {user?.name || "Usuário"}!
               </Text>
               <Text 
                 className="text-gray-400 text-lg"
-                style={{ fontFamily: "EmonaBold" }}
               >
                 Bem-vindo de volta a Monity
               </Text>
@@ -266,13 +248,13 @@ export default function Dashboard() {
                     ) : (
                       <TrendingDown size={16} color="white" />
                     )}
-                    <Text
-                      className={`text-3xs ${
-                        (balance.changePercentage || 0) >= 0
-                          ? "text-green-400"
-                          : "text-red-400"
-                      }`}
-                    >
+                      <Text
+                        className={`text-3xs ${
+                          (balance.changePercentage || 0) >= 0
+                            ? "text-green-400"
+                            : "text-white"
+                        }`}
+                      >
                       {(balance.changePercentage || 0) >= 0 ? "+" : ""}
                       {(balance.changePercentage || 0).toFixed(1)}%
                     </Text>
@@ -311,12 +293,12 @@ export default function Dashboard() {
               <Card>
                 <View className="p-4">
                   <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-red-500/10 rounded-lg items-center justify-center">
+                    <View className="w-10 h-10 bg-white/10 rounded-lg items-center justify-center">
                       <TrendingDown size={20} color="white" />
                     </View>
                     <View>
                       <Text className="text-xs text-gray-400">Despesas</Text>
-                      <Text className="text-sm font-semibold text-red-400">
+                      <Text className="text-sm font-semibold text-white">
                         {balance
                           ? formatCurrency(balance?.expenses)
                           : "R$ 0,00"}

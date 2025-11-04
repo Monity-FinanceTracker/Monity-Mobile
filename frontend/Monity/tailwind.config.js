@@ -55,8 +55,8 @@ module.exports = {
           bg: 'rgba(34, 197, 94, 0.2)',
         },
         expense: {
-          DEFAULT: '#F87171',
-          bg: 'rgba(239, 68, 68, 0.2)',
+          DEFAULT: '#FFFFFF',
+          bg: 'rgba(255, 255, 255, 0.1)',
         },
         savings: {
           DEFAULT: '#60A5FA',

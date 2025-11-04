@@ -130,20 +130,6 @@ export default function AddIncomeForm() {
     }
   }, [favoriteData, categories]);
 
-  const getCategoryIcon = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      Coffee: Coffee,
-      Car: Car,
-      Home: Home,
-      ShoppingCart: ShoppingCart,
-      Gamepad2: Gamepad2,
-      Heart: Heart,
-      GraduationCap: GraduationCap,
-      Briefcase: Briefcase,
-      TrendingUp: TrendingUp,
-    };
-    return iconMap[iconName] || Coffee;
-  };
 
   const getBackgroundColorClass = (color: string) => {
     const colorMap: { [key: string]: string } = {
@@ -398,28 +384,20 @@ export default function AddIncomeForm() {
                 contentContainerStyle={{ gap: 12 }}
               >
                 {filteredCategories.map((category) => {
-                  const Icon = getCategoryIcon(category.icon);
                   const isSelected = selectedCategory === category.id;
                   return (
                     <Pressable
                       key={category.id}
                       onPress={() => setSelectedCategory(category.id)}
-                      className={`w-24 h-24 rounded-xl items-center justify-center flex-col gap-2 ${
+                      className={`px-4 py-3 rounded-xl items-center justify-center ${
                         isSelected
                           ? "bg-accent"
                           : "bg-card-bg border border-border-default"
                       }`}
                     >
-                      <View
-                        className={`w-10 h-10 rounded-lg items-center justify-center ${getBackgroundColorClass(
-                          category.color
-                        )}`}
-                      >
-                        <Icon size={20} color={colors.textPrimary} />
-                      </View>
                       <Text
                         style={{
-                          fontSize: 12,
+                          fontSize: 14,
                           textAlign: "center",
                           paddingHorizontal: 4,
                           color: isSelected ? "#191E29" : colors.textGray,
