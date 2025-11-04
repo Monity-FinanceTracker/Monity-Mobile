@@ -6,15 +6,25 @@ const router = express.Router();
 export default (controllers: any, middleware: any) => {
   const { authController } = controllers;
 
-  router.post("/register", (req: Request, res: Response, next: NextFunction) =>
-    authController.register(req, res, next)
+  // Public endpoints (not authenticated) - use stricter rate limiting
+  router.post("/register", 
+    middleware.rateLimiter.authLimiter,
+    (req: Request, res: Response, next: NextFunction) =>
+      authController.register(req, res, next)
   );
-  router.post("/check-email", (req: Request, res: Response, next: NextFunction) =>
-    authController.checkEmailExists(req, res, next)
+  router.post("/check-email",
+    middleware.rateLimiter.authLimiter,
+    (req: Request, res: Response, next: NextFunction) =>
+      authController.checkEmailExists(req, res, next)
   );
-  router.post("/login", (req: Request, res: Response, next: NextFunction) =>
-    authController.login(req, res, next)
+  router.post("/login",
+    middleware.rateLimiter.authLimiter,
+    (req: Request, res: Response, next: NextFunction) =>
+      authController.login(req, res, next)
   );
+  
+  // Authenticated endpoints - use general rate limiting (already applied by v1Router)
+  // These endpoints are protected by authentication, so they don't need strict rate limiting
   router.get(
     "/profile",
     middleware.auth.authenticate,

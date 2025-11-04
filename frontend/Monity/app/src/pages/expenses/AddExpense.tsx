@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -17,13 +19,15 @@ import {
   HelpCircle,
   ChevronRight,
   Star,
-  ShoppingCart,
-  Car,
-  Home,
-  Coffee,
-  Gamepad2,
+  Camera as CameraIcon,
+  Mic,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
+import * as ImagePicker from "expo-image-picker";
+import { Audio } from "expo-av";
+import { geminiService } from "../../services/geminiService";
 
 // Quick actions for the carousel
 const quickActions = [
@@ -56,25 +60,41 @@ const quickActions = [
   },
 ];
 
-const getTransactionIcon = (categoryName: string) => {
-  const categoryMap: { [key: string]: any } = {
-    Alimentação: ShoppingCart,
-    Transporte: Car,
-    Moradia: Home,
-    Entretenimento: Gamepad2,
-    Saúde: TrendingUp,
-    Educação: TrendingUp,
-    Trabalho: TrendingUp,
-    Receita: TrendingUp,
-  };
-  return categoryMap[categoryName] || ShoppingCart;
-};
 
 export default function AddExpense() {
   const navigation = useNavigation();
   const colors = COLORS;
   const [favoriteTransactions, setFavoriteTransactions] = useState<Transaction[]>([]);
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
+  const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
+  const [audioPermission, setAudioPermission] = useState<boolean | null>(null);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Solicitar permissões ao montar o componente
+  useEffect(() => {
+    (async () => {
+      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+      const { status: audioStatus } = await Audio.requestPermissionsAsync();
+      
+      setCameraPermission(cameraStatus === "granted");
+      setAudioPermission(audioStatus === "granted");
+    })();
+  }, []);
+
+  // Cleanup ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      if (recording) {
+        // Tenta parar a gravação, mas ignora erros se já foi unloaded
+        recording.stopAndUnloadAsync().catch(() => {
+          // Silenciosamente ignora erros de gravação já unloaded
+          // Isso é esperado quando a gravação já foi parada manualmente
+        });
+      }
+    };
+  }, [recording]);
 
   const loadFavorites = async () => {
     try {
@@ -132,6 +152,8 @@ export default function AddExpense() {
   useFocusEffect(
     React.useCallback(() => {
       loadFavorites();
+      // Reset processing state when screen is focused (in case user navigated back)
+      setIsProcessing(false);
     }, [])
   );
 
@@ -204,6 +226,196 @@ export default function AddExpense() {
         day: "2-digit",
         month: "short",
       });
+    }
+  };
+
+  const processImageAndNavigate = async (imageUri: string) => {
+    try {
+      setIsProcessing(true);
+      
+      // Process image with Gemini AI
+      const extractedData = await geminiService.processReceiptImage(imageUri);
+      
+      // Prepare favoriteData object
+      const favoriteData = {
+        name: extractedData.name,
+        amount: extractedData.amount,
+        description: extractedData.description || extractedData.name,
+        date: extractedData.date,
+        categoryName: extractedData.categoryName,
+        isFavorite: false,
+      };
+
+      // Reset processing state before navigation
+      setIsProcessing(false);
+
+      // Navigate to appropriate form based on transaction type
+      if (extractedData.type === "income") {
+        (navigation as any).navigate("AddIncomeForm", { favoriteData });
+      } else {
+        (navigation as any).navigate("AddExpenseForm", { favoriteData });
+      }
+    } catch (error: any) {
+      console.error("Erro ao processar imagem:", error);
+      setIsProcessing(false);
+      Alert.alert(
+        "Erro ao Processar",
+        error.message || "Não foi possível processar a imagem. Tente novamente.",
+        [
+          {
+            text: "OK",
+            onPress: () => {},
+          },
+        ]
+      );
+    }
+  };
+
+  const handleCameraPress = async () => {
+    if (!cameraPermission) {
+      Alert.alert(
+        "Permissão Necessária",
+        "Por favor, conceda permissão para usar a câmera nas configurações do aplicativo."
+      );
+      return;
+    }
+
+    if (isProcessing) return;
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const photo = result.assets[0];
+        console.log("Foto tirada:", photo.uri);
+        // Process image with AI
+        await processImageAndNavigate(photo.uri);
+      } else {
+        // User canceled, reset processing state
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error("Erro ao tirar foto:", error);
+      setIsProcessing(false);
+      Alert.alert("Erro", "Não foi possível tirar a foto.");
+    }
+  };
+
+  const processAudioAndNavigate = async (audioUri: string | null) => {
+    if (!audioUri) {
+      setIsProcessing(false);
+      Alert.alert("Erro", "URI do áudio não disponível.");
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      
+      // Process audio with Gemini AI
+      const extractedData = await geminiService.processTransactionAudio(audioUri);
+      
+      // Prepare favoriteData object
+      const favoriteData = {
+        name: extractedData.name,
+        amount: extractedData.amount,
+        description: extractedData.description || extractedData.name,
+        date: extractedData.date,
+        categoryName: extractedData.categoryName,
+        isFavorite: false,
+      };
+
+      // Reset processing state before navigation
+      setIsProcessing(false);
+
+      // Navigate to appropriate form based on transaction type
+      if (extractedData.type === "income") {
+        (navigation as any).navigate("AddIncomeForm", { favoriteData });
+      } else {
+        (navigation as any).navigate("AddExpenseForm", { favoriteData });
+      }
+    } catch (error: any) {
+      console.error("Erro ao processar áudio:", error);
+      setIsProcessing(false);
+      Alert.alert(
+        "Erro ao Processar",
+        error.message || "Não foi possível processar o áudio. Tente novamente.",
+        [
+          {
+            text: "OK",
+            onPress: () => {},
+          },
+        ]
+      );
+    }
+  };
+
+  const handleAudioPress = async () => {
+    if (!audioPermission) {
+      Alert.alert(
+        "Permissão Necessária",
+        "Por favor, conceda permissão para usar o microfone nas configurações do aplicativo."
+      );
+      return;
+    }
+
+    if (isProcessing && !isRecording) return;
+
+    try {
+      if (isRecording && recording) {
+        // Parar gravação
+        try {
+          await recording.stopAndUnloadAsync();
+          const uri = recording.getURI();
+          console.log("Áudio gravado:", uri);
+          setIsRecording(false);
+          setRecording(null);
+          
+          // Process audio with AI
+          if (uri) {
+            await processAudioAndNavigate(uri);
+          } else {
+            setIsProcessing(false);
+            Alert.alert("Erro", "Não foi possível obter o áudio gravado.");
+          }
+        } catch (stopError) {
+          console.error("Erro ao parar gravação:", stopError);
+          setIsRecording(false);
+          setRecording(null);
+          setIsProcessing(false);
+          Alert.alert("Erro", "Não foi possível parar a gravação.");
+        }
+      } else {
+        // Iniciar gravação
+        try {
+          await Audio.setAudioModeAsync({
+            allowsRecordingIOS: true,
+            playsInSilentModeIOS: true,
+          });
+
+          const { recording: newRecording } = await Audio.Recording.createAsync(
+            Audio.RecordingOptionsPresets.HIGH_QUALITY
+          );
+
+          setRecording(newRecording);
+          setIsRecording(true);
+        } catch (startError) {
+          console.error("Erro ao iniciar gravação:", startError);
+          setIsRecording(false);
+          setRecording(null);
+          Alert.alert("Erro", "Não foi possível iniciar a gravação.");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao gravar áudio:", error);
+      Alert.alert("Erro", "Não foi possível gravar o áudio.");
+      setIsRecording(false);
+      setRecording(null);
+      setIsProcessing(false);
     }
   };
 
@@ -339,6 +551,134 @@ export default function AddExpense() {
             </View>
           </Pressable>
 
+          {/* Camera and Audio Cards */}
+          <View className="mb-6">
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              {/* Camera Card */}
+              <Pressable
+                onPress={handleCameraPress}
+                disabled={!cameraPermission || isProcessing}
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.cardBg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 16,
+                  padding: 16,
+                  opacity: cameraPermission && !isProcessing ? 1 : 0.5,
+                }}
+              >
+                <View style={{ alignItems: 'center', gap: 8 }}>
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 28,
+                      backgroundColor: colors.accentLight,
+                      borderWidth: 1,
+                      borderColor: colors.accent,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {isProcessing ? (
+                      <ActivityIndicator size="small" color={colors.accent} />
+                    ) : (
+                      <CameraIcon size={24} color={colors.accent} />
+                    )}
+                  </View>
+                  <Text
+                    style={{
+                      color: colors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: '600',
+                      textAlign: 'center',
+                    }}
+                  >
+                    Foto
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.textMuted,
+                      fontSize: 12,
+                      textAlign: 'center',
+                    }}
+                    numberOfLines={2}
+                  >
+                    Capturar comprovante
+                  </Text>
+                </View>
+              </Pressable>
+
+              {/* Audio Card */}
+              <Pressable
+                onPress={handleAudioPress}
+                disabled={!audioPermission || isProcessing}
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.cardBg,
+                  borderWidth: 1,
+                  borderColor: isRecording ? colors.error : colors.border,
+                  borderRadius: 16,
+                  padding: 16,
+                  opacity: audioPermission && !isProcessing ? 1 : 0.5,
+                }}
+              >
+                <View style={{ alignItems: 'center', gap: 8 }}>
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 28,
+                      backgroundColor: isRecording ? colors.errorLight : colors.accentLight,
+                      borderWidth: 1,
+                      borderColor: isRecording ? colors.error : colors.accent,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {isProcessing && !isRecording ? (
+                      <ActivityIndicator size="small" color={colors.accent} />
+                    ) : (
+                      <Mic size={24} color={isRecording ? colors.error : colors.accent} />
+                    )}
+                  </View>
+                  <Text
+                    style={{
+                      color: colors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: '600',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {isRecording ? "Gravando..." : "Áudio"}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.textMuted,
+                      fontSize: 12,
+                      textAlign: 'center',
+                    }}
+                    numberOfLines={2}
+                  >
+                    {isRecording ? "Toque para parar" : "Registrar por voz"}
+                  </Text>
+                  {isRecording && (
+                    <View
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: colors.error,
+                        marginTop: -4,
+                      }}
+                    />
+                  )}
+                </View>
+              </Pressable>
+            </View>
+          </View>
+
           {/* Quick Actions Carousel */}
           <View className="mb-6">
             <Text
@@ -426,7 +766,10 @@ export default function AddExpense() {
                   const transactionType =
                     transaction.type || (transaction.categoryId === "1" ? "expense" : "income");
                   const amount = transaction.amount || 0;
-                  const Icon = getTransactionIcon(categoryName as string);
+                  
+                  // Use arrows instead of category icons
+                  const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
+                  const arrowColor = transactionType === "income" ? "#4ADE80" : "#FFFFFF"; // Green-400 for income, white for expense
 
                   return (
                     <Pressable
@@ -448,10 +791,10 @@ export default function AddExpense() {
                               className={`w-10 h-10 rounded-lg items-center justify-center ${
                                 transactionType === "income"
                                   ? "bg-green-500/10"
-                                  : "bg-red-500/10"
+                                  : "bg-white/10"
                               }`}
                             >
-                              <Icon size={18} color="white" />
+                              <ArrowIcon size={18} color={arrowColor} />
                             </View>
                             <View className="flex-1">
                               <View className="flex-row items-center gap-2">

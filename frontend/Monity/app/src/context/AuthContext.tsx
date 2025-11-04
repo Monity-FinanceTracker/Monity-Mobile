@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiService, User } from "../services/apiService";
 import {
   signInWithGoogle,
@@ -128,23 +129,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogle = useCallback(async () => {
     try {
       setIsLoading(true);
+      console.log("🔐 Iniciando login com Google...");
+      
       const result = await signInWithGoogle();
+      console.log("📋 Resultado do signInWithGoogle:", {
+        success: result.success,
+        hasSession: !!result.session,
+        hasUser: !!result.user,
+        error: result.error
+      });
       
       if (result.success && result.session) {
         // Token já foi salvo pelo socialAuthService
+        // Verificar se o token está disponível antes de chamar getProfile
+        const token = await AsyncStorage.getItem("auth_token");
+        console.log("🔑 Token após login:", token ? "Presente" : "Ausente");
+        
+        if (!token) {
+          console.error("❌ Token não encontrado após login com Google!");
+          throw new Error("Token não foi salvo corretamente após login com Google");
+        }
+        
         // Agora buscar o perfil do usuário
+        console.log("👤 Buscando perfil do usuário...");
         const profileResponse = await apiService.getProfile();
+        console.log("📋 Resposta do getProfile:", {
+          success: profileResponse.success,
+          hasData: !!profileResponse.data,
+          error: profileResponse.error,
+          errorCode: profileResponse.errorCode
+        });
         
         if (profileResponse.success && profileResponse.data) {
           setUser(profileResponse.data);
+          console.log("✅ Login com Google concluído com sucesso!");
         } else {
+          console.error("❌ Falha ao buscar perfil:", profileResponse.error);
           throw new Error("Failed to fetch user profile: " + profileResponse.error);
         }
       } else {
+        console.error("❌ Login com Google falhou:", result.error);
         throw new Error(result.error || "Google login failed");
       }
     } catch (error: any) {
-      console.error("Google login error:", error);
+      console.error("❌ Erro no login com Google:", error);
       throw error;
     } finally {
       setIsLoading(false);
