@@ -356,6 +356,39 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
 }
 
 /**
+ * Gera um nonce aleatório para autenticação Apple
+ */
+function generateNonce(): string {
+  const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+  const length = 32;
+  let nonce = '';
+  for (let i = 0; i < length; i++) {
+    nonce += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return nonce;
+}
+
+/**
+ * Decodifica o JWT para extrair o nonce (se presente)
+ */
+function decodeJWT(token: string): any {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Erro ao decodificar JWT:', error);
+    return null;
+  }
+}
+
+/**
  * Login com Apple (apenas iOS)
  */
 export async function signInWithApple(): Promise<SocialAuthResult> {
@@ -403,13 +436,51 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
       };
     }
 
-    console.log("✅ Credencial recebida da Apple, autenticando no Supabase...");
+    console.log("✅ Credencial recebida da Apple");
+    console.log("🔑 Identity Token recebido:", credential.identityToken.substring(0, 50) + "...");
+    console.log("📧 Email fornecido:", credential.email || "não fornecido");
+    console.log("👤 Nome fornecido:", credential.fullName || "não fornecido");
+
+    // Decodificar o JWT para debug
+    const decodedToken = decodeJWT(credential.identityToken);
+    console.log("🔍 Token JWT decodificado:");
+    console.log("  - Issuer:", decodedToken?.iss);
+    console.log("  - Subject:", decodedToken?.sub);
+    console.log("  - Email:", decodedToken?.email);
+    console.log("  - Email verified:", decodedToken?.email_verified);
+    console.log("  - Nonce presente:", !!decodedToken?.nonce);
+    console.log("  - Audience:", decodedToken?.aud);
+    console.log("  - Expiration:", decodedToken?.exp);
+
+    // Preparar dados para enviar ao Supabase
+    const tokenToSend = credential.identityToken.trim();
+    
+    console.log("🔄 Enviando token para Supabase...");
+    console.log("🔗 Supabase URL:", SUPABASE_URL);
+    console.log("📝 Token length:", tokenToSend.length);
 
     // Fazer login no Supabase com o token da Apple
-    const { data, error } = await supabase.auth.signInWithIdToken({
+    // Não passar nonce se não estiver presente no token
+    const signInOptions: any = {
       provider: "apple",
-      token: credential.identityToken,
+      token: tokenToSend,
+    };
+
+    // Adicionar nonce apenas se estiver presente no token decodificado
+    if (decodedToken?.nonce) {
+      console.log("🔐 Adicionando nonce do token JWT");
+      signInOptions.nonce = decodedToken.nonce;
+    } else {
+      console.log("⚠️ Nonce não encontrado no token - Supabase pode rejeitar");
+    }
+
+    console.log("📤 Enviando requisição para Supabase com opções:", {
+      provider: signInOptions.provider,
+      tokenLength: signInOptions.token.length,
+      hasNonce: !!signInOptions.nonce,
     });
+
+    const { data, error } = await supabase.auth.signInWithIdToken(signInOptions);
 
     if (error) {
       console.error("❌ Erro ao fazer login com Apple no Supabase:", error);

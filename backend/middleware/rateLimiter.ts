@@ -11,6 +11,8 @@ const apiLimiter = rateLimit({
     success: false,
     message: "Too many requests from this IP, please try again in a minute.",
   },
+  // Trust proxy is configured in server.ts to only trust Railway's proxy (trust proxy: 1)
+  // This prevents rate limiting bypass while still allowing proper IP detection
   // Skip rate limiting for localhost in development
   skip: (req: Request) => {
     return (
@@ -32,6 +34,7 @@ const authLimiter = rateLimit({
     message:
       "Too many authentication attempts from this IP, please try again after 15 minutes.",
   },
+  // Trust proxy is configured in server.ts
 });
 
 // Rate limiting específico para pagamentos (mais restritivo)
@@ -44,6 +47,7 @@ const paymentLimiter = rateLimit({
     success: false,
     message: "Too many payment attempts from this IP, please try again after 15 minutes.",
   },
+  // Trust proxy is configured in server.ts
   // Skip rate limiting para localhost em desenvolvimento
   skip: (req: Request) => {
     return (
