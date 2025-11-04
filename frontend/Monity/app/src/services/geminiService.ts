@@ -170,6 +170,193 @@ export class GeminiService {
   }
 
   /**
+   * Process image in chat context - analyze and respond to images
+   * @param imageUri - URI of the image file
+   * @param context - Optional context about the user's financial situation
+   * @returns Promise<string> - AI's response about the image
+   */
+  async processChatImage(imageUri: string, context?: string): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error("Gemini API key not configured");
+    }
+
+    try {
+      // Read image as base64 using legacy API
+      const base64Data = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Get mime type from URI
+      const mimeType = imageUri.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+      const systemPrompt = `
+        Você é um assistente financeiro especializado em economia pessoal brasileira. 
+        Analise a imagem fornecida e responda de forma útil sobre finanças pessoais.
+        Se a imagem for uma nota fiscal, comprovante ou recibo, analise e forneça insights financeiros.
+        Se for outra coisa relacionada a finanças, ajude da melhor forma possível.
+        Mantenha um tom conversacional e amigável, sempre em português brasileiro.
+        
+        ${context ? `Contexto do usuário: ${context}` : ""}
+      `;
+
+      const requestData: GeminiRequest = {
+        systemInstruction: {
+          parts: [
+            {
+              text: systemPrompt,
+            },
+          ],
+        },
+        contents: [
+          {
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
+                },
+              },
+              {
+                text: "Analise esta imagem e me ajude com informações financeiras relevantes.",
+              },
+            ],
+          },
+        ],
+      };
+
+      const response = await fetch(
+        `${this.baseUrl}/models/gemini-2.0-flash-001:generateContent?key=${this.apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Gemini API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: GeminiResponse = await response.json();
+
+      if (data.candidates && data.candidates.length > 0) {
+        const candidate = data.candidates[0];
+        if (
+          candidate.content &&
+          candidate.content.parts &&
+          candidate.content.parts.length > 0
+        ) {
+          return candidate.content.parts[0].text.trim();
+        }
+      }
+
+      throw new Error("No response received from Gemini API");
+    } catch (error) {
+      console.error("Error processing chat image:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process audio in chat context - transcribe and respond to audio messages
+   * @param audioUri - URI of the audio file
+   * @param context - Optional context about the user's financial situation
+   * @returns Promise<string> - AI's response about the audio
+   */
+  async processChatAudio(audioUri: string, context?: string): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error("Gemini API key not configured");
+    }
+
+    try {
+      // Read audio as base64 using legacy API
+      const base64Data = await FileSystem.readAsStringAsync(audioUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Determine mime type
+      const mimeType = audioUri.toLowerCase().endsWith('.m4a') 
+        ? 'audio/m4a' 
+        : audioUri.toLowerCase().endsWith('.mp3')
+        ? 'audio/mp3'
+        : 'audio/webm';
+
+      const systemPrompt = `
+        Você é um assistente financeiro especializado em economia pessoal brasileira. 
+        Transcreva o áudio e responda de forma útil sobre finanças pessoais.
+        Se o áudio mencionar uma transação financeira, forneça insights e sugestões.
+        Mantenha um tom conversacional e amigável, sempre em português brasileiro.
+        
+        ${context ? `Contexto do usuário: ${context}` : ""}
+      `;
+
+      const requestData: GeminiRequest = {
+        systemInstruction: {
+          parts: [
+            {
+              text: systemPrompt,
+            },
+          ],
+        },
+        contents: [
+          {
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
+                },
+              },
+              {
+                text: "Transcreva este áudio e me ajude com informações financeiras relevantes.",
+              },
+            ],
+          },
+        ],
+      };
+
+      const response = await fetch(
+        `${this.baseUrl}/models/gemini-2.0-flash-001:generateContent?key=${this.apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Gemini API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: GeminiResponse = await response.json();
+
+      if (data.candidates && data.candidates.length > 0) {
+        const candidate = data.candidates[0];
+        if (
+          candidate.content &&
+          candidate.content.parts &&
+          candidate.content.parts.length > 0
+        ) {
+          return candidate.content.parts[0].text.trim();
+        }
+      }
+
+      throw new Error("No response received from Gemini API");
+    } catch (error) {
+      console.error("Error processing chat audio:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Process image and extract transaction data from receipt/invoice
    * @param imageUri - URI of the image file
    * @returns Promise<ExtractedTransactionData> - Extracted transaction information

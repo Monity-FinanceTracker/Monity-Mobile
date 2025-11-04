@@ -20,49 +20,12 @@ import {
   Trash2,
   TrendingUp,
   TrendingDown,
-  ShoppingCart,
-  Car,
-  Home,
-  Coffee,
-  Gamepad2,
-  Heart,
-  GraduationCap,
-  Briefcase,
   Palette,
   BarChart3,
   PieChart,
   X,
 } from "lucide-react-native";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
-
-const getCategoryIcon = (iconName: string) => {
-  const iconMap: { [key: string]: any } = {
-    Coffee: Coffee,
-    Car: Car,
-    Home: Home,
-    ShoppingCart: ShoppingCart,
-    Gamepad2: Gamepad2,
-    Heart: Heart,
-    GraduationCap: GraduationCap,
-    Briefcase: Briefcase,
-    TrendingUp: TrendingUp,
-    TrendingDown: TrendingDown,
-  };
-  return iconMap[iconName] || Coffee;
-};
-
-const availableIcons = [
-  { icon: Coffee, name: "Coffee" },
-  { icon: Car, name: "Car" },
-  { icon: Home, name: "Home" },
-  { icon: ShoppingCart, name: "Shopping" },
-  { icon: Gamepad2, name: "Games" },
-  { icon: Heart, name: "Health" },
-  { icon: GraduationCap, name: "Education" },
-  { icon: Briefcase, name: "Work" },
-  { icon: TrendingUp, name: "Growth" },
-  { icon: TrendingDown, name: "Decline" },
-];
 
 const availableColors = [
   "bg-red-500",
@@ -91,7 +54,6 @@ export default function Categories() {
   const [isLoading, setIsLoading] = useState(true);
   const [newCategory, setNewCategory] = useState({
     name: "",
-    icon: "Coffee",
     color: "bg-blue-500",
     type: "expense" as "income" | "expense",
   });
@@ -226,7 +188,7 @@ export default function Categories() {
     try {
       const response = await apiService.createCategory({
         name: newCategory.name,
-        icon: newCategory.icon,
+        icon: "Coffee", // Default icon - not used in UI anymore
         color: newCategory.color,
         typeId: newCategory.type === "income" ? 2 : 1, // Convert type to typeId
       });
@@ -236,7 +198,6 @@ export default function Categories() {
         setShowCreateForm(false);
         setNewCategory({
           name: "",
-          icon: "Coffee",
           color: "bg-blue-500",
           type: "expense",
         });
@@ -259,7 +220,7 @@ export default function Categories() {
     try {
       const response = await apiService.updateCategory(editingCategory.id, {
         name: newCategory.name,
-        icon: newCategory.icon,
+        icon: editingCategory.icon || "Coffee", // Keep existing icon - not used in UI anymore
         color: newCategory.color,
         typeId: newCategory.type === "income" ? 2 : 1, // Convert type to typeId
       });
@@ -269,7 +230,6 @@ export default function Categories() {
         setEditingCategory(null);
         setNewCategory({
           name: "",
-          icon: "Coffee",
           color: "bg-blue-500",
           type: "expense",
         });
@@ -287,7 +247,6 @@ export default function Categories() {
     setEditingCategory(category);
     setNewCategory({
       name: category.name,
-      icon: category.icon,
       color: category.color,
       type: category.typeId === 2 ? "income" : "expense",
     });
@@ -351,16 +310,10 @@ export default function Categories() {
   };
 
   const renderCategory = (category: Category) => {
-    const Icon = getCategoryIcon(category.icon);
     return (
       <Card key={category.id} className="mb-3">
         <View>
           <View className="flex-row items-center gap-3">
-            <View
-              className={`w-12 h-12 rounded-lg items-center justify-center flex-shrink-0 ${getBackgroundColorClass(category.color)}`}
-            >
-              <Icon size={20} color="white" />
-            </View>
             <View className="flex-1 min-w-0">
               <View className="flex-row items-center gap-2 mb-1 flex-wrap">
                 <Text className="font-medium text-white text-sm">
@@ -391,7 +344,7 @@ export default function Categories() {
               <View className="flex-row items-center justify-between">
                 <Text
                   className={`text-sm font-semibold ${
-                    category.type === "income" ? "text-green-400" : "text-red-400"
+                    category.type === "income" ? "text-green-400" : "text-white"
                   }`}
                   numberOfLines={1}
                   adjustsFontSizeToFit
@@ -429,14 +382,8 @@ export default function Categories() {
           </Text>
           <View className="gap-4">
             {filteredCategories.map((category) => {
-              const Icon = getCategoryIcon(category.icon);
               return (
                 <View key={category.id} className="flex-row items-center gap-3">
-                  <View
-                    className={`w-8 h-8 rounded items-center justify-center ${getBackgroundColorClass(category.color)}`}
-                  >
-                    <Icon size={14} color="white" />
-                  </View>
                   <View className="flex-1">
                     <View className="flex-row items-center justify-between mb-1">
                       <Text className="text-sm font-medium text-white">
@@ -455,7 +402,7 @@ export default function Categories() {
                     className={`text-sm font-medium ${
                       category.type === "income"
                         ? "text-green-400"
-                        : "text-red-400"
+                        : "text-white"
                     }`}
                   >
                     {formatCurrency(category.totalSpent || 0)}
@@ -520,12 +467,12 @@ export default function Categories() {
               <Card>
                 <View className="p-4">
                   <View className="flex-row items-center gap-2">
-                    <View className="w-10 h-10 bg-red-500/10 rounded-lg items-center justify-center flex-shrink-0">
+                    <View className="w-10 h-10 bg-white/10 rounded-lg items-center justify-center flex-shrink-0">
                       <TrendingDown size={20} color="white" />
                     </View>
                     <View className="flex-1 min-w-0">
                       <Text className="text-xs text-gray-400">Despesas</Text>
-                      <Text className="text-xs font-semibold text-red-400" numberOfLines={1} adjustsFontSizeToFit>
+                      <Text className="text-xs font-semibold text-white" numberOfLines={1} adjustsFontSizeToFit>
                         {formatCurrency(totalExpenses)}
                       </Text>
                       <Text className="text-xs text-gray-400">
@@ -817,37 +764,6 @@ export default function Categories() {
                           Receita
                         </Text>
                       </Pressable>
-                    </View>
-                  </View>
-
-                  <View>
-                    <Text className="text-gray-400 text-sm mb-2">Ícone</Text>
-                    <View className="flex-row flex-wrap gap-2">
-                      {availableIcons.map((iconOption) => {
-                        const Icon = iconOption.icon;
-                        const isSelected = newCategory.icon === iconOption.name;
-                        return (
-                          <Pressable
-                            key={iconOption.name}
-                            onPress={() =>
-                              setNewCategory({
-                                ...newCategory,
-                                icon: iconOption.name,
-                              })
-                            }
-                            className={`h-12 w-12 rounded-lg items-center justify-center ${
-                              isSelected
-                                ? "bg-accent"
-                                : "bg-card-bg border border-border-default"
-                            }`}
-                          >
-                            <Icon
-                              size={20}
-                              color="white"
-                            />
-                          </Pressable>
-                        );
-                      })}
                     </View>
                   </View>
 

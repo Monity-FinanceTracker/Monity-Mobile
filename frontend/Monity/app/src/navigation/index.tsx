@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,12 +16,13 @@ import Categories from "../pages/categories/Categories";
 import Profile from "../pages/profile/Profile";
 import Chat from "../pages/chat/Chat";
 import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
-import { Platform, View, Text, Dimensions, Image, Pressable } from "react-native";
+import { Platform, View, Text, Dimensions, Image, Pressable, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { BlurView } from "expo-blur";
 import { COLORS } from "../constants/colors";
-import CameraAudioModal from "../components/CameraAudioModal";
 import { triggerHaptic } from "../utils/haptics";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -115,104 +116,108 @@ function HapticTabButton({ children, onPress, ...props }: any) {
   );
 }
 
-// Componente para detectar duplo toque no botão AddExpense
-function DoubleTapTabButton({
-  children,
-  onPress,
-  onDoublePress,
-}: {
-  children: React.ReactNode;
-  onPress: (e?: any) => void;
-  onDoublePress: () => void;
-}) {
-  const lastTap = useRef<number>(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handlePress = () => {
-    triggerHaptic();
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300; // 300ms para considerar duplo toque
-
-    if (lastTap.current && now - lastTap.current < DOUBLE_TAP_DELAY) {
-      // Duplo toque detectado
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      triggerHaptic();
-      onDoublePress();
-      lastTap.current = 0;
-    } else {
-      // Primeiro toque - aguardar para ver se há segundo toque
-      lastTap.current = now;
-      timeoutRef.current = setTimeout(() => {
-        // Se não houver segundo toque, executar ação de toque único
-        onPress();
-        lastTap.current = 0;
-        timeoutRef.current = null;
-      }, DOUBLE_TAP_DELAY);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+// Tab bar customizada com blur
+function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = Platform.OS === "android"
+    ? 60 + Math.max(0, insets.bottom)
+    : 60;
 
   return (
-    <Pressable 
-      onPress={handlePress} 
-      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+    <View
+      style={{
+        position: 'absolute',
+        bottom: Platform.OS === "android" ? 16 : 20,
+        left: 60,
+        right: 60,
+        height: tabBarHeight,
+        borderRadius: 24,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(38, 38, 38, 0.2)',
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+      }}
     >
-      {children}
-    </Pressable>
+      <BlurView
+        intensity={Platform.OS === 'ios' ? 15 : 30}
+        tint="dark"
+        style={StyleSheet.absoluteFill}
+      />
+      <View
+        style={{
+          flexDirection: 'row',
+          height: tabBarHeight,
+          paddingBottom: Platform.OS === "android" ? Math.max(12, insets.bottom + 4) : Math.max(8, insets.bottom),
+          paddingTop: 12,
+          paddingHorizontal: 8,
+        }}
+      >
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
+          const isAddExpense = route.name === 'AddExpense';
+
+          const handlePress = () => {
+            triggerHaptic();
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name as never);
+            }
+          };
+
+          const handleLongPress = () => {
+            navigation.emit({
+              type: 'tabLongPress',
+              target: route.key,
+            });
+          };
+
+          const color = isFocused ? '#01C38D' : '#9CA3AF';
+          const icon = options.tabBarIcon?.({ focused: isFocused, color, size: 24 });
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              onPress={handlePress}
+              onLongPress={handleLongPress}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 4,
+              }}
+            >
+              {icon}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
 function MainTabs() {
-  const insets = useSafeAreaInsets();
-  const [showCameraAudioModal, setShowCameraAudioModal] = useState(false);
-
   return (
-    <>
-      <Tab.Navigator
+    <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,
-        tabBarStyle: {
-          backgroundColor: COLORS.cardBg,
-          borderTopColor: COLORS.border,
-          borderTopWidth: 0,
-          // Add extra bottom padding for Android gesture nav / soft keys
-          paddingBottom: Platform.OS === "android" ? Math.max(12, insets.bottom + 4) : Math.max(8, insets.bottom),
-          paddingTop: 12,
-          paddingHorizontal: 8,
-          // Increase height slightly on Android when there is a bottom inset
-          height:
-            Platform.OS === "android"
-              ? 60 + Math.max(0, insets.bottom)
-              : 60,
-          // Ensure tab bar is above system navigation - flutuante
-          position: 'absolute',
-          bottom: Platform.OS === "android" ? 16 : 20,
-          left: 120,
-          right: 120,
-          borderRadius: 24,
-          borderWidth: 1,
-          borderColor: COLORS.border,
-          // Sombra para efeito flutuante
-          shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: 4,
-          },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
-        },
         tabBarActiveTintColor: '#01C38D',
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarLabelStyle: {
@@ -232,13 +237,10 @@ function MainTabs() {
         options={{
           tabBarIcon: ({ focused, color }) => (
             <AnimatedTabIcon focused={focused} activeColor={focused ? COLORS.accent : color}>
-              <Home size={22} color={color} />
+              <Home size={24} color={color} />
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
-          tabBarButton: (props) => (
-            <HapticTabButton {...props} />
-          ),
         }}
       />
       <Tab.Screen
@@ -247,13 +249,10 @@ function MainTabs() {
         options={{
           tabBarIcon: ({ focused, color }) => (
             <AnimatedTabIcon focused={focused} activeColor={focused ? COLORS.accent : color}>
-              <Receipt size={22} color={color} />
+              <Receipt size={24} color={color} />
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
-          tabBarButton: (props) => (
-            <HapticTabButton {...props} />
-          ),
         }}
       />
       <Tab.Screen
@@ -274,26 +273,6 @@ function MainTabs() {
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
-          tabBarButton: (props) => {
-            // Criar um novo handler que intercepta o onPress original
-            const originalOnPress = props.onPress;
-            return (
-              <DoubleTapTabButton
-                onPress={(e?: any) => {
-                  if (originalOnPress) {
-                    originalOnPress(e);
-                  }
-                }}
-                onDoublePress={() => {
-                  setShowCameraAudioModal(true);
-                }}
-              >
-                <View style={props.style} {...props.accessibilityState}>
-                  {props.children}
-                </View>
-              </DoubleTapTabButton>
-            );
-          },
         })}
       />
       <Tab.Screen
@@ -302,13 +281,10 @@ function MainTabs() {
         options={{
           tabBarIcon: ({ focused, color }) => (
             <AnimatedTabIcon focused={focused} activeColor={focused ? COLORS.accent : color}>
-              <MessageCircle size={22} color={color} />
+              <MessageCircle size={24} color={color} />
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
-          tabBarButton: (props) => (
-            <HapticTabButton {...props} />
-          ),
         }}
       />
       <Tab.Screen
@@ -317,21 +293,13 @@ function MainTabs() {
         options={{
           tabBarIcon: ({ focused, color }) => (
             <AnimatedTabIcon focused={focused} activeColor={focused ? COLORS.accent : color}>
-              <Tag size={22} color={color} />
+              <Tag size={24} color={color} />
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
-          tabBarButton: (props) => (
-            <HapticTabButton {...props} />
-          ),
         }}
       />
     </Tab.Navigator>
-    <CameraAudioModal
-      visible={showCameraAudioModal}
-      onClose={() => setShowCameraAudioModal(false)}
-    />
-    </>
   );
 }
 

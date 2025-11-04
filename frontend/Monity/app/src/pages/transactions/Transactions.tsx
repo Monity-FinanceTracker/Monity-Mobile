@@ -28,6 +28,8 @@ import {
   Trash2,
   X,
   Star,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react-native";
 import { apiService, Transaction } from "../../services/apiService";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
@@ -333,7 +335,10 @@ export default function Transactions() {
     const amount = item.amount || 0;
     const isFavorite = item.isFavorite === true;
 
-    const Icon = getTransactionIcon(categoryName as string);
+    // Use arrows instead of category icons
+    const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
+    const arrowColor = transactionType === "income" ? "#4ADE80" : "#FFFFFF"; // Green-400 for income, white for expense
+    
     return (
       <Pressable 
         onPress={() => handleTransactionPress(item)}
@@ -345,12 +350,12 @@ export default function Transactions() {
               className={`w-8 h-8 rounded-lg items-center justify-center ${
                 transactionType === "income"
                   ? "bg-green-500/10"
-                  : "bg-red-500/10"
+                  : "bg-white/10"
               }`}
             >
-              <Icon
+              <ArrowIcon
                 size={16}
-                color="white"
+                color={arrowColor}
               />
             </View>
             <View className="flex-1">
@@ -368,7 +373,7 @@ export default function Transactions() {
           <View className="items-end">
             <Text
               className={`font-semibold text-xs ${
-                transactionType === "income" ? "text-green-400" : "text-red-400"
+                transactionType === "income" ? "text-green-400" : "text-white"
               }`}
             >
               {transactionType === "income" ? "+" : "-"}
@@ -628,7 +633,7 @@ export default function Transactions() {
 
                     <Pressable
                       onPress={handleDeleteTransaction}
-                      className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex-row items-center justify-center gap-3"
+                      className="bg-white/10 border border-white/20 rounded-xl p-4 flex-row items-center justify-center gap-3"
                     >
                       <Trash2 size={20} color={colors.error} />
                       <Text style={{ color: colors.error, fontWeight: "600", fontSize: 16 }}>

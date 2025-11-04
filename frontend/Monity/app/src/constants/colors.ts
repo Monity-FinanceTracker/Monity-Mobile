@@ -40,8 +40,8 @@ export const COLORS = {
   // Transaction Specific Colors
   income: '#4ADE80',               // Green-400 for income
   incomeBg: 'rgba(34, 197, 94, 0.2)',  // Income background
-  expense: '#F87171',              // Red-400 for expenses
-  expenseBg: 'rgba(239, 68, 68, 0.2)',  // Expense background
+  expense: '#FFFFFF',              // White for expenses
+  expenseBg: 'rgba(255, 255, 255, 0.1)',  // Expense background
   savings: '#60A5FA',              // Blue-400 for savings
   savingsBg: 'rgba(59, 130, 246, 0.2)',  // Savings background
 
