@@ -31,10 +31,11 @@ export default (controllers: any, middleware: any) => {
     });
   });
 
-  // Auth routes have a stricter rate limit
+  // Auth routes - rate limiting is applied per endpoint in authRoutes
+  // Public endpoints (login, register) use authLimiter
+  // Authenticated endpoints use apiLimiter (already applied above)
   v1Router.use(
     "/auth",
-    middleware.rateLimiter.authLimiter,
     authRoutes(controllers, middleware)
   );
 
