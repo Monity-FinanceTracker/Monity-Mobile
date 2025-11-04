@@ -236,7 +236,7 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
         return {
           success: true,
           session: sessionData.session,
-          user: sessionData.user,
+          user: sessionData.session.user,
         };
       }
 
@@ -266,7 +266,7 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
               return {
                 success: true,
                 session: existingSession.session,
-                user: existingSession.user,
+                user: existingSession.session.user,
               };
             }
           }
@@ -312,7 +312,7 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
         return {
           success: true,
           session: sessionData.session,
-          user: sessionData.user,
+          user: sessionData.session.user,
         };
       }
 
@@ -337,7 +337,7 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
         return {
           success: true,
           session: sessionData.session,
-          user: sessionData.user,
+          user: sessionData.session.user,
         };
       }
       
@@ -409,7 +409,6 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: "apple",
       token: credential.identityToken,
-      nonce: credential.nonce || undefined,
     });
 
     if (error) {
