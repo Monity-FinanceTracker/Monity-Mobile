@@ -2,7 +2,7 @@
   "expo": {
     "name": "Monity",
     "slug": "Monity",
-    "version": "1.0.0",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "monity",
@@ -21,7 +21,8 @@
       },
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.Monity"
+      "package": "com.Monity",
+      "versionCode": 11
     },
     "web": {
       "bundler": "metro",
@@ -61,7 +62,7 @@
       },
       "router": {},
       "eas": {
-        "projectId": "e2bfd3ea-a052-4ec5-9d67-bcd4067cab20"
+        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
       }
     }
   }

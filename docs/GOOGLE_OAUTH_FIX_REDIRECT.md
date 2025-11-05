@@ -97,3 +97,5 @@ O Google é muito específico sobre URLs - elas precisam ser **exatamente iguais
 - Nenhuma diferença de maiúsculas/minúsculas
 - Sem trailing slash extra (a menos que esteja na URL)
 
+
+
