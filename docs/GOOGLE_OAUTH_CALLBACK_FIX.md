@@ -57,3 +57,5 @@ As "Origens JavaScript autorizadas" não são necessárias para OAuth redirect. 
 4. Tente fazer login com Google
 5. Após autenticar, o app deve abrir automaticamente
 
+
+
