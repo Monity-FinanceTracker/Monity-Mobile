@@ -10,6 +10,7 @@ import {
   StatusBar,
   Image,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Mail } from "lucide-react-native";
@@ -93,33 +94,49 @@ export default function Login({
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      setError("");
-      setSocialLoading("google");
-      await loginWithGoogle();
-      // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
-    } catch (err: any) {
-      const errorMessage = err.message || "Erro ao fazer login com Google";
-      setError(errorMessage);
-      console.error("Erro no login com Google:", err);
-    } finally {
-      setSocialLoading(null);
-    }
+    // TODO: Implementar login com Google
+    // try {
+    //   setError("");
+    //   setSocialLoading("google");
+    //   await loginWithGoogle();
+    //   // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
+    // } catch (err: any) {
+    //   const errorMessage = err.message || "Erro ao fazer login com Google";
+    //   setError(errorMessage);
+    //   console.error("Erro no login com Google:", err);
+    // } finally {
+    //   setSocialLoading(null);
+    // }
+    
+    // Mostrar aviso temporário
+    Alert.alert(
+      "Funcionalidade em Desenvolvimento",
+      "O login com Google ainda está sendo implementado. Por favor, use email e senha para entrar.",
+      [{ text: "OK" }]
+    );
   };
 
   const handleAppleSignIn = async () => {
-    try {
-      setError("");
-      setSocialLoading("apple");
-      await loginWithApple();
-      // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
-    } catch (err: any) {
-      const errorMessage = err.message || "Erro ao fazer login com Apple";
-      setError(errorMessage);
-      console.error("Erro no login com Apple:", err);
-    } finally {
-      setSocialLoading(null);
-    }
+    // TODO: Implementar login com Apple
+    // try {
+    //   setError("");
+    //   setSocialLoading("apple");
+    //   await loginWithApple();
+    //   // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
+    // } catch (err: any) {
+    //   const errorMessage = err.message || "Erro ao fazer login com Apple";
+    //   setError(errorMessage);
+    //   console.error("Erro no login com Apple:", err);
+    // } finally {
+    //   setSocialLoading(null);
+    // }
+    
+    // Mostrar aviso temporário
+    Alert.alert(
+      "Funcionalidade em Desenvolvimento",
+      "O login com Apple ainda está sendo implementado. Por favor, use email e senha para entrar.",
+      [{ text: "OK" }]
+    );
   };
 
   const isValidEmail = (email: string) => {

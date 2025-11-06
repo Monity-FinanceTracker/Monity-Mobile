@@ -54,3 +54,5 @@ Quando você tentar fazer login com Google, você deve ver algo assim:
 3. Tente limpar o cache: `expo start -c`
 4. Reinicie o Expo Go app
 
+
+
