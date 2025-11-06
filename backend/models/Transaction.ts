@@ -44,16 +44,20 @@ export default class Transaction {
       "encryptedKeys": Object.keys(encryptedData),
     });
     
-    // CRITICAL: Set is_favorite AFTER encryption to ensure it's never removed
-    // The encryption only handles 'description', so is_favorite should pass through
-    // But we'll set it explicitly after encryption to be 100% sure
+    // CRITICAL: Set is_favorite and categoryId AFTER encryption to ensure they're never removed
+    // The encryption only handles 'description', so is_favorite and categoryId should pass through
+    // But we'll set them explicitly after encryption to be 100% sure
     encryptedData.is_favorite = finalIsFavorite === true ? true : false;
     
-    // Create insert object - explicitly include is_favorite at the end
+    // Preserve categoryId (it's not encrypted, similar to is_favorite)
+    const categoryId = transactionData.categoryId;
+    
+    // Create insert object - explicitly include is_favorite and categoryId at the end
     const insertData: any = {
       ...encryptedData,
-      // Force include is_favorite as the LAST property to ensure it's not overwritten
+      // Force include is_favorite and categoryId as the LAST properties to ensure they're not overwritten
       is_favorite: finalIsFavorite === true ? true : false,
+      categoryId: categoryId || null, // Allow null for backward compatibility
     };
     
     console.log("🔍 Transaction.create - Before Supabase insert:", {
@@ -78,16 +82,20 @@ export default class Transaction {
 
     // Final verification before insert
     // CRITICAL: Always explicitly set is_favorite as a boolean to avoid NULL
+    // categoryId can be null for backward compatibility
     const finalInsertValue = {
       ...insertData,
       is_favorite: finalIsFavorite === true ? true : false, // Always set as explicit boolean
+      categoryId: categoryId || null, // Allow null for backward compatibility
     };
     
-    // Remove any undefined/null values that might interfere
+    // Remove any undefined values that might interfere (but keep null for categoryId)
     Object.keys(finalInsertValue).forEach(key => {
-      if (finalInsertValue[key] === undefined || finalInsertValue[key] === null) {
+      if (finalInsertValue[key] === undefined) {
         if (key === 'is_favorite') {
           finalInsertValue[key] = false; // Never allow NULL for is_favorite
+        } else if (key === 'categoryId') {
+          finalInsertValue[key] = null; // Allow null for categoryId
         }
       }
     });
@@ -103,7 +111,7 @@ export default class Transaction {
     const { data, error } = await supabaseAdmin
       .from(Transaction.TABLE_NAME)
       .insert([finalInsertValue])
-      .select("*, is_favorite") // Explicitly select is_favorite to ensure it's returned
+      .select("*, is_favorite, categoryId") // Explicitly select is_favorite and categoryId to ensure they're returned
       .single();
 
     if (error) {
@@ -126,12 +134,17 @@ export default class Transaction {
       "fullData_is_favorite": data ? (data as any).is_favorite : "no data",
     });
 
-    // Decrypt sensitive fields but preserve is_favorite
+    // Decrypt sensitive fields but preserve is_favorite and categoryId
     const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
     
-    // Ensure is_favorite is preserved from the database response
-    if (data && data.is_favorite !== undefined) {
-      decryptedData.is_favorite = data.is_favorite === true;
+    // Ensure is_favorite and categoryId are preserved from the database response
+    if (data) {
+      if (data.is_favorite !== undefined) {
+        decryptedData.is_favorite = data.is_favorite === true;
+      }
+      if (data.categoryId !== undefined) {
+        decryptedData.categoryId = data.categoryId;
+      }
     }
     
     return decryptedData;
@@ -150,12 +163,17 @@ export default class Transaction {
       throw new Error(`Error fetching transaction: ${error.message}`);
     }
 
-    // Decrypt sensitive fields but preserve is_favorite
+    // Decrypt sensitive fields but preserve is_favorite and categoryId
     const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
     
-    // Ensure is_favorite is preserved
-    if (data && data.is_favorite !== undefined) {
-      decryptedData.is_favorite = data.is_favorite === true;
+    // Ensure is_favorite and categoryId are preserved
+    if (data) {
+      if (data.is_favorite !== undefined) {
+        decryptedData.is_favorite = data.is_favorite === true;
+      }
+      if (data.categoryId !== undefined) {
+        decryptedData.categoryId = data.categoryId;
+      }
     }
     
     return decryptedData;
@@ -187,50 +205,12 @@ export default class Transaction {
       query = query.eq("typeId", typeId);
     }
 
-    // Note: Category filter will be applied after decryption
-    // because we need to get the category name first and filter in memory
-    // to ensure it works correctly with encrypted descriptions
-    let categoryFilterName: string | null = null;
+    // Apply category filter directly using categoryId (similar to is_favorite)
+    // This is more efficient than filtering by encrypted category name
     if (filters?.categoryId) {
-      console.log(`🔍 Getting category name for filter: ${filters.categoryId}`);
-      // First, get the category name from the categoryId
-      const { data: categoryData, error: categoryError } = await supabaseAdmin
-        .from("categories")
-        .select("name")
-        .eq("id", filters.categoryId)
-        .single();
-
-      if (categoryError) {
-        console.error("🔍 Error fetching category:", categoryError);
-        console.error("🔍 Category error details:", {
-          message: categoryError.message,
-          code: categoryError.code,
-          details: categoryError.details,
-        });
-      }
-
-      if (categoryData?.name) {
-        // categoryData.name is the encrypted value from the database
-        // We need to use it for filtering at DB level
-        const encryptedCategoryName = categoryData.name;
-        console.log(`🔍 Category name (encrypted in DB): ${encryptedCategoryName.substring(0, 50)}...`);
-        
-        // Apply filter at database level using the encrypted category name
-        query = query.eq("category", encryptedCategoryName);
-        console.log(`🔍 Category filter applied at DB level using encrypted name`);
-        
-        // Also get the decrypted name for post-decryption filtering (as fallback)
-        // Use Category model to get decrypted name
-        const Category = require("./Category").default;
-        const decryptedCategory = await Category.findById(filters.categoryId, userId);
-        if (decryptedCategory?.name) {
-          categoryFilterName = decryptedCategory.name;
-          console.log(`🔍 Category name (decrypted for fallback): ${categoryFilterName}`);
-        }
-      } else {
-        console.log("🔍 Category not found for ID:", filters.categoryId);
-        console.log("🔍 Category data received:", categoryData);
-      }
+      console.log(`🔍 Applying category filter using categoryId: ${filters.categoryId}`);
+      query = query.eq("categoryId", filters.categoryId);
+      console.log(`🔍 Category filter applied at DB level using categoryId`);
     }
 
     // Apply date range filters
@@ -330,26 +310,13 @@ export default class Transaction {
       );
     }
     
-    // Decrypt sensitive fields but preserve is_favorite
+    // Decrypt sensitive fields but preserve is_favorite and categoryId
     const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
     
-    // Apply category filter after decryption if needed (as a fallback)
-    let filteredData = decryptedData;
-    if (categoryFilterName && Array.isArray(decryptedData)) {
-      const beforeFilter = decryptedData.length;
-      filteredData = decryptedData.filter((item: any) => {
-        const itemCategory = item.category || item.category_name || "";
-        const matches = itemCategory === categoryFilterName;
-        if (!matches && beforeFilter <= 20) {
-          // Log for debugging if we have few items
-          console.log(`🔍 Category filter: item category "${itemCategory}" !== filter "${categoryFilterName}"`);
-        }
-        return matches;
-      });
-      console.log(`🔍 Category filter applied: ${beforeFilter} -> ${filteredData.length} transactions`);
-    }
+    // No need for post-decryption category filtering - it's already filtered at DB level using categoryId
+    const filteredData = decryptedData;
     
-    // Ensure is_favorite is preserved for all transactions
+    // Ensure is_favorite and categoryId are preserved for all transactions
     if (Array.isArray(filteredData) && Array.isArray(originalData)) {
       return filteredData.map((item: any, index: number) => {
         // Find corresponding original item by ID since filtering may have changed order
@@ -362,6 +329,10 @@ export default class Transaction {
             item.is_favorite = originalItem.is_favorite === true || originalItem.is_favorite === "true" || originalItem.is_favorite === 1;
           } else {
             item.is_favorite = false;
+          }
+          // Preserve categoryId from original data (it's not encrypted)
+          if (originalItem.categoryId !== undefined) {
+            item.categoryId = originalItem.categoryId;
           }
         }
         return item;
@@ -385,19 +356,24 @@ export default class Transaction {
       );
     }
 
-    // Preserve original data before decryption to access is_favorite
+    // Preserve original data before decryption to access is_favorite and categoryId
     const originalData = Array.isArray(data) ? [...data] : data;
     
-    // Decrypt sensitive fields but preserve is_favorite
+    // Decrypt sensitive fields but preserve is_favorite and categoryId
     const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
     
-    // Ensure is_favorite is preserved for all transactions
+    // Ensure is_favorite and categoryId are preserved for all transactions
     if (Array.isArray(decryptedData) && Array.isArray(originalData)) {
       return decryptedData.map((item: any, index: number) => {
-        // Preserve is_favorite if it exists in the original data
+        // Preserve is_favorite and categoryId if they exist in the original data
         const originalItem = originalData[index];
-        if (originalItem && originalItem.is_favorite !== undefined) {
-          item.is_favorite = originalItem.is_favorite === true;
+        if (originalItem) {
+          if (originalItem.is_favorite !== undefined) {
+            item.is_favorite = originalItem.is_favorite === true;
+          }
+          if (originalItem.categoryId !== undefined) {
+            item.categoryId = originalItem.categoryId;
+          }
         }
         return item;
       });

@@ -173,6 +173,7 @@ class TransactionController {
       description,
       amount,
       category,
+      categoryId,
       date,
       typeId,
       isFavorite,
@@ -226,11 +227,31 @@ class TransactionController {
         userId,
       });
 
+      // If categoryId is not provided, try to find it by category name
+      let finalCategoryId = categoryId;
+      if (!finalCategoryId && category) {
+        try {
+          const Category = require("../models/Category").default;
+          const categories = await Category.findByUser(userId);
+          const foundCategory = categories.find((cat: any) => cat.name === category);
+          if (foundCategory) {
+            finalCategoryId = foundCategory.id;
+            console.log(`🔍 Found categoryId ${finalCategoryId} for category name "${category}"`);
+          } else {
+            console.log(`⚠️ CategoryId not found for category name "${category}", will be null`);
+          }
+        } catch (error) {
+          console.error("⚠️ Error finding categoryId by name:", error);
+          // Continue without categoryId - it's optional
+        }
+      }
+
       const newTransaction = {
         userId,
         description,
         amount: parseFloat(amount),
         category,
+        categoryId: finalCategoryId, // Add categoryId to transaction
         date,
         typeId,
         is_favorite: isFavoriteValue, // Explicitly set to boolean true/false
