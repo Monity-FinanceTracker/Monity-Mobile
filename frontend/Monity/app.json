@@ -2,38 +2,48 @@
   "expo": {
     "name": "Monity",
     "slug": "Monity",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
     "scheme": "monity",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.Monity"
+      "bundleIdentifier": "com.widechain.monity",
+      "buildNumber": "5",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "https",
+          "http",
+          "https",
+          "http"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/LOGO_MONITY_APP.jpeg",
+        "backgroundImage": "./assets/images/LOGO_MONITY_APP.jpeg",
+        "monochromeImage": "./assets/images/LOGO_MONITY_APP.jpeg"
       },
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.Monity",
+      "package": "com.widechain.monity",
       "versionCode": 11
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/LOGO_MONITY_512px512px.png"
     },
     "plugins": [
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/LOGO_MONITY_APP.jpeg",
+          "image": "./assets/images/LOGO_MONITY_512px512px.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#0A0A0A",
@@ -62,7 +72,7 @@
       },
       "router": {},
       "eas": {
-        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
+        "projectId": "e2bfd3ea-a052-4ec5-9d67-bcd4067cab20"
       }
     }
   }
