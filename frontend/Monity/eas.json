@@ -19,6 +19,10 @@
       }
     },
     "production": {
+      "ios": {
+        "simulator": false,
+        "autoIncrement": "buildNumber"
+      },
       "android": {
         "buildType": "app-bundle",
         "gradleCommand": ":app:bundleRelease"
