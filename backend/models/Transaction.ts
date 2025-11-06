@@ -161,15 +161,147 @@ export default class Transaction {
     return decryptedData;
   }
 
-  static async getAll(userId: string) {
-    const { data, error } = await supabaseAdmin
+  static async getAll(
+    userId: string,
+    filters?: {
+      type?: "income" | "expense";
+      categoryId?: string;
+      startDate?: string;
+      endDate?: string;
+      search?: string;
+    }
+  ) {
+    console.log("🔍 Transaction.getAll - Filters received:", JSON.stringify(filters));
+    console.log("🔍 Transaction.getAll - startDate:", filters?.startDate);
+    console.log("🔍 Transaction.getAll - endDate:", filters?.endDate);
+    
+    let query = supabaseAdmin
       .from(Transaction.TABLE_NAME)
       .select("*")
-      .eq("userId", userId)
-      .order("date", { ascending: false });
+      .eq("userId", userId);
+
+    // Apply type filter (typeId: 1 = expense, 2 = income)
+    if (filters?.type) {
+      const typeId = filters.type === "income" ? 2 : 1;
+      console.log(`🔍 Applying type filter: ${filters.type} (typeId: ${typeId})`);
+      query = query.eq("typeId", typeId);
+    }
+
+    // Note: Category filter will be applied after decryption
+    // because we need to get the category name first and filter in memory
+    // to ensure it works correctly with encrypted descriptions
+    let categoryFilterName: string | null = null;
+    if (filters?.categoryId) {
+      console.log(`🔍 Getting category name for filter: ${filters.categoryId}`);
+      // First, get the category name from the categoryId
+      const { data: categoryData, error: categoryError } = await supabaseAdmin
+        .from("categories")
+        .select("name")
+        .eq("id", filters.categoryId)
+        .single();
+
+      if (categoryError) {
+        console.error("🔍 Error fetching category:", categoryError);
+        console.error("🔍 Category error details:", {
+          message: categoryError.message,
+          code: categoryError.code,
+          details: categoryError.details,
+        });
+      }
+
+      if (categoryData?.name) {
+        categoryFilterName = categoryData.name;
+        console.log(`🔍 Category name found: ${categoryFilterName}`);
+        // Try to apply filter at database level first
+        query = query.eq("category", categoryFilterName);
+        console.log(`🔍 Category filter applied at DB level: category = "${categoryFilterName}"`);
+      } else {
+        console.log("🔍 Category not found for ID:", filters.categoryId);
+        console.log("🔍 Category data received:", categoryData);
+      }
+    }
+
+    // Apply date range filters
+    if (filters?.startDate) {
+      console.log(`🔍 Applying startDate filter: ${filters.startDate}`);
+      // Ensure date is in YYYY-MM-DD format
+      const startDateStr = filters.startDate.includes("T") 
+        ? filters.startDate.split("T")[0] 
+        : filters.startDate;
+      console.log(`🔍 StartDate filter string: ${startDateStr}`);
+      // Use gte to include the start date
+      query = query.gte("date", startDateStr);
+    }
+    if (filters?.endDate) {
+      // Ensure date is in YYYY-MM-DD format
+      const endDateInput = filters.endDate.includes("T") 
+        ? filters.endDate.split("T")[0] 
+        : filters.endDate;
+      console.log(`🔍 Applying endDate filter: ${filters.endDate} -> ${endDateInput}`);
+      // Use lte to include the entire end date
+      query = query.lte("date", endDateInput);
+    }
+
+    // Apply search filter (search in description)
+    if (filters?.search) {
+      console.log(`🔍 Applying search filter: ${filters.search}`);
+      query = query.ilike("description", `%${filters.search}%`);
+    }
+
+    query = query.order("date", { ascending: false });
+
+    console.log("🔍 Final query being executed with filters");
+    console.log("🔍 Applied filters summary:", {
+      hasTypeFilter: !!filters?.type,
+      hasCategoryFilter: !!filters?.categoryId,
+      hasStartDateFilter: !!filters?.startDate,
+      hasEndDateFilter: !!filters?.endDate,
+      hasSearchFilter: !!filters?.search,
+      startDate: filters?.startDate,
+      endDate: filters?.endDate,
+    });
+    
+    const { data, error } = await query;
 
     if (error) {
+      console.error("🔍 Query error:", error);
       throw new Error(`Error fetching transactions for user: ${error.message}`);
+    }
+
+    console.log(`🔍 Query returned ${data?.length || 0} transactions`);
+    if (data && data.length > 0) {
+      console.log("🔍 Sample transaction dates:", data.slice(0, 5).map((t: any) => ({
+        id: t.id,
+        date: t.date,
+        description: t.description?.substring(0, 30),
+      })));
+      
+      // Check if date filters are working
+      if (filters?.startDate || filters?.endDate) {
+        const startDateStr = filters?.startDate?.includes("T") 
+          ? filters.startDate.split("T")[0] 
+          : filters?.startDate;
+        const endDateStr = filters?.endDate?.includes("T") 
+          ? filters.endDate.split("T")[0] 
+          : filters?.endDate;
+        
+        const filteredDates = data
+          .map((t: any) => t.date)
+          .filter((date: string) => {
+            const dateStr = date?.includes("T") ? date.split("T")[0] : date;
+            const isAfterStart = !startDateStr || dateStr >= startDateStr;
+            const isBeforeEnd = !endDateStr || dateStr <= endDateStr;
+            return isAfterStart && isBeforeEnd;
+          });
+        
+        console.log("🔍 Date filter validation:", {
+          expectedCount: filteredDates.length,
+          actualCount: data.length,
+          startDate: startDateStr,
+          endDate: endDateStr,
+          allDates: data.map((t: any) => t.date?.includes("T") ? t.date.split("T")[0] : t.date),
+        });
+      }
     }
 
     // Preserve original data before decryption to access is_favorite
@@ -189,11 +321,29 @@ export default class Transaction {
     // Decrypt sensitive fields but preserve is_favorite
     const decryptedData = decryptObject(Transaction.TABLE_NAME, data);
     
+    // Apply category filter after decryption if needed (as a fallback)
+    let filteredData = decryptedData;
+    if (categoryFilterName && Array.isArray(decryptedData)) {
+      const beforeFilter = decryptedData.length;
+      filteredData = decryptedData.filter((item: any) => {
+        const itemCategory = item.category || item.category_name || "";
+        const matches = itemCategory === categoryFilterName;
+        if (!matches && beforeFilter <= 20) {
+          // Log for debugging if we have few items
+          console.log(`🔍 Category filter: item category "${itemCategory}" !== filter "${categoryFilterName}"`);
+        }
+        return matches;
+      });
+      console.log(`🔍 Category filter applied: ${beforeFilter} -> ${filteredData.length} transactions`);
+    }
+    
     // Ensure is_favorite is preserved for all transactions
-    if (Array.isArray(decryptedData) && Array.isArray(originalData)) {
-      return decryptedData.map((item: any, index: number) => {
-        // Preserve is_favorite from the original data (before decryption)
-        const originalItem = originalData[index];
+    if (Array.isArray(filteredData) && Array.isArray(originalData)) {
+      return filteredData.map((item: any, index: number) => {
+        // Find corresponding original item by ID since filtering may have changed order
+        const originalItem = Array.isArray(originalData) 
+          ? originalData.find((orig: any) => orig.id === item.id) 
+          : originalData;
         if (originalItem) {
           // Explicitly set is_favorite, handling null, true, false, and undefined
           if (originalItem.is_favorite !== undefined && originalItem.is_favorite !== null) {
@@ -206,7 +356,7 @@ export default class Transaction {
       });
     }
     
-    return decryptedData;
+    return filteredData;
   }
 
   static async getRecent(userId: string, limit: number = 5) {

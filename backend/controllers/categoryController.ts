@@ -49,7 +49,8 @@ export default class CategoryController {
         })
       );
 
-      res.json(categoriesWithCounts);
+      console.log("✅ Categories returned:", categoriesWithCounts.length);
+      res.json({ success: true, data: categoriesWithCounts });
     } catch (error) {
       logger.error("Failed to get categories for user", {
         userId,
