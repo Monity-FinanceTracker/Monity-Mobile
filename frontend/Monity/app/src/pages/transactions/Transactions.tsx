@@ -186,6 +186,23 @@ export default function Transactions() {
     }
   }, [showFilterModal]);
 
+  // Clear category filter if no categories are available or selected category doesn't exist
+  useEffect(() => {
+    if (filterCategoryId) {
+      if (categories.length === 0) {
+        console.log("🧹 Clearing category filter - no categories available");
+        setFilterCategoryId(undefined);
+      } else {
+        // Check if the selected category still exists
+        const categoryExists = categories.some(c => c.id === filterCategoryId);
+        if (!categoryExists) {
+          console.log("🧹 Clearing category filter - selected category no longer exists");
+          setFilterCategoryId(undefined);
+        }
+      }
+    }
+  }, [categories, filterCategoryId]);
+
   useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
@@ -518,7 +535,13 @@ export default function Transactions() {
             >
               <Filter size={18} color={colors.textPrimary} />
               {/* Show indicator if filters are active */}
-              {(filterType !== "all" || filterCategoryId || filterStartDate || filterEndDate) && (
+              {/* Only show category filter indicator if categories are available */}
+              {(
+                filterType !== "all" || 
+                (filterCategoryId && categories.length > 0) || 
+                filterStartDate || 
+                filterEndDate
+              ) && (
                 <View className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full" />
               )}
             </Pressable>

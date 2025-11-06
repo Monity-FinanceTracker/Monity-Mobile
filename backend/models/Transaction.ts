@@ -210,11 +210,23 @@ export default class Transaction {
       }
 
       if (categoryData?.name) {
-        categoryFilterName = categoryData.name;
-        console.log(`🔍 Category name found: ${categoryFilterName}`);
-        // Try to apply filter at database level first
-        query = query.eq("category", categoryFilterName);
-        console.log(`🔍 Category filter applied at DB level: category = "${categoryFilterName}"`);
+        // categoryData.name is the encrypted value from the database
+        // We need to use it for filtering at DB level
+        const encryptedCategoryName = categoryData.name;
+        console.log(`🔍 Category name (encrypted in DB): ${encryptedCategoryName.substring(0, 50)}...`);
+        
+        // Apply filter at database level using the encrypted category name
+        query = query.eq("category", encryptedCategoryName);
+        console.log(`🔍 Category filter applied at DB level using encrypted name`);
+        
+        // Also get the decrypted name for post-decryption filtering (as fallback)
+        // Use Category model to get decrypted name
+        const Category = require("./Category").default;
+        const decryptedCategory = await Category.findById(filters.categoryId, userId);
+        if (decryptedCategory?.name) {
+          categoryFilterName = decryptedCategory.name;
+          console.log(`🔍 Category name (decrypted for fallback): ${categoryFilterName}`);
+        }
       } else {
         console.log("🔍 Category not found for ID:", filters.categoryId);
         console.log("🔍 Category data received:", categoryData);
