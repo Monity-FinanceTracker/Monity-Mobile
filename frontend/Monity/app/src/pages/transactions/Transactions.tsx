@@ -52,37 +52,21 @@ const getTransactionIcon = (categoryName: string) => {
   return categoryMap[categoryName] || ShoppingCart;
 };
 
-const filterOptions = [
-  { value: "all", label: "Todas" },
-  { value: "income", label: "Receitas" },
-  { value: "expense", label: "Despesas" },
-  { value: "favorites", label: "Favoritas" },
-];
-
-const periodOptions = [
-  { value: "thisMonth", label: "Este Mês" },
-  { value: "lastMonth", label: "Mês Passado" },
-  { value: "thisYear", label: "Este Ano" },
-  { value: "custom", label: "Personalizado" },
-];
-
 export default function Transactions() {
   const colors = COLORS;
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("all");
-  const [selectedPeriod, setSelectedPeriod] = useState("thisMonth");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
   
-  // Filter modal states - these are the active filters applied to API
+  // Active filters applied to API
   const [filterCategoryId, setFilterCategoryId] = useState<string | undefined>(undefined);
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>(undefined);
   const [filterEndDate, setFilterEndDate] = useState<Date | undefined>(undefined);
   
-  // Modal UI states - these are temporary until user applies
+  // Filter modal states
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tempFilterCategoryId, setTempFilterCategoryId] = useState<string | undefined>(undefined);
@@ -91,7 +75,7 @@ export default function Transactions() {
   const [tempFilterEndDate, setTempFilterEndDate] = useState<Date | undefined>(undefined);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const loadCategories = async () => {
     try {
@@ -124,31 +108,63 @@ export default function Transactions() {
   const filterStartDateStr = useMemo(() => formatDateForAPI(filterStartDate), [filterStartDate, formatDateForAPI]);
   const filterEndDateStr = useMemo(() => formatDateForAPI(filterEndDate), [filterEndDate, formatDateForAPI]);
 
-  const loadTransactions = useCallback(async () => {
+  const loadTransactions = useCallback(async (overrideFilters?: {
+    type?: "all" | "income" | "expense";
+    categoryId?: string | undefined;
+    startDate?: Date | undefined;
+    endDate?: Date | undefined;
+  }) => {
     try {
       setIsLoading(true);
 
+      // Use override filters if provided, otherwise use state filters
+      const effectiveType = overrideFilters?.type !== undefined ? overrideFilters.type : filterType;
+      const effectiveCategoryId = overrideFilters?.categoryId !== undefined ? overrideFilters.categoryId : filterCategoryId;
+      const effectiveStartDate = overrideFilters?.startDate !== undefined ? overrideFilters.startDate : filterStartDate;
+      const effectiveEndDate = overrideFilters?.endDate !== undefined ? overrideFilters.endDate : filterEndDate;
+
+      // Format dates for API
+      const effectiveStartDateStr = effectiveStartDate ? formatDateForAPI(effectiveStartDate) : undefined;
+      const effectiveEndDateStr = effectiveEndDate ? formatDateForAPI(effectiveEndDate) : undefined;
+
       const filters = {
-        type: filterType === "all" ? undefined : filterType,
-        categoryId: filterCategoryId,
-        startDate: filterStartDateStr,
-        endDate: filterEndDateStr,
+        type: effectiveType === "all" ? undefined : effectiveType,
+        categoryId: effectiveCategoryId,
+        startDate: effectiveStartDateStr,
+        endDate: effectiveEndDateStr,
         search: searchTerm || undefined,
       };
 
-      console.log("Loading transactions with filters:", filters);
+      console.log("🔄 Loading transactions with filters:", filters);
+      console.log("🔄 Override filters:", overrideFilters);
+      console.log("🔄 Current filter state:", {
+        filterType,
+        filterCategoryId,
+        filterStartDate,
+        filterEndDate,
+        filterStartDateStr,
+        filterEndDateStr,
+        searchTerm,
+      });
 
       const response = await apiService.getTransactions(filters);
 
       if (response.success && response.data) {
-        console.log("Transactions loaded:", response.data.length);
+        console.log("✅ Transactions loaded:", response.data.length, "transactions");
+        console.log("✅ First few transactions:", response.data.slice(0, 3).map(t => ({
+          id: t.id,
+          description: t.description || t.title,
+          date: t.date,
+          type: t.type,
+          category: t.category,
+        })));
         setTransactions(response.data);
       } else {
-        console.error("Failed to load transactions:", response.error);
+        console.error("❌ Failed to load transactions:", response.error);
         Alert.alert("Erro", "Falha ao carregar transações");
       }
     } catch (error) {
-      console.error("Error loading transactions:", error);
+      console.error("❌ Error loading transactions:", error);
       Alert.alert("Erro", "Falha ao carregar transações");
     } finally {
       setIsLoading(false);
@@ -179,17 +195,12 @@ export default function Transactions() {
     if (!showFilterModal) {
       setShowStartDatePicker(false);
       setShowEndDatePicker(false);
-      setShowCategoryPicker(false);
+      setShowCategoryDropdown(false);
     }
   }, [showFilterModal]);
 
-  // Apply client-side filters for favorites (API doesn't support this)
-  const filteredTransactions = transactions.filter((transaction) => {
-    if (selectedFilter === "favorites") {
-      return transaction.isFavorite === true;
-    }
-    return true;
-  });
+  // No client-side filtering needed - all filtering is done by API
+  const filteredTransactions = transactions;
 
   const formatDate = (dateString: string) => {
     // Handle YYYY-MM-DD format dates correctly
@@ -480,87 +491,19 @@ export default function Transactions() {
         <View className="px-6 pt-6 pb-6">
           <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold', marginBottom: 24 }}>Transações</Text>
 
-          {/* Search Bar */}
-          <View className="relative mb-4">
-            <TextInput
-              placeholder="Buscar transações..."
-              placeholderTextColor="#9CA3AF"
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-              className="bg-card-bg border border-border-default rounded-xl pl-10 pr-4 py-3 text-white"
-            />
-          </View>
-
-          {/* Filter Bar */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mb-6"
-          >
-            <View className="flex-row gap-2">
-              {filterOptions.map((option) => (
-                <Pressable
-                  key={option.value}
-                  onPress={() => {
-                    triggerHaptic();
-                    setSelectedFilter(option.value);
-                    // Sync with filterType for income/expense/all
-                    if (option.value === "all" || option.value === "income" || option.value === "expense") {
-                      setFilterType(option.value as "all" | "income" | "expense");
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-lg ${
-                    selectedFilter === option.value
-                      ? "bg-accent"
-                      : "bg-card-bg border border-border-default"
-                  }`}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: selectedFilter === option.value
-                        ? "#191E29"
-                        : colors.textGray
-                    }}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              ))}
-              <View className="w-px bg-[#4B5563] mx-2" />
-              {periodOptions.map((option) => (
-                <Pressable
-                  key={option.value}
-                  onPress={() => setSelectedPeriod(option.value)}
-                  className={`px-4 py-2 rounded-lg ${
-                    selectedPeriod === option.value
-                      ? "bg-card-bg"
-                      : "bg-transparent"
-                  }`}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      color: selectedPeriod === option.value
-                        ? colors.textPrimary
-                        : colors.textMuted
-                    }}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              ))}
+          {/* Search and Filter Bar */}
+          <View className="flex-row items-center gap-3 mb-6">
+            <View className="flex-1 relative">
+              <TextInput
+                placeholder="Buscar transações..."
+                placeholderTextColor="#9CA3AF"
+                value={searchTerm}
+                onChangeText={setSearchTerm}
+                className="bg-card-bg border border-border-default rounded-xl pl-4 pr-4 py-3 text-white"
+              />
             </View>
-          </ScrollView>
-
-          {/* Transactions List Header */}
-          <View className="flex-row items-center justify-between mb-4">
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
-              {filteredTransactions.length} transações encontradas
-            </Text>
             <Pressable 
-              className="flex-row items-center gap-2"
+              className="flex-row items-center gap-2 bg-card-bg border border-border-default rounded-xl px-4 py-3"
               onPress={() => {
                 triggerHaptic();
                 // Load categories when opening modal
@@ -573,9 +516,19 @@ export default function Transactions() {
                 setShowFilterModal(true);
               }}
             >
-              <Filter size={16} color={colors.textPrimary} />
-              <Text style={{ fontSize: 12, color: colors.textMuted }}>Filtros</Text>
+              <Filter size={18} color={colors.textPrimary} />
+              {/* Show indicator if filters are active */}
+              {(filterType !== "all" || filterCategoryId || filterStartDate || filterEndDate) && (
+                <View className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full" />
+              )}
             </Pressable>
+          </View>
+
+          {/* Transactions List Header */}
+          <View className="flex-row items-center justify-between mb-4">
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
+              {filteredTransactions.length} transações encontradas
+            </Text>
           </View>
 
           {/* Transactions List */}
@@ -743,7 +696,7 @@ export default function Transactions() {
           // Close all pickers
           setShowStartDatePicker(false);
           setShowEndDatePicker(false);
-          setShowCategoryPicker(false);
+          setShowCategoryDropdown(false);
           // Reset temp filters when closing without applying
           setTempFilterType(filterType);
           setTempFilterCategoryId(filterCategoryId);
@@ -761,7 +714,7 @@ export default function Transactions() {
               // Close all pickers
               setShowStartDatePicker(false);
               setShowEndDatePicker(false);
-              setShowCategoryPicker(false);
+              setShowCategoryDropdown(false);
               // Reset temp filters when closing without applying
               setTempFilterType(filterType);
               setTempFilterCategoryId(filterCategoryId);
@@ -771,7 +724,7 @@ export default function Transactions() {
             }}
             style={{ flex: 1 }}
           />
-          <View className="bg-background rounded-t-3xl p-6 max-h-[90%]">
+          <View className="bg-background rounded-t-3xl p-6 max-h-[90%]" onStartShouldSetResponder={() => true}>
               {/* Header */}
               <View className="flex-row items-center justify-between mb-6">
                 <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold' }}>
@@ -782,7 +735,7 @@ export default function Transactions() {
                     // Close all pickers
                     setShowStartDatePicker(false);
                     setShowEndDatePicker(false);
-                    setShowCategoryPicker(false);
+                    setShowCategoryDropdown(false);
                     // Reset temp filters when closing without applying
                     setTempFilterType(filterType);
                     setTempFilterCategoryId(filterCategoryId);
@@ -796,7 +749,10 @@ export default function Transactions() {
                 </Pressable>
               </View>
 
-              <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView 
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
                 {/* Tipo de Transação */}
                 <View className="mb-6">
                   <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: '600', marginBottom: 12 }}>
@@ -813,6 +769,8 @@ export default function Transactions() {
                         onPress={() => {
                           triggerHaptic();
                           setTempFilterType(option.value as "all" | "income" | "expense");
+                          // Close dropdown if open
+                          setShowCategoryDropdown(false);
                         }}
                         className={`flex-1 px-4 py-3 rounded-xl ${
                           tempFilterType === option.value
@@ -842,20 +800,104 @@ export default function Transactions() {
                   <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: '600', marginBottom: 12 }}>
                     Categoria
                   </Text>
-                  <Pressable
-                    onPress={() => {
-                      triggerHaptic();
-                      setShowCategoryPicker(true);
-                    }}
-                    className="bg-card-bg border border-border-default rounded-xl px-4 py-3 flex-row items-center justify-between"
-                  >
-                    <Text style={{ color: tempFilterCategoryId ? colors.textPrimary : colors.textMuted, fontSize: 14 }}>
-                      {tempFilterCategoryId 
-                        ? categories.find(c => c.id === tempFilterCategoryId)?.name || "Selecionar categoria"
-                        : "Todas as categorias"}
-                    </Text>
-                    <ChevronDown size={20} color={colors.textMuted} />
-                  </Pressable>
+                  <View className="relative z-10">
+                    <Pressable
+                      onPress={() => {
+                        triggerHaptic();
+                        setShowCategoryDropdown(!showCategoryDropdown);
+                        // Close date pickers if open
+                        setShowStartDatePicker(false);
+                        setShowEndDatePicker(false);
+                      }}
+                      className="bg-card-bg border border-border-default rounded-xl px-4 py-3 flex-row items-center justify-between"
+                    >
+                      <Text style={{ color: tempFilterCategoryId ? colors.textPrimary : colors.textMuted, fontSize: 14 }}>
+                        {tempFilterCategoryId 
+                          ? categories.find(c => c.id === tempFilterCategoryId)?.name || "Selecionar categoria"
+                          : "Todas as categorias"}
+                      </Text>
+                      <ChevronDown 
+                        size={20} 
+                        color={colors.textMuted}
+                        style={{ transform: [{ rotate: showCategoryDropdown ? '180deg' : '0deg' }] }}
+                      />
+                    </Pressable>
+                    
+                    {/* Dropdown */}
+                    {showCategoryDropdown && (
+                      <View 
+                        className="absolute top-full left-0 right-0 mt-2 bg-background border border-border-default rounded-xl shadow-lg overflow-hidden" 
+                        style={{ zIndex: 10000, elevation: 10 }}
+                      >
+                          <ScrollView 
+                            showsVerticalScrollIndicator={true}
+                            nestedScrollEnabled={true}
+                            style={{ maxHeight: 240 }}
+                            keyboardShouldPersistTaps="always"
+                          >
+                            <TouchableOpacity
+                              activeOpacity={0.7}
+                              onPress={() => {
+                                triggerHaptic();
+                                setTempFilterCategoryId(undefined);
+                                setShowCategoryDropdown(false);
+                              }}
+                              className={`py-3 px-4 ${
+                                !tempFilterCategoryId
+                                  ? "bg-accent/20"
+                                  : "bg-transparent"
+                              }`}
+                            >
+                              <Text
+                                style={{
+                                  color: !tempFilterCategoryId ? colors.accent : colors.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: !tempFilterCategoryId ? '600' : '400',
+                                }}
+                              >
+                                Todas as categorias
+                              </Text>
+                            </TouchableOpacity>
+                            
+                            {categories.length === 0 ? (
+                              <View className="py-4 px-4 items-center">
+                                <Text style={{ color: colors.textMuted, fontSize: 14 }}>
+                                  Nenhuma categoria disponível
+                                </Text>
+                              </View>
+                            ) : (
+                              categories.map((category) => (
+                                <TouchableOpacity
+                                  key={category.id}
+                                  activeOpacity={0.7}
+                                  onPress={() => {
+                                    triggerHaptic();
+                                    console.log("📌 Selected category:", category.id, category.name);
+                                    setTempFilterCategoryId(category.id);
+                                    setShowCategoryDropdown(false);
+                                  }}
+                                  className={`py-3 px-4 ${
+                                    tempFilterCategoryId === category.id
+                                      ? "bg-accent/20"
+                                      : "bg-transparent"
+                                  }`}
+                                >
+                                  <Text
+                                    style={{
+                                      color: tempFilterCategoryId === category.id ? colors.accent : colors.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: tempFilterCategoryId === category.id ? '600' : '400',
+                                    }}
+                                  >
+                                    {category.name}
+                                  </Text>
+                                </TouchableOpacity>
+                              ))
+                            )}
+                          </ScrollView>
+                        </View>
+                    )}
+                  </View>
                 </View>
 
                 {/* Data Inicial */}
@@ -867,6 +909,9 @@ export default function Transactions() {
                     onPress={() => {
                       triggerHaptic();
                       setShowStartDatePicker(true);
+                      // Close dropdown if open
+                      setShowCategoryDropdown(false);
+                      setShowEndDatePicker(false);
                     }}
                     className="bg-card-bg border border-border-default rounded-xl px-4 py-3 flex-row items-center justify-between"
                   >
@@ -933,6 +978,9 @@ export default function Transactions() {
                     onPress={() => {
                       triggerHaptic();
                       setShowEndDatePicker(true);
+                      // Close dropdown if open
+                      setShowCategoryDropdown(false);
+                      setShowStartDatePicker(false);
                     }}
                     className="bg-card-bg border border-border-default rounded-xl px-4 py-3 flex-row items-center justify-between"
                   >
@@ -993,12 +1041,25 @@ export default function Transactions() {
                 {/* Action Buttons */}
                 <View className="gap-3 mb-4">
                   <Pressable
-                    onPress={() => {
+                    onPress={async () => {
                       triggerHaptic();
                       setTempFilterType("all");
                       setTempFilterCategoryId(undefined);
                       setTempFilterStartDate(undefined);
                       setTempFilterEndDate(undefined);
+                      // Also clear the actual filters immediately
+                      setFilterType("all");
+                      setFilterCategoryId(undefined);
+                      setFilterStartDate(undefined);
+                      setFilterEndDate(undefined);
+                      // Reload transactions after clearing filters
+                      console.log("🔄 Reloading transactions after clearing filters");
+                      await loadTransactions({
+                        type: "all",
+                        categoryId: undefined,
+                        startDate: undefined,
+                        endDate: undefined,
+                      });
                     }}
                     className="bg-card-bg border border-border-default rounded-xl p-4 flex-row items-center justify-center"
                   >
@@ -1008,12 +1069,12 @@ export default function Transactions() {
                   </Pressable>
 
                   <Pressable
-                    onPress={() => {
+                    onPress={async () => {
                       triggerHaptic();
                       // Close all pickers first
                       setShowStartDatePicker(false);
                       setShowEndDatePicker(false);
-                      setShowCategoryPicker(false);
+                      setShowCategoryDropdown(false);
                       
                       console.log("🔧 Applying filters:", {
                         type: tempFilterType,
@@ -1022,15 +1083,24 @@ export default function Transactions() {
                         endDate: tempFilterEndDate,
                       });
                       
+                      // Close modal first
+                      setShowFilterModal(false);
+                      
                       // Apply temp filters to actual filters
                       setFilterType(tempFilterType);
                       setFilterCategoryId(tempFilterCategoryId);
                       setFilterStartDate(tempFilterStartDate);
                       setFilterEndDate(tempFilterEndDate);
-                      // Sync with selectedFilter
-                      setSelectedFilter(tempFilterType);
-                      // Close modal
-                      setShowFilterModal(false);
+                      
+                      // Immediately reload transactions with the new filter values
+                      // Pass the new filter values directly to avoid closure issues
+                      console.log("🔄 Reloading transactions with new filters immediately");
+                      await loadTransactions({
+                        type: tempFilterType,
+                        categoryId: tempFilterCategoryId,
+                        startDate: tempFilterStartDate,
+                        endDate: tempFilterEndDate,
+                      });
                     }}
                     className="bg-accent rounded-xl p-4 flex-row items-center justify-center"
                   >
@@ -1044,100 +1114,6 @@ export default function Transactions() {
         </View>
       </Modal>
 
-      {/* Category Picker Modal */}
-      <Modal
-        visible={showCategoryPicker}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowCategoryPicker(false)}
-      >
-        <TouchableOpacity 
-          className="flex-1 bg-black/50 justify-center items-center px-6"
-          activeOpacity={1}
-          onPress={() => setShowCategoryPicker(false)}
-        >
-          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
-            <View className="bg-background rounded-2xl p-6 w-full max-w-sm">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
-                  Selecionar Categoria
-                </Text>
-                <Pressable
-                  onPress={() => setShowCategoryPicker(false)}
-                  className="w-8 h-8 bg-card-bg rounded-full items-center justify-center"
-                >
-                  <X size={16} color={colors.textPrimary} />
-                </Pressable>
-              </View>
-              
-              <ScrollView className="max-h-64" showsVerticalScrollIndicator={false}>
-                <Pressable
-                  onPress={() => {
-                    triggerHaptic();
-                    setTempFilterCategoryId(undefined);
-                    setShowCategoryPicker(false);
-                  }}
-                  className={`py-3 px-4 rounded-xl mb-2 ${
-                    !tempFilterCategoryId
-                      ? "bg-accent"
-                      : "bg-card-bg"
-                  }`}
-                >
-                  <Text
-                    style={{
-                      color: !tempFilterCategoryId ? "#191E29" : colors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: '500',
-                    }}
-                  >
-                    Todas as categorias
-                  </Text>
-                </Pressable>
-                
-                {(() => {
-                  console.log("🎨 Categories in modal:", categories.length, categories);
-                  return categories.length === 0 ? (
-                    <View className="py-4 items-center">
-                      <Text style={{ color: colors.textMuted, fontSize: 14 }}>
-                        Nenhuma categoria disponível
-                      </Text>
-                    </View>
-                  ) : (
-                    categories.map((category) => {
-                      console.log("🎨 Rendering category:", category.name, category.id);
-                      return (
-                  <Pressable
-                    key={category.id}
-                    onPress={() => {
-                      triggerHaptic();
-                      setTempFilterCategoryId(category.id);
-                      setShowCategoryPicker(false);
-                    }}
-                    className={`py-3 px-4 rounded-xl mb-2 ${
-                      tempFilterCategoryId === category.id
-                        ? "bg-accent"
-                        : "bg-card-bg"
-                    }`}
-                  >
-                    <Text
-                      style={{
-                        color: tempFilterCategoryId === category.id ? "#191E29" : colors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: '500',
-                      }}
-                    >
-                      {category.name}
-                    </Text>
-                  </Pressable>
-                      );
-                    })
-                  );
-                })()}
-              </ScrollView>
-            </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 }

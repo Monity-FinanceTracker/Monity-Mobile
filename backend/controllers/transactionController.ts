@@ -19,7 +19,35 @@ class TransactionController {
   async getAllTransactions(req: AuthenticatedRequest, res: Response) {
     const userId = req.user.id;
     try {
-      const transactions = await Transaction.getAll(userId);
+      // Get filters from query parameters
+      const filters: {
+        type?: "income" | "expense";
+        categoryId?: string;
+        startDate?: string;
+        endDate?: string;
+        search?: string;
+      } = {};
+
+      if (req.query.type) {
+        filters.type = req.query.type as "income" | "expense";
+      }
+      if (req.query.categoryId) {
+        filters.categoryId = req.query.categoryId as string;
+      }
+      if (req.query.startDate) {
+        filters.startDate = req.query.startDate as string;
+      }
+      if (req.query.endDate) {
+        filters.endDate = req.query.endDate as string;
+      }
+      if (req.query.search) {
+        filters.search = req.query.search as string;
+      }
+
+      console.log("🔍 getAllTransactions - Query params:", req.query);
+      console.log("🔍 getAllTransactions - Parsed filters:", filters);
+
+      const transactions = await Transaction.getAll(userId, filters);
 
       // Add type field based on typeId for frontend compatibility
       // Also map is_favorite from database to isFavorite for frontend
@@ -46,14 +74,8 @@ class TransactionController {
       // Debug log to check if favorites are being returned
       const favoritesCount = transactionsWithType.filter((t: any) => t.isFavorite === true).length;
       console.log("🔍 getAllTransactions - Favorites count:", favoritesCount, "out of", transactionsWithType.length);
-      console.log("🔍 getAllTransactions - Sample transactions with isFavorite:", 
-        transactionsWithType.slice(0, 3).map((t: any) => ({ 
-          id: t.id, 
-          description: t.description, 
-          isFavorite: t.isFavorite, 
-          is_favorite: t.is_favorite 
-        }))
-      );
+      console.log("🔍 getAllTransactions - Filters applied:", filters);
+      console.log("🔍 getAllTransactions - Transactions returned:", transactionsWithType.length);
 
       res.json({ success: true, data: transactionsWithType });
     } catch (error) {
