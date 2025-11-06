@@ -276,9 +276,13 @@ export default function Dashboard() {
                     <View>
                       <Text className="text-xs text-gray-400">Receitas</Text>
                       <Text className="text-sm font-semibold text-green-400">
-                        {balance ? formatCurrency(balance?.income) : "R$ 0,00"}
+                        {showBalance
+                          ? balance
+                            ? formatCurrency(balance?.income)
+                            : "R$ 0,00"
+                          : "••••••"}
                       </Text>
-                      {(!balance || (balance?.income || 0) === 0) && (
+                      {showBalance && (!balance || (balance?.income || 0) === 0) && (
                         <Text className="text-xs text-gray-500 mt-1">
                           Você não tem receitas
                         </Text>
@@ -299,11 +303,13 @@ export default function Dashboard() {
                     <View>
                       <Text className="text-xs text-gray-400">Despesas</Text>
                       <Text className="text-sm font-semibold text-white">
-                        {balance
-                          ? formatCurrency(balance?.expenses)
-                          : "R$ 0,00"}
+                        {showBalance
+                          ? balance
+                            ? formatCurrency(balance?.expenses)
+                            : "R$ 0,00"
+                          : "••••••"}
                       </Text>
-                      {(!balance || (balance?.expenses || 0) === 0) && (
+                      {showBalance && (!balance || (balance?.expenses || 0) === 0) && (
                         <Text className="text-xs text-gray-500 mt-1">
                           Você não tem despesas
                         </Text>
