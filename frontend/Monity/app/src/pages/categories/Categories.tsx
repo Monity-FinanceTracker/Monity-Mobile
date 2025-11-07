@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import Card from "../../components/molecules/Card";
 import Button from "../../components/atoms/Button";
 import { COLORS } from "../../constants/colors";
@@ -24,8 +25,10 @@ import {
   BarChart3,
   PieChart,
   X,
+  ArrowLeft,
 } from "lucide-react-native";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
+import { triggerHaptic } from "../../utils/haptics";
 
 const availableColors = [
   "bg-red-500",
@@ -44,6 +47,7 @@ const availableColors = [
 
 export default function Categories() {
   const colors = COLORS;
+  const navigation = useNavigation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -64,8 +68,17 @@ export default function Categories() {
       const response = await apiService.getCategories();
       if (response.success && response.data) {
         // Add computed type field for frontend compatibility
+        // Preserve all fields from the API response including totalSpent and transactionCount
         const categoriesWithType = response.data.map((category) => ({
-          ...category,
+          id: category.id,
+          name: category.name,
+          color: category.color,
+          icon: category.icon,
+          typeId: category.typeId,
+          // Preserve totalSpent and transactionCount from API
+          totalSpent: category.totalSpent !== undefined ? category.totalSpent : 0,
+          transactionCount: category.transactionCount !== undefined ? category.transactionCount : 0,
+          // Add computed type field
           type: (category.typeId === 2
             ? "income"
             : category.typeId === 3
@@ -88,9 +101,12 @@ export default function Categories() {
     onRefresh: loadCategories,
   });
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  // Load categories when component mounts and when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      loadCategories();
+    }, [])
+  );
 
   const expenseCategories = categories.filter((cat) => cat.type === "expense");
   const incomeCategories = categories.filter((cat) => cat.type === "income");
@@ -430,7 +446,18 @@ export default function Categories() {
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-white text-lg font-bold">Categorias</Text>
+            <View className="flex-row items-center gap-4">
+              <Pressable 
+                onPress={() => {
+                  triggerHaptic();
+                  navigation.goBack();
+                }} 
+                className="p-2"
+              >
+                <ArrowLeft size={20} color={colors.textPrimary} />
+              </Pressable>
+              <Text className="text-white text-lg font-bold">Categorias</Text>
+            </View>
             <Pressable
               onPress={() => setShowCreateForm(true)}
               className="bg-accent px-4 py-2 rounded-lg flex-row items-center gap-2"
