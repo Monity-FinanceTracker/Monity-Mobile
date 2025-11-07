@@ -1,6 +1,6 @@
 import { Category } from "../models";
 import { logger } from "../utils/logger";
-import { supabase } from "../config";
+import { supabaseAdmin } from "../config";
 import type { Request, Response, NextFunction } from "express";
 
 interface AuthenticatedRequest extends Request {
@@ -19,15 +19,17 @@ export default class CategoryController {
       const categoriesWithCounts = await Promise.all(
         categories.map(async (category: any) => {
           // Get transaction count and total spent amount
-          const { data: transactions, error } = await supabase
+          // Use categoryId instead of category name to match transactions
+          const { data: transactions, error } = await supabaseAdmin
             .from("transactions")
             .select("amount")
             .eq("userId", userId)
-            .eq("category", category.name);
+            .eq("categoryId", category.id);
 
           if (error) {
             logger.warn("Error fetching transactions for category", {
-              category: category.name,
+              categoryId: category.id,
+              categoryName: category.name,
               error: (error as Error).message,
             });
             return { ...category, transactionCount: 0, totalSpent: 0 };
@@ -36,9 +38,13 @@ export default class CategoryController {
           const transactionCount = transactions?.length || 0;
           const totalSpent =
             transactions?.reduce((sum, transaction) => {
+              // Parse amount to number (it might be stored as string)
+              const amount = typeof transaction.amount === 'string' 
+                ? parseFloat(transaction.amount) 
+                : transaction.amount || 0;
               // For expenses, amount is negative, so we take absolute value
               // For income, amount is positive
-              return sum + Math.abs(transaction.amount);
+              return sum + Math.abs(amount);
             }, 0) || 0;
 
           return {
