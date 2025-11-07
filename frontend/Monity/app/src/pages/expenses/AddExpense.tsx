@@ -36,7 +36,7 @@ const quickActions = [
     title: "Criar Categoria",
     icon: Tag,
     onPress: (navigation: any) => {
-      // Navigate to Categories tab
+      // Navigate to Categories page (stack navigation)
       navigation.navigate("Categories" as never);
     },
   },

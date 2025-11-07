@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { Home, Receipt, MessageCircle, Tag } from "lucide-react-native";
+import { Home, Receipt, MessageCircle } from "lucide-react-native";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import LoginScreen from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
@@ -13,6 +13,7 @@ import AddExpense from "../pages/expenses/AddExpense";
 import AddExpenseForm from "../pages/expenses/AddExpenseForm";
 import AddIncomeForm from "../pages/expenses/AddIncomeForm";
 import Categories from "../pages/categories/Categories";
+import Overview from "../pages/overview/Overview";
 import Profile from "../pages/profile/Profile";
 import Chat from "../pages/chat/Chat";
 import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
@@ -33,6 +34,7 @@ export type RootStackParamList = {
   SubscriptionPlans: undefined;
   AddExpenseForm: { favoriteData?: any } | undefined;
   AddIncomeForm: { favoriteData?: any } | undefined;
+  Categories: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -211,6 +213,27 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   );
 }
 
+// Componente de ícone customizado com 4 bolinhas 2x2
+function GridIcon({ color, size = 24 }: { color: string; size?: number }) {
+  const dotSize = size * 0.3;
+  const gap = size * 0.2;
+  
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'column', marginRight: gap }}>
+          <View style={{ width: dotSize, height: dotSize, borderRadius: dotSize / 2, backgroundColor: color, marginBottom: gap }} />
+          <View style={{ width: dotSize, height: dotSize, borderRadius: dotSize / 2, backgroundColor: color }} />
+        </View>
+        <View style={{ flexDirection: 'column' }}>
+          <View style={{ width: dotSize, height: dotSize, borderRadius: dotSize / 2, backgroundColor: color, marginBottom: gap }} />
+          <View style={{ width: dotSize, height: dotSize, borderRadius: dotSize / 2, backgroundColor: color }} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -288,12 +311,12 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Categories"
-        component={Categories}
+        name="Overview"
+        component={Overview}
         options={{
           tabBarIcon: ({ focused, color }) => (
             <AnimatedTabIcon focused={focused} activeColor={focused ? COLORS.accent : color}>
-              <Tag size={24} color={color} />
+              <GridIcon color={color} size={24} />
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",
@@ -323,6 +346,7 @@ function Gate() {
           <RootStack.Screen name="SubscriptionPlans" component={SubscriptionPlans} />
           <RootStack.Screen name="AddExpenseForm" component={AddExpenseForm} />
           <RootStack.Screen name="AddIncomeForm" component={AddIncomeForm} />
+          <RootStack.Screen name="Categories" component={Categories} />
         </>
       ) : (
         <>

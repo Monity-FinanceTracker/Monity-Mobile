@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -24,16 +24,34 @@ import {
   ArrowUp,
 } from "lucide-react-native";
 
+interface MonthOption {
+  month: number;
+  year: number;
+  label: string;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const colors = COLORS;
   const navigation = useNavigation();
   const [balance, setBalance] = useState<Balance | null>(null);
+  const [monthlyIncomeExpenses, setMonthlyIncomeExpenses] = useState<{
+    income: number;
+    expenses: number;
+  }>({
+    income: 0,
+    expenses: 0,
+  });
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>(
     []
   );
   const [showBalance, setShowBalance] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Estado para mês selecionado (apenas para receitas/despesas)
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
   const formatCurrency = (value: number | undefined | null) => {
     if (value === undefined || value === null || isNaN(value)) {
@@ -49,11 +67,46 @@ export default function Dashboard() {
     return email ? email.charAt(0).toUpperCase() : "U";
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return "Bom dia!";
+    } else if (hour >= 12 && hour < 18) {
+      return "Boa tarde!";
+    } else {
+      return "Boa noite!";
+    }
+  };
+
+  // Gerar lista de 3 meses (2 anteriores + atual)
+  const monthOptions: MonthOption[] = useMemo(() => {
+    const options: MonthOption[] = [];
+    const currentDate = new Date();
+    
+    for (let i = 2; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      const monthNames = [
+        "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+        "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+      ];
+      
+      options.push({
+        month,
+        year,
+        label: `${monthNames[month - 1]}/${year}`,
+      });
+    }
+    
+    return options;
+  }, []);
+
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
 
-      // Load balance data
+      // Load total balance (sem filtro de mês)
       const balanceResponse = await apiService.getBalance();
       if (balanceResponse.success && balanceResponse.data) {
         setBalance(balanceResponse.data);
@@ -64,12 +117,79 @@ export default function Dashboard() {
       if (transactionsResponse.success && transactionsResponse.data) {
         setRecentTransactions(transactionsResponse.data);
       }
+
+      // Load monthly income/expenses
+      await loadMonthlyIncomeExpenses(selectedMonth, selectedYear);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
       Alert.alert("Erro", "Falha ao carregar dados do dashboard");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadMonthlyIncomeExpenses = async (month: number, year: number) => {
+    try {
+      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+      
+      const [monthlyBalanceResponse, transactionsResponse] = await Promise.all([
+        apiService.getMonthlyBalance(month, year),
+        apiService.getTransactions({ startDate, endDate }),
+      ]);
+
+      // Process monthly income and expenses
+      let income = 0;
+      let expenses = 0;
+
+      if (monthlyBalanceResponse.success && monthlyBalanceResponse.data) {
+        const responseData = monthlyBalanceResponse.data as any;
+        
+        // Verificar se é o formato antigo {balance: X} ou novo {total, income, expenses, ...}
+        if (responseData.balance !== undefined && responseData.total === undefined) {
+          // Formato antigo: calcular income e expenses das transações
+          if (transactionsResponse.success && transactionsResponse.data) {
+            transactionsResponse.data.forEach((transaction: Transaction) => {
+              const amount = Math.abs(transaction.amount || 0);
+              if (transaction.type === "income") {
+                income += amount;
+              } else if (transaction.type === "expense") {
+                expenses += amount;
+              }
+            });
+          }
+        } else {
+          // Formato novo
+          income = responseData.income || 0;
+          expenses = responseData.expenses || 0;
+        }
+      } else if (transactionsResponse.success && transactionsResponse.data) {
+        // Fallback: calcular das transações se não houver resposta do balance
+        transactionsResponse.data.forEach((transaction: Transaction) => {
+          const amount = Math.abs(transaction.amount || 0);
+          if (transaction.type === "income") {
+            income += amount;
+          } else if (transaction.type === "expense") {
+            expenses += amount;
+          }
+        });
+      }
+
+      setMonthlyIncomeExpenses({ income, expenses });
+    } catch (error) {
+      console.error("Error loading monthly income/expenses:", error);
+      setMonthlyIncomeExpenses({ income: 0, expenses: 0 });
+    }
+  };
+
+  const handleMonthChange = async (month: number, year: number) => {
+    // Atualizar mês imediatamente
+    setSelectedMonth(month);
+    setSelectedYear(year);
+    
+    // Carregar dados
+    await loadMonthlyIncomeExpenses(month, year);
   };
 
   const { refreshControl } = usePullToRefresh({
@@ -202,7 +322,7 @@ export default function Dashboard() {
               <Text 
                 className="text-white text-2xl font-bold"
               >
-                Olá, {user?.name || "Usuário"}!
+                {getGreeting()} {user?.name || "Usuário"}
               </Text>
               <Text 
                 className="text-gray-400 text-lg"
@@ -264,60 +384,99 @@ export default function Dashboard() {
             </View>
           </Card>
 
-          {/* Quick Stats */}
-          <View className="gap-4 mt-3">
-            <View className="flex-1">
-              <Card>
-                <View className="p-4">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center">
-                      <TrendingUp size={20} color="white" />
-                    </View>
-                    <View>
-                      <Text className="text-xs text-gray-400">Receitas</Text>
-                      <Text className="text-sm font-semibold text-green-400">
-                        {showBalance
-                          ? balance
-                            ? formatCurrency(balance?.income)
-                            : "R$ 0,00"
-                          : "••••••"}
-                      </Text>
-                      {showBalance && (!balance || (balance?.income || 0) === 0) && (
-                        <Text className="text-xs text-gray-500 mt-1">
-                          Você não tem receitas
-                        </Text>
-                      )}
-                    </View>
+          {/* Month Selector */}
+          <View className="mt-3 flex-row mb-2" style={{ gap: 8, paddingHorizontal: 8 }}>
+            {monthOptions.map((option, index) => {
+              const isSelected = option.month === selectedMonth && option.year === selectedYear;
+              
+              return (
+                <Pressable
+                  key={`${option.month}-${option.year}`}
+                  onPress={() => handleMonthChange(option.month, option.year)}
+                  className="flex-1 px-3 py-3"
+                  style={{
+                    backgroundColor: isSelected ? '#171717' : colors.background,
+                    borderRadius: isSelected ? 12 : 0,
+                    borderTopLeftRadius: isSelected ? 12 : 0,
+                    borderTopRightRadius: isSelected ? 12 : 0,
+                    borderBottomLeftRadius: isSelected ? 0 : 0,
+                    borderBottomRightRadius: isSelected ? 0 : 0,
+                    borderWidth: isSelected ? 1 : 0,
+                    borderColor: isSelected ? '#262626' : 'transparent',
+                    borderBottomWidth: isSelected ? 0 : 0,
+                    marginBottom: isSelected ? -2 : 0,
+                    zIndex: isSelected ? 1 : 0,
+                  }}
+                >
+                  <View className="items-center justify-center">
+                    <Text
+                      className={`text-xs font-medium ${
+                        isSelected ? 'text-white' : 'text-gray-400'
+                      }`}
+                      numberOfLines={1}
+                    >
+                      {option.label}
+                    </Text>
                   </View>
-                </View>
-              </Card>
-            </View>
+                </Pressable>
+              );
+            })}
+          </View>
 
-            <View className="flex-1">
-              <Card>
-                <View className="p-4">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-white/10 rounded-lg items-center justify-center">
-                      <TrendingDown size={20} color="white" />
-                    </View>
-                    <View>
-                      <Text className="text-xs text-gray-400">Despesas</Text>
-                      <Text className="text-sm font-semibold text-white">
-                        {showBalance
-                          ? balance
-                            ? formatCurrency(balance?.expenses)
-                            : "R$ 0,00"
-                          : "••••••"}
+          {/* Income & Expenses Card */}
+          <View 
+            style={{
+              backgroundColor: '#171717',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: '#262626',
+              padding: 16,
+            }}
+          >
+            <View className="flex-row gap-4">
+              {/* Receitas */}
+              <View className="flex-1">
+                <View className="flex-row items-center gap-3">
+                  <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center">
+                    <TrendingUp size={20} color="#4ADE80" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-xs text-gray-400">Receitas</Text>
+                    <Text className="text-sm font-semibold text-green-400">
+                      {showBalance
+                        ? formatCurrency(monthlyIncomeExpenses.income)
+                        : "••••••"}
+                    </Text>
+                    {showBalance && monthlyIncomeExpenses.income === 0 && (
+                      <Text className="text-xs text-gray-500 mt-1">
+                        Nenhuma receita
                       </Text>
-                      {showBalance && (!balance || (balance?.expenses || 0) === 0) && (
-                        <Text className="text-xs text-gray-500 mt-1">
-                          Você não tem despesas
-                        </Text>
-                      )}
-                    </View>
+                    )}
                   </View>
                 </View>
-              </Card>
+              </View>
+
+              {/* Despesas */}
+              <View className="flex-1">
+                <View className="flex-row items-center gap-3">
+                  <View className="w-10 h-10 bg-white/10 rounded-lg items-center justify-center">
+                    <TrendingDown size={20} color="white" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-xs text-gray-400">Despesas</Text>
+                    <Text className="text-sm font-semibold text-white">
+                      {showBalance
+                        ? formatCurrency(monthlyIncomeExpenses.expenses)
+                        : "••••••"}
+                    </Text>
+                    {showBalance && monthlyIncomeExpenses.expenses === 0 && (
+                      <Text className="text-xs text-gray-500 mt-1">
+                        Nenhuma despesa
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </View>
             </View>
           </View>
 
