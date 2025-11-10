@@ -17,6 +17,8 @@ import Overview from "../pages/overview/Overview";
 import Profile from "../pages/profile/Profile";
 import Chat from "../pages/chat/Chat";
 import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
+import Savings from "../pages/savings/Savings";
+import Analytics from "../pages/analytics/Analytics";
 import { Platform, View, Text, Dimensions, Image, Pressable, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
@@ -35,6 +37,8 @@ export type RootStackParamList = {
   AddExpenseForm: { favoriteData?: any } | undefined;
   AddIncomeForm: { favoriteData?: any } | undefined;
   Categories: undefined;
+  Savings: undefined;
+  Analytics: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -347,6 +351,8 @@ function Gate() {
           <RootStack.Screen name="AddExpenseForm" component={AddExpenseForm} />
           <RootStack.Screen name="AddIncomeForm" component={AddIncomeForm} />
           <RootStack.Screen name="Categories" component={Categories} />
+          <RootStack.Screen name="Savings" component={Savings} />
+          <RootStack.Screen name="Analytics" component={Analytics} />
         </>
       ) : (
         <>

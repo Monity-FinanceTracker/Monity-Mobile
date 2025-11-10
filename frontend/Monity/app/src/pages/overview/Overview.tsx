@@ -51,15 +51,13 @@ export default function Overview() {
       },
     },
     {
-      id: "analytics",
-      title: "Analytics",
-      icon: BarChart3,
+      id: "wallet",
+      title: "Poupança",
+      icon: Wallet,
       onPress: () => {
         triggerHaptic();
-        // TODO: Navigate to Analytics page
-        console.log("Navigate to Analytics");
+        (navigation as any).navigate("Savings");
       },
-      comingSoon: true,
     },
     {
       id: "budgets",
@@ -106,15 +104,13 @@ export default function Overview() {
       comingSoon: true,
     },
     {
-      id: "wallet",
-      title: "Carteiras",
-      icon: Wallet,
+      id: "analytics",
+      title: "Analytics",
+      icon: BarChart3,
       onPress: () => {
         triggerHaptic();
-        // TODO: Navigate to Wallets page
-        console.log("Navigate to Wallets");
+        (navigation as any).navigate("Analytics");
       },
-      comingSoon: true,
     },
     {
       id: "settings",
