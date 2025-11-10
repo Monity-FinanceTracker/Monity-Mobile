@@ -406,24 +406,36 @@ export default class SubscriptionController {
     productId: string
   ): Promise<{ isValid: boolean; data?: any }> {
     try {
-      // Para validação real, você precisa configurar as credenciais do Google Play
-      // Por enquanto, vamos fazer uma validação básica
-      
-      // TODO: Implementar validação real usando Google Play Developer API
-      // Você precisará:
-      // 1. Service account JSON do Google Cloud
-      // 2. Package name do app
-      // 3. Usar googleapis para validar
-
       // Validação básica - verificar se o token existe
       if (!purchaseToken || purchaseToken.length < 10) {
         return { isValid: false };
       }
 
-      // Em produção, você deve validar com a API do Google Play:
-      /*
+      // Verificar se as credenciais estão configuradas
+      const serviceAccountJson = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON;
+      const packageName = process.env.GOOGLE_PLAY_PACKAGE_NAME || 'com.widechain.monity';
+
+      if (!serviceAccountJson) {
+        logger.warn("Google Play Service Account JSON not configured - using basic validation");
+        return { isValid: true }; // Permitir testes sem validação real
+      }
+
+      // Parse do JSON da variável de ambiente
+      let credentials;
+      try {
+        credentials = typeof serviceAccountJson === 'string' 
+          ? JSON.parse(serviceAccountJson) 
+          : serviceAccountJson;
+      } catch (parseError) {
+        logger.error("Error parsing GOOGLE_PLAY_SERVICE_ACCOUNT_JSON", {
+          error: parseError as Error["message"]
+        });
+        return { isValid: false };
+      }
+
+      // Configurar autenticação usando as credenciais
       const auth = new google.auth.GoogleAuth({
-        keyFile: 'path/to/service-account.json',
+        credentials: credentials,
         scopes: ['https://www.googleapis.com/auth/androidpublisher'],
       });
 
@@ -432,28 +444,41 @@ export default class SubscriptionController {
         auth,
       });
 
-      const packageName = process.env.GOOGLE_PLAY_PACKAGE_NAME || 'com.Monity';
-      
+      // Validar a compra com a API do Google Play
       const result = await androidpublisher.purchases.subscriptions.get({
         packageName,
         subscriptionId: productId,
         token: purchaseToken,
       });
 
+      // Verificar o estado do pagamento
+      // paymentState: 0 = Payment pending, 1 = Payment received, 2 = Free trial, 3 = Pending deferred upgrade/downgrade
+      const isValid = result.data.paymentState === 1 || result.data.paymentState === 2;
+
+      logger.info("Google Play purchase validation result", {
+        productId,
+        paymentState: result.data.paymentState,
+        isValid,
+        expiryTimeMillis: result.data.expiryTimeMillis,
+      });
+
       return {
-        isValid: result.data.paymentState === 1, // 1 = Payment received
+        isValid,
         data: result.data
       };
-      */
-
-      // Por enquanto, retornar true para permitir testes
-      // REMOVER ISSO EM PRODUÇÃO e implementar validação real acima
-      logger.warn("Google Play purchase validation not fully implemented - using basic check");
-      return { isValid: true };
-    } catch (error) {
+    } catch (error: any) {
       logger.error("Error validating Google Play purchase", {
-        error: error as Error["message"]
+        error: error?.message || error,
+        stack: error?.stack
       });
+      
+      // Se for erro de autenticação, retornar inválido
+      // Se for erro de rede/API, logar mas permitir (pode ser temporário)
+      if (error?.code === 401 || error?.code === 403) {
+        return { isValid: false };
+      }
+      
+      // Para outros erros, retornar inválido por segurança
       return { isValid: false };
     }
   }

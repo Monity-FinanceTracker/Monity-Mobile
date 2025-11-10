@@ -18,7 +18,6 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginWithApple: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<User>) => Promise<void>;
   changePassword: (
@@ -34,7 +33,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 function AuthProviderInner({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { signInWithGoogle: socialGoogleSignIn, signInWithApple: socialAppleSignIn } = useSocialAuth();
+  const { signInWithGoogle: socialGoogleSignIn } = useSocialAuth();
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -143,24 +142,6 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
     }
   }, [socialGoogleSignIn]);
 
-  const loginWithApple = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      await socialAppleSignIn();
-      // After successful sign in, refresh user profile
-      const profileResponse = await apiService.getProfile();
-      if (profileResponse.success && profileResponse.data) {
-        setUser(profileResponse.data);
-      } else {
-        throw new Error(profileResponse.error || "Falha ao buscar perfil");
-      }
-    } catch (error: any) {
-      console.error("❌ Erro no login com Apple:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [socialAppleSignIn]);
 
   const logout = useCallback(async () => {
     try {
@@ -264,7 +245,6 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       login,
       signup,
       loginWithGoogle,
-      loginWithApple,
       logout,
       updateProfile,
       changePassword,
@@ -277,7 +257,6 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       login,
       signup,
       loginWithGoogle,
-      loginWithApple,
       logout,
       updateProfile,
       changePassword,

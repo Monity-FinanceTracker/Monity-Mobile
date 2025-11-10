@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { BlurView } from "expo-blur";
 import Svg, { Circle, Path, Rect, Text as SvgText, G } from "react-native-svg";
 import Card from "../../components/molecules/Card";
 import { COLORS } from "../../constants/colors";
@@ -30,6 +31,7 @@ import {
   Target,
   Activity,
   AlertCircle,
+  Lock,
 } from "lucide-react-native";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 import { triggerHaptic } from "../../utils/haptics";
@@ -69,6 +71,7 @@ export default function Analytics() {
   const [projections, setProjections] = useState<any>(null);
   const [aiStats, setAiStats] = useState<any>(null);
   const [savingsOverview, setSavingsOverview] = useState<any>(null);
+  const [isPremium, setIsPremium] = useState(false);
 
   const formatCurrency = (value: number | undefined | null) => {
     if (value === undefined || value === null || isNaN(value)) {
@@ -83,6 +86,14 @@ export default function Analytics() {
   const loadData = async () => {
     try {
       setIsLoading(true);
+      
+      // Verificar status premium primeiro
+      const subscriptionRes = await apiService.getSubscriptionInfo();
+      const premiumStatus = subscriptionRes.success && subscriptionRes.data 
+        ? subscriptionRes.data.is_premium || false 
+        : false;
+      setIsPremium(premiumStatus);
+
       const [
         balanceRes,
         transactionsRes,
@@ -96,11 +107,11 @@ export default function Analytics() {
         apiService.getBalance(),
         apiService.getTransactions(),
         apiService.getCategories(),
-        apiService.getBalanceHistory(),
-        apiService.getFinancialHealth(),
-        apiService.getFinancialProjections(),
-        apiService.getAIStats(),
-        apiService.getSavingsOverview(),
+        premiumStatus ? apiService.getBalanceHistory() : Promise.resolve({ success: false, data: [] }),
+        premiumStatus ? apiService.getFinancialHealth() : Promise.resolve({ success: false, data: null }),
+        premiumStatus ? apiService.getFinancialProjections() : Promise.resolve({ success: false, data: null }),
+        premiumStatus ? apiService.getAIStats() : Promise.resolve({ success: false, data: null }),
+        premiumStatus ? apiService.getSavingsOverview() : Promise.resolve({ success: false, data: null }),
       ]);
 
       if (balanceRes.status === "fulfilled" && balanceRes.value.success) {
@@ -243,7 +254,12 @@ export default function Analytics() {
     }
 
     const padding = 40;
-    const chartWidth = CHART_WIDTH - padding * 2;
+    // Ajustar largura para considerar o padding do Card (16px de cada lado = 32px total)
+    // e o padding do container (24px de cada lado = 48px total)
+    const cardPadding = 32;
+    const containerPadding = 48;
+    const availableWidth = SCREEN_WIDTH - containerPadding - cardPadding;
+    const chartWidth = Math.max(availableWidth - padding * 2, 200); // Largura do gráfico (sem padding lateral)
     const chartHeight = CHART_HEIGHT - padding * 2;
 
     const values = data.map((d) => d.balance);
@@ -268,16 +284,17 @@ export default function Analytics() {
             .join(" ")
         : `M ${points[0]?.x || padding} ${points[0]?.y || padding + chartHeight} L ${points[0]?.x || padding} ${points[0]?.y || padding + chartHeight}`;
 
+    const svgWidth = chartWidth + padding * 2;
     return (
-      <View>
-        <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+      <View style={{ width: svgWidth, height: CHART_HEIGHT, overflow: 'hidden' }}>
+        <Svg width={svgWidth} height={CHART_HEIGHT}>
           {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
             const y = padding + chartHeight - ratio * chartHeight;
             return (
               <Path
                 key={ratio}
-                d={`M ${padding} ${y} L ${CHART_WIDTH - padding} ${y}`}
+                d={`M ${padding} ${y} L ${svgWidth - padding} ${y}`}
                 stroke="#333"
                 strokeWidth="1"
                 strokeDasharray="4,4"
@@ -317,7 +334,7 @@ export default function Analytics() {
             if (index % Math.ceil(data.length / 4) !== 0 && index !== data.length - 1)
               return null;
             // Ensure labels stay within bounds
-            const labelX = Math.max(padding, Math.min(CHART_WIDTH - padding, point.x));
+            const labelX = Math.max(padding, Math.min(chartWidth + padding, point.x));
             return (
               <SvgText
                 key={index}
@@ -430,6 +447,43 @@ export default function Analytics() {
       </View>
     );
   };
+
+  // Premium Lock Overlay Component
+  const PremiumLockOverlay = () => (
+    <BlurView
+      intensity={80}
+      tint="dark"
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 16,
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 10,
+        overflow: "hidden",
+      }}
+    >
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        }}
+      />
+      <View className="items-center gap-3">
+        <Lock size={32} color={colors.accent} />
+        <Text className="text-white text-base font-semibold">
+          Assine o Premium
+        </Text>
+      </View>
+    </BlurView>
+  );
 
   // Bar Chart Component
   const BarChartComponent = ({ data }: { data: MonthlyData[] }) => {
@@ -574,102 +628,95 @@ export default function Analytics() {
             </View>
           </View>
 
-          {/* Summary Cards */}
-          <View className="flex-row flex-wrap gap-4 mb-6">
-            <Card className="flex-1 min-w-[47%]">
-              <View className="p-4">
-                <View className="flex-row items-center gap-2 mb-2">
-                  <DollarSign size={16} color={colors.accent} />
-                  <Text className="text-gray-400 text-xs">Saldo Total</Text>
-                </View>
-                <Text className="text-white text-xl font-bold">
-                  {formatCurrency(balance?.total)}
-                </Text>
-                <View className="flex-row items-center gap-1 mt-1">
-                  {balance && balance.change >= 0 ? (
-                    <TrendingUp size={12} color="#10B981" />
-                  ) : (
-                    <TrendingDown size={12} color="#EF4444" />
-                  )}
-                  <Text
-                    className={`text-xs ${
-                      balance && balance.change >= 0
-                        ? "text-green-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {balance?.changePercentage?.toFixed(1) || 0}%
-                  </Text>
-                </View>
+          {/* Saldo Total - Topo */}
+          <Card className="mb-6">
+            <View className="p-4">
+              <View className="flex-row items-center gap-2 mb-2">
+                <DollarSign size={16} color={colors.accent} />
+                <Text className="text-gray-400 text-xs">Saldo Total</Text>
               </View>
-            </Card>
-
-            <Card className="flex-1 min-w-[47%]">
-              <View className="p-4">
-                <View className="flex-row items-center gap-2 mb-2">
-                  <TrendingUp size={16} color="#10B981" />
-                  <Text className="text-gray-400 text-xs">Receitas</Text>
-                </View>
-                <Text className="text-white text-xl font-bold">
-                  {formatCurrency(balance?.income)}
-                </Text>
-                <Text className="text-gray-400 text-xs mt-1">
-                  {transactions.filter((t) => t.type === "income").length}{" "}
-                  transações
+              <Text className="text-white text-2xl font-bold">
+                {formatCurrency(balance?.total)}
+              </Text>
+              <View className="flex-row items-center gap-1 mt-1">
+                {balance && balance.change >= 0 ? (
+                  <TrendingUp size={12} color="#10B981" />
+                ) : (
+                  <TrendingDown size={12} color="#EF4444" />
+                )}
+                <Text
+                  className={`text-xs ${
+                    balance && balance.change >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {balance?.changePercentage?.toFixed(1) || 0}%
                 </Text>
               </View>
-            </Card>
+            </View>
+          </Card>
 
-            <Card className="flex-1 min-w-[47%]">
-              <View className="p-4">
-                <View className="flex-row items-center gap-2 mb-2">
-                  <TrendingDown size={16} color="#EF4444" />
-                  <Text className="text-gray-400 text-xs">Despesas</Text>
-                </View>
-                <Text className="text-white text-xl font-bold">
-                  {formatCurrency(balance?.expenses)}
-                </Text>
-                <Text className="text-gray-400 text-xs mt-1">
-                  {transactions.filter((t) => t.type === "expense").length}{" "}
-                  transações
-                </Text>
-              </View>
-            </Card>
-
-            {financialHealth && (
-              <Card className="flex-1 min-w-[47%]">
-                <View className="p-4">
+          {/* Receitas e Despesas - Na Mesma Box */}
+          <Card className="mb-6">
+            <View className="p-4">
+              <View className="flex-row gap-4">
+                {/* Receitas */}
+                <View className="flex-1">
                   <View className="flex-row items-center gap-2 mb-2">
-                    <Activity size={16} color={colors.accent} />
-                    <Text className="text-gray-400 text-xs">Health Score</Text>
+                    <TrendingUp size={16} color="#10B981" />
+                    <Text className="text-gray-400 text-xs">Receitas</Text>
                   </View>
                   <Text className="text-white text-xl font-bold">
-                    {financialHealth.score || 0}/100
+                    {formatCurrency(balance?.income)}
                   </Text>
                   <Text className="text-gray-400 text-xs mt-1">
-                    {financialHealth.category || "N/A"}
+                    {transactions.filter((t) => t.type === "income").length}{" "}
+                    transações
                   </Text>
                 </View>
-              </Card>
-            )}
-          </View>
+
+                {/* Divisor vertical */}
+                <View className="w-px bg-white/10" />
+
+                {/* Despesas */}
+                <View className="flex-1">
+                  <View className="flex-row items-center gap-2 mb-2">
+                    <TrendingDown size={16} color="#EF4444" />
+                    <Text className="text-gray-400 text-xs">Despesas</Text>
+                  </View>
+                  <Text className="text-white text-xl font-bold">
+                    {formatCurrency(balance?.expenses)}
+                  </Text>
+                  <Text className="text-gray-400 text-xs mt-1">
+                    {transactions.filter((t) => t.type === "expense").length}{" "}
+                    transações
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </Card>
 
           {/* Balance History Line Chart */}
           <Card className="mb-6">
-            <View className="p-4">
+            <View className="p-4" style={{ position: 'relative' }}>
+              {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <LineChart size={20} color={colors.accent} />
                 <Text className="text-white text-lg font-semibold">
                   Histórico de Saldo
                 </Text>
               </View>
-              <LineChartComponent data={balanceHistory} />
+              <View style={{ overflow: 'hidden' }}>
+                <LineChartComponent data={balanceHistory} />
+              </View>
             </View>
           </Card>
 
           {/* Monthly Income vs Expenses Bar Chart */}
           <Card className="mb-6">
-            <View className="p-4">
+            <View className="p-4" style={{ position: 'relative' }}>
+              {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <BarChart3 size={20} color={colors.accent} />
                 <Text className="text-white text-lg font-semibold">
@@ -682,7 +729,8 @@ export default function Analytics() {
 
           {/* Category Distribution Pie Chart */}
           <Card className="mb-6">
-            <View className="p-4">
+            <View className="p-4" style={{ position: 'relative' }}>
+              {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <PieChart size={20} color={colors.accent} />
                 <Text className="text-white text-lg font-semibold">
@@ -695,7 +743,8 @@ export default function Analytics() {
 
           {/* Top Categories Table */}
           <Card className="mb-6">
-            <View className="p-4">
+            <View className="p-4" style={{ position: 'relative' }}>
+              {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <Target size={20} color={colors.accent} />
                 <Text className="text-white text-lg font-semibold">
@@ -730,10 +779,52 @@ export default function Analytics() {
             </View>
           </Card>
 
-          {/* Financial Health Details */}
-          {financialHealth && (
+          {/* AI Statistics */}
+          {(aiStats || !isPremium) && (
             <Card className="mb-6">
-              <View className="p-4">
+              <View className="p-4" style={{ position: 'relative' }}>
+                {!isPremium && <PremiumLockOverlay />}
+                <View className="flex-row items-center gap-2 mb-4">
+                  <Activity size={20} color={colors.accent} />
+                  <Text className="text-white text-lg font-semibold">
+                    Estatísticas de IA
+                  </Text>
+                </View>
+                <View className="gap-3">
+                  {aiStats?.totalSuggestions && (
+                    <View className="flex-row justify-between py-2">
+                      <Text className="text-gray-400">Sugestões Totais</Text>
+                      <Text className="text-white font-medium">
+                        {aiStats.totalSuggestions}
+                      </Text>
+                    </View>
+                  )}
+                  {aiStats?.acceptedSuggestions && (
+                    <View className="flex-row justify-between py-2">
+                      <Text className="text-gray-400">Aceitas</Text>
+                      <Text className="text-green-400 font-medium">
+                        {aiStats.acceptedSuggestions}
+                      </Text>
+                    </View>
+                  )}
+                  {aiStats?.accuracy && (
+                    <View className="flex-row justify-between py-2">
+                      <Text className="text-gray-400">Precisão</Text>
+                      <Text className="text-white font-medium">
+                        {(aiStats.accuracy * 100).toFixed(1)}%
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </Card>
+          )}
+
+          {/* Financial Health Details */}
+          {(financialHealth || !isPremium) && (
+            <Card className="mb-6">
+              <View className="p-4" style={{ position: 'relative' }}>
+                {!isPremium && <PremiumLockOverlay />}
                 <View className="flex-row items-center gap-2 mb-4">
                   <Activity size={20} color={colors.accent} />
                   <Text className="text-white text-lg font-semibold">
@@ -741,7 +832,7 @@ export default function Analytics() {
                   </Text>
                 </View>
                 <View className="gap-3">
-                  {financialHealth.metrics && (
+                  {financialHealth?.metrics && (
                     <>
                       <View className="flex-row justify-between py-2">
                         <Text className="text-gray-400">Taxa de Poupança</Text>
@@ -749,11 +840,11 @@ export default function Analytics() {
                           {(() => {
                             // Use totalSavings from financialHealth first, then fallback to allocated savings
                             const totalSavings = 
-                              financialHealth.metrics.totalSavings || 
+                              financialHealth?.metrics?.totalSavings || 
                               savingsOverview?.totalAllocated || 
                               balance?.allocatedSavings || 
                               0;
-                            const totalIncome = financialHealth.metrics.totalIncome || balance?.income || 0;
+                            const totalIncome = financialHealth?.metrics?.totalIncome || balance?.income || 0;
                             const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
                             return savingsRate.toFixed(1);
                           })()}%
@@ -762,19 +853,19 @@ export default function Analytics() {
                       <View className="flex-row justify-between py-2">
                         <Text className="text-gray-400">Taxa de Despesas</Text>
                         <Text className="text-white font-medium">
-                          {financialHealth.metrics.expenseRatio?.toFixed(1) || "0"}%
+                          {financialHealth?.metrics?.expenseRatio?.toFixed(1) || "0"}%
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2">
                         <Text className="text-gray-400">Total de Receitas</Text>
                         <Text className="text-green-400 font-medium">
-                          {formatCurrency(financialHealth.metrics.totalIncome || 0)}
+                          {formatCurrency(financialHealth?.metrics?.totalIncome || 0)}
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2">
                         <Text className="text-gray-400">Total de Despesas</Text>
                         <Text className="text-red-400 font-medium">
-                          {formatCurrency(financialHealth.metrics.totalExpenses || 0)}
+                          {formatCurrency(financialHealth?.metrics?.totalExpenses || 0)}
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2">
@@ -783,7 +874,7 @@ export default function Analytics() {
                           {(() => {
                             // Use the exact same calculation as savings rate
                             const totalSavings = 
-                              financialHealth.metrics.totalSavings || 
+                              financialHealth?.metrics?.totalSavings || 
                               savingsOverview?.totalAllocated || 
                               balance?.allocatedSavings || 
                               0;
@@ -794,18 +885,18 @@ export default function Analytics() {
                       <View className="flex-row justify-between py-2">
                         <Text className="text-gray-400">Total de Transações</Text>
                         <Text className="text-white font-medium">
-                          {financialHealth.metrics.transactionCount || 0}
+                          {financialHealth?.metrics?.transactionCount || 0}
                         </Text>
                       </View>
                     </>
                   )}
-                  {financialHealth.recommendations &&
-                    financialHealth.recommendations.length > 0 && (
+                  {financialHealth?.recommendations &&
+                    financialHealth?.recommendations.length > 0 && (
                       <View className="mt-2">
                         <Text className="text-gray-400 text-sm mb-2">
                           Recomendações:
                         </Text>
-                        {financialHealth.recommendations.map(
+                        {financialHealth?.recommendations.map(
                           (rec: any, index: number) => (
                             <View
                               key={index}
@@ -841,7 +932,8 @@ export default function Analytics() {
 
           {/* Transaction Statistics */}
           <Card className="mb-6">
-            <View className="p-4">
+            <View className="p-4" style={{ position: 'relative' }}>
+              {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <Calendar size={20} color={colors.accent} />
                 <Text className="text-white text-lg font-semibold">
@@ -943,6 +1035,56 @@ export default function Analytics() {
                       <Text className="text-white font-medium">
                         {(aiStats.accuracy * 100).toFixed(1)}%
                       </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </Card>
+          )}
+
+          {/* Health Score - Avaliação Final */}
+          {(financialHealth || !isPremium) && (
+            <Card className="mb-6">
+              <View className="p-4" style={{ position: 'relative' }}>
+                {!isPremium && <PremiumLockOverlay />}
+                <View className="flex-row items-center gap-2 mb-4">
+                  <Activity size={20} color={colors.accent} />
+                  <Text className="text-white text-lg font-semibold">
+                    Health Score
+                  </Text>
+                </View>
+                <View className="items-center py-4">
+                  <View className="items-center mb-4">
+                    <Text className="text-white text-4xl font-bold mb-2">
+                      {financialHealth?.score || 0}/100
+                    </Text>
+                    <Text className="text-gray-400 text-sm">
+                      {financialHealth?.category || "N/A"}
+                    </Text>
+                  </View>
+                  {financialHealth?.metrics && (
+                    <View className="w-full gap-2">
+                      <View className="flex-row justify-between py-2 border-b border-white/10">
+                        <Text className="text-gray-400">Taxa de Poupança</Text>
+                        <Text className="text-white font-medium">
+                          {(() => {
+                            const totalSavings = 
+                              financialHealth?.metrics?.totalSavings || 
+                              savingsOverview?.totalAllocated || 
+                              balance?.allocatedSavings || 
+                              0;
+                            const totalIncome = financialHealth?.metrics?.totalIncome || balance?.income || 0;
+                            const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+                            return savingsRate.toFixed(1);
+                          })()}%
+                        </Text>
+                      </View>
+                      <View className="flex-row justify-between py-2 border-b border-white/10">
+                        <Text className="text-gray-400">Taxa de Despesas</Text>
+                        <Text className="text-white font-medium">
+                          {financialHealth?.metrics?.expenseRatio?.toFixed(1) || "0"}%
+                        </Text>
+                      </View>
                     </View>
                   )}
                 </View>
