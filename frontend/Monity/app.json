@@ -68,8 +68,7 @@
       "googleOAuth": {
         "iosClientId": "225354640415-hj201o4upab8ok547kuof5o3on9t84pd.apps.googleusercontent.com",
         "androidClientId": "225354640415-i4jt50qe2gge4d0h3r1n4dudg408oqul.apps.googleusercontent.com",
-        "webClientId": "225354640415-7c5lgokagg6u1kvngg3egolsefes8n6e.apps.googleusercontent.com",
-        "webClientSecret": "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"
+        "webClientId": "225354640415-7c5lgokagg6u1kvngg3egolsefes8n6e.apps.googleusercontent.com"
       },
       "router": {},
       "eas": {
