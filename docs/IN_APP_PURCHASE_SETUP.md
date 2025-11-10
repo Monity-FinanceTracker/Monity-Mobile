@@ -149,7 +149,7 @@ Este guia detalha todos os passos necessários para configurar pagamentos in-app
 1. Dentro do grupo criado, clique em **+** para criar assinatura
 2. Selecione **Assinatura Auto-Renovável**
 3. Preencha os dados:
-   - **ID do produto**: `com.monity.premium.monthly`
+   - **ID do produto**: `com_monity_premium_monthly`
      - ⚠️ **IMPORTANTE**: Este ID deve corresponder exatamente ao configurado no código
    - **Nome de referência**: `Monity Premium Mensal`
    - **Descrição**: `Assinatura mensal do Monity Premium com acesso a todos os recursos exclusivos`
@@ -236,7 +236,7 @@ Adicione as seguintes variáveis no arquivo `.env` do backend:
 
 ```bash
 # Google Play Configuration
-GOOGLE_PLAY_PACKAGE_NAME=com.Monity
+GOOGLE_PLAY_PACKAGE_NAME=com.widechain.monity
 GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_PATH=./config/google-play-service-account.json
 # OU use variável de ambiente com o JSON completo:
 # GOOGLE_PLAY_SERVICE_ACCOUNT_JSON={"type":"service_account",...}

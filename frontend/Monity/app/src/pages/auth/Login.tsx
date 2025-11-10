@@ -34,7 +34,7 @@ export default function Login({
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [emailFocused, setEmailFocused] = useState(false);
   const [fontLoaded, setFontLoaded] = useState(false);
-  const { login, loginWithGoogle, loginWithApple } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   React.useEffect(() => {
     const loadFont = async () => {
@@ -94,50 +94,20 @@ export default function Login({
   };
 
   const handleGoogleSignIn = async () => {
-    // TODO: Implementar login com Google
-    // try {
-    //   setError("");
-    //   setSocialLoading("google");
-    //   await loginWithGoogle();
-    //   // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
-    // } catch (err: any) {
-    //   const errorMessage = err.message || "Erro ao fazer login com Google";
-    //   setError(errorMessage);
-    //   console.error("Erro no login com Google:", err);
-    // } finally {
-    //   setSocialLoading(null);
-    // }
-    
-    // Mostrar aviso temporário
-    Alert.alert(
-      "Funcionalidade em Desenvolvimento",
-      "O login com Google ainda está sendo implementado. Por favor, use email e senha para entrar.",
-      [{ text: "OK" }]
-    );
+    try {
+      setError("");
+      setSocialLoading("google");
+      await loginWithGoogle();
+      // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
+    } catch (err: any) {
+      const errorMessage = err.message || "Erro ao fazer login com Google";
+      setError(errorMessage);
+      console.error("Erro no login com Google:", err);
+    } finally {
+      setSocialLoading(null);
+    }
   };
 
-  const handleAppleSignIn = async () => {
-    // TODO: Implementar login com Apple
-    // try {
-    //   setError("");
-    //   setSocialLoading("apple");
-    //   await loginWithApple();
-    //   // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
-    // } catch (err: any) {
-    //   const errorMessage = err.message || "Erro ao fazer login com Apple";
-    //   setError(errorMessage);
-    //   console.error("Erro no login com Apple:", err);
-    // } finally {
-    //   setSocialLoading(null);
-    // }
-    
-    // Mostrar aviso temporário
-    Alert.alert(
-      "Funcionalidade em Desenvolvimento",
-      "O login com Apple ainda está sendo implementado. Por favor, use email e senha para entrar.",
-      [{ text: "OK" }]
-    );
-  };
 
   const isValidEmail = (email: string) => {
     return /\S+@\S+\.\S+/.test(email);
@@ -215,30 +185,6 @@ export default function Login({
                   )}
                 </TouchableOpacity>
 
-                {/* Apple Button (iOS only) */}
-                {Platform.OS === "ios" && (
-                  <TouchableOpacity
-                    onPress={handleAppleSignIn}
-                    disabled={socialLoading !== null || loading}
-                    className="w-full py-4 rounded-xl border-2 flex-row items-center justify-center mt-2"
-                    style={{
-                      backgroundColor: COLORS.cardBg,
-                      borderColor: COLORS.border,
-                      opacity: socialLoading === "apple" || loading ? 0.6 : 1,
-                    }}
-                  >
-                    {socialLoading === "apple" ? (
-                      <ActivityIndicator size="small" color={COLORS.textPrimary} />
-                    ) : (
-                      <Text
-                        className="font-semibold text-base"
-                        style={{ color: COLORS.textPrimary }}
-                      >
-                        Continue com Apple
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                )}
               </View>
 
               {/* Divider with "or" */}

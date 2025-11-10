@@ -11,10 +11,6 @@ import { COLORS } from "../../constants/colors";
 import {
   Tag,
   BarChart3,
-  Target,
-  Settings,
-  TrendingUp,
-  PieChart,
   Calendar,
   Wallet,
 } from "lucide-react-native";
@@ -60,48 +56,13 @@ export default function Overview() {
       },
     },
     {
-      id: "budgets",
-      title: "Orçamentos",
-      icon: Target,
-      onPress: () => {
-        triggerHaptic();
-        // TODO: Navigate to Budgets page
-        console.log("Navigate to Budgets");
-      },
-      comingSoon: true,
-    },
-    {
-      id: "goals",
-      title: "Metas",
-      icon: TrendingUp,
-      onPress: () => {
-        triggerHaptic();
-        // TODO: Navigate to Goals page
-        console.log("Navigate to Goals");
-      },
-      comingSoon: true,
-    },
-    {
-      id: "reports",
-      title: "Relatórios",
-      icon: PieChart,
-      onPress: () => {
-        triggerHaptic();
-        // TODO: Navigate to Reports page
-        console.log("Navigate to Reports");
-      },
-      comingSoon: true,
-    },
-    {
       id: "calendar",
       title: "Calendário",
       icon: Calendar,
       onPress: () => {
         triggerHaptic();
-        // TODO: Navigate to Calendar page
-        console.log("Navigate to Calendar");
+        (navigation as any).navigate("Calendar");
       },
-      comingSoon: true,
     },
     {
       id: "analytics",
@@ -111,17 +72,6 @@ export default function Overview() {
         triggerHaptic();
         (navigation as any).navigate("Analytics");
       },
-    },
-    {
-      id: "settings",
-      title: "Configurações",
-      icon: Settings,
-      onPress: () => {
-        triggerHaptic();
-        // TODO: Navigate to Settings page
-        console.log("Navigate to Settings");
-      },
-      comingSoon: true,
     },
   ];
 

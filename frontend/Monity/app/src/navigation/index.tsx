@@ -19,6 +19,7 @@ import Chat from "../pages/chat/Chat";
 import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
 import Savings from "../pages/savings/Savings";
 import Analytics from "../pages/analytics/Analytics";
+import Calendar from "../pages/overview/Calendar";
 import { Platform, View, Text, Dimensions, Image, Pressable, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
@@ -39,6 +40,7 @@ export type RootStackParamList = {
   Categories: undefined;
   Savings: undefined;
   Analytics: undefined;
+  Calendar: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -353,6 +355,7 @@ function Gate() {
           <RootStack.Screen name="Categories" component={Categories} />
           <RootStack.Screen name="Savings" component={Savings} />
           <RootStack.Screen name="Analytics" component={Analytics} />
+          <RootStack.Screen name="Calendar" component={Calendar} />
         </>
       ) : (
         <>
