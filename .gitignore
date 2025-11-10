@@ -54,3 +54,6 @@ app-example
 ids/
 **/client_secret_*.json
 **/client_*.plist
+
+# Documentation
+docs/

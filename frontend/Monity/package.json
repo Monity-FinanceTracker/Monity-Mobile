@@ -1,7 +1,7 @@
 {
   "name": "monity",
   "main": "expo-router/entry",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -21,7 +21,6 @@
     "@stripe/stripe-react-native": "0.50.3",
     "@supabase/supabase-js": "^2.78.0",
     "expo": "^54.0.12",
-    "expo-apple-authentication": "^8.0.7",
     "expo-auth-session": "^7.0.8",
     "expo-av": "^16.0.7",
     "expo-blur": "^15.0.7",

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Monity",
     "slug": "Monity",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
     "scheme": "monity",
@@ -12,6 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.widechain.monity",
       "buildNumber": "5",
+      "googleServicesFile": "./ids/client_225354640415-hj201o4upab8ok547kuof5o3on9t84pd.apps.googleusercontent.com.plist",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "https",
@@ -25,14 +26,15 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/LOGO_MONITY_APP.jpeg",
-        "backgroundImage": "./assets/images/LOGO_MONITY_APP.jpeg",
-        "monochromeImage": "./assets/images/LOGO_MONITY_APP.jpeg"
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.widechain.monity",
-      "versionCode": 12
+      "versionCode": 13,
+      "googleServicesFile": "./ids/client_secret_225354640415-i4jt50qe2gge4d0h3r1n4dudg408oqul.apps.googleusercontent.com.json"
     },
     "web": {
       "bundler": "metro",
@@ -52,8 +54,7 @@
           }
         }
       ],
-      "expo-router",
-      "expo-apple-authentication"
+      "expo-router"
     ],
     "experiments": {
       "typedRoutes": true
@@ -65,10 +66,9 @@
       "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps",
       "stripePublishableKey": "pk_live_51SH0m9BDlx4noKmetogVrJWuB7swkwBpzLi3d8GOsYUPeMB1w5IuTjVrpbrmSlJxPUj065ZdWc9CENn7AXeIWmWC00WD1iCqqz",
       "googleOAuth": {
-        "iosClientId": "YOUR_IOS_CLIENT_ID.apps.googleusercontent.com",
-        "androidClientId": "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
-        "webClientId": "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
-        "webClientSecret": "YOUR_WEB_CLIENT_SECRET"
+        "iosClientId": "225354640415-hj201o4upab8ok547kuof5o3on9t84pd.apps.googleusercontent.com",
+        "androidClientId": "225354640415-i4jt50qe2gge4d0h3r1n4dudg408oqul.apps.googleusercontent.com",
+        "webClientId": "225354640415-7c5lgokagg6u1kvngg3egolsefes8n6e.apps.googleusercontent.com"
       },
       "router": {},
       "eas": {
