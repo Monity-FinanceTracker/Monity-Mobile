@@ -2,40 +2,50 @@
   "expo": {
     "name": "Monity",
     "slug": "Monity",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
     "scheme": "monity",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.Monity",
-      "googleServicesFile": "./ids/client_225354640415-hj201o4upab8ok547kuof5o3on9t84pd.apps.googleusercontent.com.plist"
+      "bundleIdentifier": "com.widechain.monity",
+      "buildNumber": "5",
+      "googleServicesFile": "./ids/client_225354640415-hj201o4upab8ok547kuof5o3on9t84pd.apps.googleusercontent.com.plist",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "https",
+          "http",
+          "https",
+          "http"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-        "adaptiveIcon": {
-          "backgroundColor": "#E6F4FE",
-          "foregroundImage": "./assets/images/android-icon-foreground.png",
-          "backgroundImage": "./assets/images/android-icon-background.png",
-          "monochromeImage": "./assets/images/android-icon-monochrome.png"
-        },
-        "edgeToEdgeEnabled": false,
-        "predictiveBackGestureEnabled": false,
-        "package": "com.widechain.monity",
-        "versionCode": 12,
-        "googleServicesFile": "./ids/client_secret_225354640415-i4jt50qe2gge4d0h3r1n4dudg408oqul.apps.googleusercontent.com.json"
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "edgeToEdgeEnabled": false,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.widechain.monity",
+      "versionCode": 13,
+      "googleServicesFile": "./ids/client_secret_225354640415-i4jt50qe2gge4d0h3r1n4dudg408oqul.apps.googleusercontent.com.json"
+    },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/LOGO_MONITY_512px512px.png"
     },
     "plugins": [
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/LOGO_MONITY_APP.jpeg",
+          "image": "./assets/images/LOGO_MONITY_512px512px.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#0A0A0A",
@@ -63,7 +73,7 @@
       },
       "router": {},
       "eas": {
-        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
+        "projectId": "e2bfd3ea-a052-4ec5-9d67-bcd4067cab20"
       }
     }
   }
