@@ -1,6 +1,8 @@
 import { logger } from "../utils/logger";
 import { supabaseAdmin } from "../config/supabase";
 import type { Request, Response, NextFunction } from "express";
+import { google } from "googleapis";
+import axios from "axios";
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -236,6 +238,284 @@ export default class SubscriptionController {
         success: false, 
         error: "Failed to cancel subscription" 
       });
+    }
+  }
+
+  /**
+   * Valida uma compra in-app do Google Play ou App Store
+   */
+  async validatePurchase(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user.id;
+    const { 
+      platform, 
+      productId, 
+      transactionId, 
+      transactionReceipt, 
+      purchaseToken,
+      originalTransactionIdentifierIOS 
+    } = req.body;
+
+    try {
+      // Validações básicas
+      if (!platform || !productId) {
+        return res.status(400).json({
+          success: false,
+          error: "Platform and productId are required"
+        });
+      }
+
+      if (platform === "android" && !purchaseToken) {
+        return res.status(400).json({
+          success: false,
+          error: "purchaseToken is required for Android"
+        });
+      }
+
+      if (platform === "ios" && !transactionReceipt) {
+        return res.status(400).json({
+          success: false,
+          error: "transactionReceipt is required for iOS"
+        });
+      }
+
+      // Validar a compra na store correspondente
+      let isValid = false;
+      let purchaseData: any = null;
+
+      if (platform === "android") {
+        const validationResult = await this.validateGooglePlayPurchase(
+          purchaseToken,
+          productId
+        );
+        isValid = validationResult.isValid;
+        purchaseData = validationResult.data;
+      } else if (platform === "ios") {
+        const validationResult = await this.validateAppStorePurchase(
+          transactionReceipt,
+          productId
+        );
+        isValid = validationResult.isValid;
+        purchaseData = validationResult.data;
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid platform. Must be 'android' or 'ios'"
+        });
+      }
+
+      if (!isValid) {
+        logger.warn("Invalid purchase validation", {
+          userId,
+          platform,
+          productId,
+          transactionId
+        });
+        return res.status(400).json({
+          success: false,
+          error: "Invalid purchase. Purchase could not be verified."
+        });
+      }
+
+      // Verificar se o usuário já tem uma subscription ativa
+      const { data: existingProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("subscription_tier, subscription_expires_at")
+        .eq("id", userId)
+        .single();
+
+      // Calcular data de expiração (1 mês a partir de agora)
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      // Se já tem premium, apenas atualizar a data de expiração
+      if (existingProfile?.subscription_tier === "premium") {
+        // Atualizar apenas a data de expiração
+        const { error: updateError } = await supabaseAdmin
+          .from("profiles")
+          .update({
+            subscription_expires_at: expiresAt.toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", userId);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        logger.info("Premium subscription renewed", {
+          userId,
+          transactionId,
+          expiresAt: expiresAt.toISOString()
+        });
+      } else {
+        // Ativar premium pela primeira vez
+        const { error: updateError } = await supabaseAdmin
+          .from("profiles")
+          .update({
+            subscription_tier: "premium",
+            subscription_expires_at: expiresAt.toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", userId);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        logger.info("User upgraded to premium via in-app purchase", {
+          userId,
+          platform,
+          productId,
+          transactionId,
+          expiresAt: expiresAt.toISOString()
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          subscription: {
+            id: transactionId || `sub_${Date.now()}`,
+            status: "active",
+            current_period_start: new Date().toISOString(),
+            current_period_end: expiresAt.toISOString(),
+          },
+          message: "Assinatura premium ativada com sucesso!"
+        }
+      });
+    } catch (error) {
+      logger.error("Failed to validate purchase", {
+        userId,
+        platform,
+        productId,
+        error: error as Error["message"],
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      res.status(500).json({
+        success: false,
+        error: "Failed to validate purchase"
+      });
+    }
+  }
+
+  /**
+   * Valida uma compra do Google Play
+   */
+  private async validateGooglePlayPurchase(
+    purchaseToken: string,
+    productId: string
+  ): Promise<{ isValid: boolean; data?: any }> {
+    try {
+      // Para validação real, você precisa configurar as credenciais do Google Play
+      // Por enquanto, vamos fazer uma validação básica
+      
+      // TODO: Implementar validação real usando Google Play Developer API
+      // Você precisará:
+      // 1. Service account JSON do Google Cloud
+      // 2. Package name do app
+      // 3. Usar googleapis para validar
+
+      // Validação básica - verificar se o token existe
+      if (!purchaseToken || purchaseToken.length < 10) {
+        return { isValid: false };
+      }
+
+      // Em produção, você deve validar com a API do Google Play:
+      /*
+      const auth = new google.auth.GoogleAuth({
+        keyFile: 'path/to/service-account.json',
+        scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+      });
+
+      const androidpublisher = google.androidpublisher({
+        version: 'v3',
+        auth,
+      });
+
+      const packageName = process.env.GOOGLE_PLAY_PACKAGE_NAME || 'com.Monity';
+      
+      const result = await androidpublisher.purchases.subscriptions.get({
+        packageName,
+        subscriptionId: productId,
+        token: purchaseToken,
+      });
+
+      return {
+        isValid: result.data.paymentState === 1, // 1 = Payment received
+        data: result.data
+      };
+      */
+
+      // Por enquanto, retornar true para permitir testes
+      // REMOVER ISSO EM PRODUÇÃO e implementar validação real acima
+      logger.warn("Google Play purchase validation not fully implemented - using basic check");
+      return { isValid: true };
+    } catch (error) {
+      logger.error("Error validating Google Play purchase", {
+        error: error as Error["message"]
+      });
+      return { isValid: false };
+    }
+  }
+
+  /**
+   * Valida uma compra da App Store
+   */
+  private async validateAppStorePurchase(
+    transactionReceipt: string,
+    productId: string
+  ): Promise<{ isValid: boolean; data?: any }> {
+    try {
+      // Para validação real, você precisa validar com a App Store
+      // Por enquanto, vamos fazer uma validação básica
+
+      // Validação básica - verificar se o receipt existe
+      if (!transactionReceipt || transactionReceipt.length < 10) {
+        return { isValid: false };
+      }
+
+      // Em produção, você deve validar com a App Store:
+      /*
+      const isProduction = process.env.NODE_ENV === 'production';
+      const verifyURL = isProduction
+        ? 'https://buy.itunes.apple.com/verifyReceipt'
+        : 'https://sandbox.itunes.apple.com/verifyReceipt';
+
+      const sharedSecret = process.env.APP_STORE_SHARED_SECRET;
+
+      const response = await axios.post(verifyURL, {
+        'receipt-data': transactionReceipt,
+        password: sharedSecret,
+        'exclude-old-transactions': true,
+      });
+
+      const { status, receipt } = response.data;
+
+      if (status !== 0) {
+        return { isValid: false };
+      }
+
+      // Verificar se o produto está no receipt
+      const inAppPurchases = receipt.in_app || [];
+      const purchase = inAppPurchases.find(
+        (p: any) => p.product_id === productId
+      );
+
+      return {
+        isValid: !!purchase,
+        data: purchase
+      };
+      */
+
+      // Por enquanto, retornar true para permitir testes
+      // REMOVER ISSO EM PRODUÇÃO e implementar validação real acima
+      logger.warn("App Store purchase validation not fully implemented - using basic check");
+      return { isValid: true };
+    } catch (error) {
+      logger.error("Error validating App Store purchase", {
+        error: error as Error["message"]
+      });
+      return { isValid: false };
     }
   }
 }

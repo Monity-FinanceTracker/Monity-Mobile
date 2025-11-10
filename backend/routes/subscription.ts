@@ -28,5 +28,12 @@ export default (controllers: any, middleware: any) => {
     subscriptionController.cancelSubscription(req, res, next)
   );
   
+  // POST /validate-purchase - Validate in-app purchase (Google Play / App Store)
+  router.post("/validate-purchase", 
+    middleware.rateLimiter.paymentLimiter,
+    (req: Request, res: Response, next: NextFunction) =>
+      subscriptionController.validatePurchase(req, res, next)
+  );
+  
   return router;
 };
