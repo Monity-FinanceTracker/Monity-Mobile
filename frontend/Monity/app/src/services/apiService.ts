@@ -544,6 +544,68 @@ class ApiService {
     return this.request<any>("/balance/savings-overview");
   }
 
+  // Savings Goals methods
+  async getSavingsGoals(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>("/savings-goals");
+  }
+
+  async getSavingsGoalById(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/savings-goals/${id}`);
+  }
+
+  async createSavingsGoal(goal: {
+    goal_name: string;
+    target_amount: number;
+    target_date: string;
+    current_amount?: number;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>("/savings-goals", {
+      method: "POST",
+      body: JSON.stringify(goal),
+    });
+  }
+
+  async updateSavingsGoal(
+    id: string,
+    goal: {
+      goal_name?: string;
+      target_amount?: number;
+      target_date?: string;
+      current_amount?: number;
+    }
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(`/savings-goals/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(goal),
+    });
+  }
+
+  async deleteSavingsGoal(id: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/savings-goals/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async allocateToSavingsGoal(
+    id: string,
+    amount: number
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(`/savings-goals/${id}/allocate`, {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    });
+  }
+
+  async withdrawFromSavingsGoal(
+    id: string,
+    amount: number
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(`/savings-goals/${id}/withdraw`, {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    });
+  }
+
   // AI methods
   async suggestCategory(
     description: string
@@ -559,6 +621,14 @@ class ApiService {
 
   async getFinancialProjections(): Promise<ApiResponse<any>> {
     return this.request<any>("/ai/projections");
+  }
+
+  async getFinancialHealth(): Promise<ApiResponse<any>> {
+    return this.request<any>("/auth/financial-health");
+  }
+
+  async getAIStats(): Promise<ApiResponse<any>> {
+    return this.request<any>("/ai/stats");
   }
 
   // Subscription methods
@@ -580,6 +650,20 @@ class ApiService {
   async cancelSubscription(): Promise<ApiResponse<any>> {
     return this.request<any>("/subscription-tier/cancel", {
       method: "POST",
+    });
+  }
+
+  async validateInAppPurchase(purchaseData: {
+    platform: string;
+    productId: string;
+    transactionId?: string;
+    transactionReceipt?: string;
+    purchaseToken?: string;
+    originalTransactionIdentifierIOS?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>("/subscription-tier/validate-purchase", {
+      method: "POST",
+      body: JSON.stringify(purchaseData),
     });
   }
 

@@ -1,26 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   Alert,
   ActivityIndicator,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { CardField, useStripe } from '@stripe/stripe-react-native';
+import Constants from 'expo-constants';
 import Card from '../components/molecules/Card';
 import { useAuth } from '../context/AuthContext';
-import { apiService } from '../services/apiService';
+import inAppPurchaseService, { PurchaseResult } from '../services/inAppPurchaseService';
 import {
   ArrowLeft,
   CreditCard,
   Lock,
   Check,
-  X,
   Shield,
+  RefreshCw,
 } from 'lucide-react-native';
 
 interface PaymentFormProps {
@@ -38,14 +37,60 @@ export default function PaymentForm({
   onSuccess, 
   onCancel 
 }: PaymentFormProps) {
-  const navigation = useNavigation();
   const { refreshUser } = useAuth();
-  const { createPaymentMethod } = useStripe();
   
   const [isLoading, setIsLoading] = useState(false);
-  const [cardComplete, setCardComplete] = useState(false);
-  const [cardHolderName, setCardHolderName] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [product, setProduct] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isExpoGo, setIsExpoGo] = useState(false);
+
+  useEffect(() => {
+    // Verificar se está rodando no Expo Go
+    const isExpoGoEnv = Constants.executionEnvironment === 'storeClient';
+    setIsExpoGo(isExpoGoEnv);
+
+    if (!isExpoGoEnv) {
+      initializePurchase();
+    } else {
+      setIsInitializing(false);
+      setError('Pagamentos in-app não estão disponíveis no Expo Go. É necessário fazer um build nativo para testar pagamentos.');
+    }
+
+    return () => {
+      // Cleanup será feito quando o componente desmontar
+    };
+  }, []);
+
+  const initializePurchase = async () => {
+    try {
+      setIsInitializing(true);
+      setError(null);
+
+      // Inicializar serviço de pagamento
+      const initialized = await inAppPurchaseService.initialize();
+      if (!initialized) {
+        setError('Falha ao inicializar serviço de pagamento');
+        setIsInitializing(false);
+        return;
+      }
+
+      // Buscar informações do produto
+      const premiumProduct = await inAppPurchaseService.getPremiumProduct();
+      if (!premiumProduct) {
+        setError('Produto não encontrado na store. Verifique a configuração.');
+        setIsInitializing(false);
+        return;
+      }
+
+      setProduct(premiumProduct);
+      setIsInitializing(false);
+    } catch (err: any) {
+      console.error('Error initializing purchase:', err);
+      setError(err.message || 'Erro ao inicializar pagamento');
+      setIsInitializing(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -54,101 +99,164 @@ export default function PaymentForm({
     }).format(price);
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: string[] = [];
-
-    // Validar se o cartão está completo
-    if (!cardComplete) {
-      newErrors.push('Por favor, preencha todos os dados do cartão');
-    }
-
-    // Validar nome do portador
-    if (!cardHolderName.trim()) {
-      newErrors.push('Nome do portador é obrigatório');
-    } else if (cardHolderName.trim().length < 2) {
-      newErrors.push('Nome do portador deve ter pelo menos 2 caracteres');
-    }
-
-    setErrors(newErrors);
-    return newErrors.length === 0;
-  };
-
   const handlePayment = async () => {
-    if (!validateForm()) {
-      Alert.alert('Dados Inválidos', 'Por favor, corrija os erros no formulário antes de continuar.');
-      return;
-    }
-
-    if (!createPaymentMethod) {
-      Alert.alert('Erro', 'Sistema de pagamento não inicializado. Tente novamente.');
-      return;
-    }
-
     try {
       setIsLoading(true);
-      setErrors([]);
+      setError(null);
 
-      console.log('Iniciando processamento do pagamento...');
-      
-      // 1. Criar método de pagamento usando o CardField do Stripe
-      const { paymentMethod, error } = await createPaymentMethod({
-        paymentMethodType: 'Card',
-        paymentMethodData: {
-          billingDetails: {
-            name: cardHolderName,
-          },
-        },
-      });
+      console.log('🛒 Iniciando compra...');
 
-      if (error) {
-        console.error('Erro ao criar método de pagamento:', error);
-        Alert.alert('Erro no Pagamento', error.message || 'Falha ao processar dados do cartão');
+      // Iniciar o processo de compra
+      const result: PurchaseResult = await inAppPurchaseService.purchasePremium();
+
+      if (!result.success) {
+        setError(result.error || 'Falha ao processar compra');
+        Alert.alert('Erro', result.error || 'Falha ao processar compra');
         return;
       }
 
-      if (!paymentMethod) {
-        Alert.alert('Erro', 'Método de pagamento não foi criado');
-        return;
-      }
+      // O resultado será processado pelo listener no serviço
+      // Aguardar um pouco para o processamento assíncrono
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      console.log('Método de pagamento criado:', paymentMethod.id);
-
-      // 2. Criar assinatura via API do backend
-      console.log('Criando assinatura via API...');
-      const response = await apiService.createSubscription('premium', paymentMethod.id);
-      console.log('Resposta da API:', response);
-
-      if (response.success) {
-        Alert.alert(
-          'Sucesso!',
-          'Assinatura premium ativada com sucesso!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                refreshUser();
-                onSuccess();
-              },
-            },
-          ]
-        );
-      } else {
-        Alert.alert('Erro', response.error || 'Falha ao criar assinatura');
-      }
-    } catch (error) {
-      console.error('Erro no pagamento:', error);
+      // Atualizar dados do usuário
+      await refreshUser();
       
-      let errorMessage = 'Falha ao processar pagamento. Tente novamente.';
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
+      // Chamar callback de sucesso
+      onSuccess();
+    } catch (err: any) {
+      console.error('Error in handlePayment:', err);
+      const errorMessage = err.message || 'Erro ao processar pagamento';
+      setError(errorMessage);
       Alert.alert('Erro', errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleRestorePurchases = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await inAppPurchaseService.restorePurchases();
+
+      if (result.success) {
+        await refreshUser();
+        Alert.alert('Sucesso', 'Compras restauradas com sucesso!');
+        onSuccess();
+      } else {
+        Alert.alert('Aviso', result.error || 'Nenhuma compra anterior encontrada');
+      }
+    } catch (err: any) {
+      console.error('Error restoring purchases:', err);
+      Alert.alert('Erro', err.message || 'Erro ao restaurar compras');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const displayPrice = product?.localizedPrice || formatPrice(planPrice);
+
+  if (isInitializing) {
+    return (
+      <SafeAreaView
+        className="flex-1 bg-[#191E29]"
+        edges={["top", "bottom", "left", "right"]}
+      >
+        <View className="flex-1 items-center justify-center px-6">
+          <ActivityIndicator size="large" color="#01C38D" />
+          <Text className="text-white mt-4 text-center">
+            Inicializando pagamento...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isExpoGo) {
+    return (
+      <SafeAreaView
+        className="flex-1 bg-[#191E29]"
+        edges={["top", "bottom", "left", "right"]}
+      >
+        <ScrollView className="flex-1">
+          <View className="px-6 pt-6 pb-6">
+            <View className="flex-row items-center gap-4 mb-6">
+              <Pressable onPress={onCancel} className="p-2">
+                <ArrowLeft size={20} color="white" />
+              </Pressable>
+              <Text className="text-white text-xl font-bold">Assinatura Premium</Text>
+            </View>
+
+            <Card className="mb-6">
+              <View className="p-4">
+                <Text className="text-yellow-400 text-center mb-4 font-semibold">
+                  ⚠️ Build Nativo Necessário
+                </Text>
+                <Text className="text-gray-300 text-center mb-4">
+                  Pagamentos in-app não estão disponíveis no Expo Go.
+                </Text>
+                <Text className="text-gray-400 text-sm text-center mb-4">
+                  Para testar pagamentos, você precisa fazer um build nativo usando EAS Build:
+                </Text>
+                <View className="bg-card-bg p-3 rounded-lg mb-4">
+                  <Text className="text-gray-300 text-xs font-mono">
+                    eas build --platform android --profile preview
+                  </Text>
+                  <Text className="text-gray-300 text-xs font-mono mt-2">
+                    eas build --platform ios --profile preview
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={onCancel}
+                  className="bg-accent py-3 rounded-xl"
+                >
+                  <Text className="text-[#191E29] font-bold text-center">
+                    Voltar
+                  </Text>
+                </Pressable>
+              </View>
+            </Card>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && !product) {
+    return (
+      <SafeAreaView
+        className="flex-1 bg-[#191E29]"
+        edges={["top", "bottom", "left", "right"]}
+      >
+        <ScrollView className="flex-1">
+          <View className="px-6 pt-6 pb-6">
+            <View className="flex-row items-center gap-4 mb-6">
+              <Pressable onPress={onCancel} className="p-2">
+                <ArrowLeft size={20} color="white" />
+              </Pressable>
+              <Text className="text-white text-xl font-bold">Pagamento</Text>
+            </View>
+
+            <Card className="mb-6">
+              <View className="p-4">
+                <Text className="text-red-400 text-center mb-4">{error}</Text>
+                <Pressable
+                  onPress={initializePurchase}
+                  className="bg-accent py-3 rounded-xl"
+                >
+                  <Text className="text-[#191E29] font-bold text-center">
+                    Tentar Novamente
+                  </Text>
+                </Pressable>
+              </View>
+            </Card>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -160,9 +268,9 @@ export default function PaymentForm({
           {/* Header */}
           <View className="flex-row items-center gap-4 mb-6">
             <Pressable onPress={onCancel} className="p-2">
-              <ArrowLeft size={20}  />
+              <ArrowLeft size={20} color="white" />
             </Pressable>
-            <Text className="text-white text-xl font-bold">Pagamento</Text>
+            <Text className="text-white text-xl font-bold">Assinatura Premium</Text>
           </View>
 
           {/* Plan Summary */}
@@ -171,83 +279,55 @@ export default function PaymentForm({
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-white text-lg font-semibold">{planName}</Text>
                 <Text className="text-[#01C38D] text-xl font-bold">
-                  {formatPrice(planPrice)}
+                  {displayPrice}
                 </Text>
               </View>
-              <Text className="text-gray-400 text-sm">Cobrança mensal</Text>
+              <Text className="text-gray-400 text-sm">
+                Cobrança mensal
+              </Text>
+              {product?.description && (
+                <Text className="text-gray-500 text-xs mt-2">
+                  {product.description}
+                </Text>
+              )}
             </View>
           </Card>
 
-          {/* Payment Form */}
+          {/* Payment Info */}
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-4">
-                <CreditCard size={20}  />
+                <CreditCard size={20} color="white" />
                 <Text className="text-white text-lg font-semibold">
-                  Dados do Cartão
+                  Pagamento Seguro
                 </Text>
               </View>
-
-              {/* Stripe Card Field - Coleta segura de dados do cartão */}
-              <View className="mb-4">
-                <Text className="text-gray-400 text-sm mb-2">
-                  Dados do Cartão *
-                </Text>
-                <CardField
-                  postalCodeEnabled={false}
-                  placeholders={{
-                    number: '4242 4242 4242 4242',
-                  }}
-                  cardStyle={{
-                    backgroundColor: '#23263a',
-                    textColor: '#FFFFFF',
-                    borderColor: errors.some(e => e.includes('cartão')) ? '#EF4444' : '#31344d',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                  }}
-                  style={{
-                    width: '100%',
-                    height: 50,
-                    marginVertical: 0,
-                  }}
-                  onCardChange={(cardDetails) => {
-                    console.log('Card details changed:', cardDetails);
-                    setCardComplete(cardDetails.complete);
-                  }}
-                />
-                <Text className="text-gray-400 text-xs mt-2">
-                  Digite o número do cartão, data de validade (MM/AA) e CVC
-                </Text>
-              </View>
-
-              {/* Cardholder Name */}
-              <View className="mb-4">
-                <Text className="text-gray-400 text-sm mb-2">
-                  Nome do Titular *
-                </Text>
-                <TextInput
-                  value={cardHolderName}
-                  onChangeText={setCardHolderName}
-                  placeholder="Nome completo como está no cartão"
-                  placeholderTextColor="#6B7280"
-                  autoCapitalize="words"
-                  className={`bg-card-bg border-border-default rounded-xl text-white px-4 py-3 ${
-                    errors.some(e => e.includes('portador')) ? 'border-red-500' : 'border-border-default'
-                  }`}
-                />
-              </View>
-
-              {/* Errors */}
-              {errors.length > 0 && (
-                <View className="mb-4">
-                  {errors.map((error, index) => (
-                    <View key={index} className="flex-row items-center gap-2 mb-1">
-                      <X size={16}  />
-                      <Text className="text-red-400 text-sm">{error}</Text>
-                    </View>
-                  ))}
+              <View className="gap-2">
+                <View className="flex-row items-center gap-2">
+                  <Check size={16} color="#01C38D" />
+                  <Text className="text-gray-300 text-sm">
+                    Pagamento processado pela {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}
+                  </Text>
                 </View>
-              )}
+                <View className="flex-row items-center gap-2">
+                  <Check size={16} color="#01C38D" />
+                  <Text className="text-gray-300 text-sm">
+                    Renovação automática mensal
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <Check size={16} color="#01C38D" />
+                  <Text className="text-gray-300 text-sm">
+                    Cancelamento a qualquer momento
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <Check size={16} color="#01C38D" />
+                  <Text className="text-gray-300 text-sm">
+                    Acesso imediato após confirmação
+                  </Text>
+                </View>
+              </View>
             </View>
           </Card>
 
@@ -255,47 +335,54 @@ export default function PaymentForm({
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-3">
-                <Shield size={20}  />
+                <Shield size={20} color="white" />
                 <Text className="text-white font-semibold">Segurança</Text>
               </View>
-              <View className="gap-2">
-                <View className="flex-row items-center gap-2">
-                  <Check size={16}  />
-                  <Text className="text-gray-300 text-sm">
-                    Pagamento processado com segurança pelo Stripe
-                  </Text>
-                </View>
-                <View className="flex-row items-center gap-2">
-                  <Check size={16}  />
-                  <Text className="text-gray-300 text-sm">
-                    Dados do cartão não são armazenados
-                  </Text>
-                </View>
-                <View className="flex-row items-center gap-2">
-                  <Check size={16}  />
-                  <Text className="text-gray-300 text-sm">
-                    Cancelamento a qualquer momento
-                  </Text>
-                </View>
-              </View>
+              <Text className="text-gray-300 text-sm">
+                Seu pagamento é processado de forma segura pela {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}. 
+                Não armazenamos informações de pagamento.
+              </Text>
             </View>
           </Card>
 
-          {/* Payment Button */}
+          {/* Error Message */}
+          {error && (
+            <Card className="mb-6 border border-red-500">
+              <View className="p-4">
+                <Text className="text-red-400 text-sm text-center">{error}</Text>
+              </View>
+            </Card>
+          )}
+
+          {/* Purchase Button */}
           <Pressable
             onPress={handlePayment}
-            disabled={isLoading}
+            disabled={isLoading || !product}
             className={`w-full py-4 rounded-xl flex-row items-center justify-center gap-2 ${
-              isLoading ? 'bg-gray-600' : 'bg-accent'
+              isLoading || !product ? 'bg-gray-600' : 'bg-accent'
             }`}
           >
             {isLoading ? (
-              <ActivityIndicator size="small"  />
+              <ActivityIndicator size="small" color="white" />
             ) : (
-              <Lock size={20}  />
+              <Lock size={20} color={isLoading || !product ? "#999" : "#191E29"} />
             )}
-            <Text className="text-[#191E29] font-bold text-lg">
-              {isLoading ? 'Processando...' : `Pagar ${formatPrice(planPrice)}`}
+            <Text className={`font-bold text-lg ${
+              isLoading || !product ? 'text-gray-400' : 'text-[#191E29]'
+            }`}>
+              {isLoading ? 'Processando...' : `Assinar por ${displayPrice}`}
+            </Text>
+          </Pressable>
+
+          {/* Restore Purchases Button */}
+          <Pressable
+            onPress={handleRestorePurchases}
+            disabled={isLoading}
+            className="w-full py-3 rounded-xl border border-border-default mt-4 flex-row items-center justify-center gap-2"
+          >
+            <RefreshCw size={16} color="#999" />
+            <Text className="text-gray-300 font-medium">
+              Restaurar Compras
             </Text>
           </Pressable>
 
@@ -309,6 +396,12 @@ export default function PaymentForm({
               Cancelar
             </Text>
           </Pressable>
+
+          {/* Info Text */}
+          <Text className="text-gray-500 text-xs text-center mt-4">
+            Ao assinar, você concorda com os termos de serviço e política de privacidade.
+            A assinatura será renovada automaticamente a menos que seja cancelada.
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
