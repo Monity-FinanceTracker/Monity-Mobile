@@ -1,6 +1,6 @@
 # 💰 Monity - Gestão Financeira Pessoal
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.1-blue.svg)
 ![License](https://img.shields.io/badge/license-ISC-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![React Native](https://img.shields.io/badge/react--native-0.81.5-blue.svg)
@@ -391,8 +391,9 @@ Este projeto está sob a licença ISC. Veja o arquivo `LICENSE` para mais detalh
 - **Luca G. Lodi** – [https://github.com/LucaLodii](#) • [https://www.linkedin.com/in/luca-guimarães-lodi-752981356](#)
 - **Fabio Brugnara** – [https://github.com/fabiobrug](#) • [https://www.linkedin.com/in/fabio-brugnara-b32307324](#)
 
+## 👥 Empresa
 
-- **From Wide Chain & Co** 
+**Wide Chain & Co** 
 
 ## 🙏 Agradecimentos
 
