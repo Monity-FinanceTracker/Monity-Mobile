@@ -6,16 +6,22 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "ANDROID_GOOGLE_SERVICES_JSON": "@ANDROID_GOOGLE_SERVICES_JSON",
+        "IOS_GOOGLE_SERVICES_PLIST": "@IOS_GOOGLE_SERVICES_PLIST"
+      }
     },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
       },
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "ANDROID_GOOGLE_SERVICES_JSON": "@ANDROID_GOOGLE_SERVICES_JSON",
+        "IOS_GOOGLE_SERVICES_PLIST": "@IOS_GOOGLE_SERVICES_PLIST"
       }
     },
     "production": {
@@ -28,7 +34,9 @@
         "gradleCommand": ":app:bundleRelease"
       },
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "ANDROID_GOOGLE_SERVICES_JSON": "@ANDROID_GOOGLE_SERVICES_JSON",
+        "IOS_GOOGLE_SERVICES_PLIST": "@IOS_GOOGLE_SERVICES_PLIST"
       }
     }
   },

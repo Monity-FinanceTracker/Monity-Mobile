@@ -33,8 +33,7 @@
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.widechain.monity",
-      "versionCode": 13,
-      "googleServicesFile": "./ids/client_secret_225354640415-i4jt50qe2gge4d0h3r1n4dudg408oqul.apps.googleusercontent.com.json"
+      "versionCode": 13
     },
     "web": {
       "bundler": "metro",
@@ -42,6 +41,7 @@
       "favicon": "./assets/images/LOGO_MONITY_512px512px.png"
     },
     "plugins": [
+      "./app.plugin.js",
       [
         "expo-splash-screen",
         {
@@ -72,7 +72,7 @@
       },
       "router": {},
       "eas": {
-        "projectId": "e2bfd3ea-a052-4ec5-9d67-bcd4067cab20"
+        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
       }
     }
   }
