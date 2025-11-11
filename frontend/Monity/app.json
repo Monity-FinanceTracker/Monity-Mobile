@@ -32,7 +32,7 @@
       },
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.widechain.monity",
+      "package": "com.Monity",
       "versionCode": 13
     },
     "web": {
@@ -72,7 +72,7 @@
       },
       "router": {},
       "eas": {
-        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
+        "projectId": "e2bfd3ea-a052-4ec5-9d67-bcd4067cab20"
       }
     }
   }
