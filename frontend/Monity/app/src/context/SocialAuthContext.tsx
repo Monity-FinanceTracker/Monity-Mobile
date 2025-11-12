@@ -211,7 +211,6 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
       });
 
       if (oauthError || !data.url) {
-        console.error('❌ Erro ao obter URL OAuth:', oauthError);
         throw new Error(oauthError?.message || 'URL de autenticação não disponível');
       }
 
@@ -272,7 +271,6 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
         });
 
         if (setSessionError) {
-          console.error('❌ Erro ao definir sessão:', setSessionError);
           throw new Error(`Erro ao criar sessão: ${setSessionError.message}`);
         }
 
@@ -280,7 +278,6 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
         const { data: fullSessionData, error: getSessionError } = await supabase.auth.getSession();
         
         if (getSessionError || !fullSessionData.session) {
-          console.error('❌ Erro ao obter sessão completa:', getSessionError);
           throw new Error('Não foi possível obter a sessão completa');
         }
 
@@ -312,12 +309,6 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
         return;
       }
 
-      // Log detailed error information
-      console.error('❌ Código de autenticação não encontrado');
-      console.error('📋 URL completa recebida:', authResult.url);
-      console.error('📋 Tipo de resultado:', authResult.type);
-      console.error('📋 Parâmetros extraídos:', { code, accessToken, urlError });
-      
       throw new Error('Código de autenticação não encontrado na URL de callback. Verifique se as URLs de redirect estão configuradas corretamente no Supabase e Google Cloud Console.');
     } catch (err: any) {
       const errorMessage = err.message || 'Erro ao fazer login com Google';

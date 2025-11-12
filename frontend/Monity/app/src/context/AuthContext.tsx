@@ -73,9 +73,9 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
-      
       const response = await apiService.login(email, password);
       
       if (response.success && response.data) {
@@ -84,16 +84,18 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         
         if (profileResponse.success && profileResponse.data) {
           setUser(profileResponse.data);
+          setIsLoading(false);
         } else {
+          setIsLoading(false);
           throw new Error("Failed to fetch user profile: " + profileResponse.error);
         }
       } else {
+        setIsLoading(false);
         throw new Error(response.error || "Login failed");
       }
     } catch (error) {
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   }, []);
 
@@ -135,7 +137,6 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         throw new Error(profileResponse.error || "Falha ao buscar perfil");
       }
     } catch (error: any) {
-      console.error("❌ Erro no login com Google:", error);
       throw error;
     } finally {
       setIsLoading(false);

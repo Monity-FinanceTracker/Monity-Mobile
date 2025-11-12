@@ -10,31 +10,31 @@ import {
   StatusBar,
   Image,
   ScrollView,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Mail } from "lucide-react-native";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
 import * as Font from "expo-font";
 import { useAuth } from "../../context/AuthContext";
-import { apiService } from "../../services/apiService";
 import { COLORS } from "../../constants/colors";
+import { Images } from "../../assets/images";
 
 interface LoginProps {
   onNavigateToSignup: () => void;
-  onNavigateToPassword: (email: string) => void;
 }
 
 export default function Login({
   onNavigateToSignup,
-  onNavigateToPassword,
 }: LoginProps) {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [fontLoaded, setFontLoaded] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, isLoading: authLoading } = useAuth();
 
   React.useEffect(() => {
     const loadFont = async () => {
@@ -51,6 +51,15 @@ export default function Login({
     loadFont();
   }, []);
 
+  // Garantir que o loading local seja sincronizado com o loading do AuthContext
+  React.useEffect(() => {
+    if (!authLoading && loading) {
+      // Se o AuthContext terminou de carregar mas ainda estamos em loading local,
+      // pode ser que houve um erro que não foi capturado
+      // Não fazer nada aqui, o catch já deve ter tratado
+    }
+  }, [authLoading, loading]);
+
   const handleSubmit = async () => {
     if (!email) {
       setError("Por favor, insira seu email");
@@ -62,33 +71,24 @@ export default function Login({
       return;
     }
 
+    if (!password) {
+      setError("Por favor, insira sua senha");
+      return;
+    }
+
+    // Limpar erro anterior
     setError("");
     setLoading(true);
 
     try {
-      // Verificar se o email existe
-      const response = await apiService.checkEmailExists(email);
-
-      if (response.success && response.data?.exists) {
-        // Email existe, navegar para página de senha
-        onNavigateToPassword(email);
-      } else if (response.errorCode === "NOT_FOUND") {
-        // Endpoint não encontrado - servidor pode não ter sido atualizado
-        // Navegar direto para tela de senha para permitir tentativa de login
-        // Se o email não existir, o login falhará e mostrará erro na tela de senha
-        console.warn("check-email endpoint not available, navigating directly to password screen");
-        onNavigateToPassword(email);
-      } else {
-        // Email não existe, navegar para signup
-        onNavigateToSignup();
-      }
+      await login(email, password);
+      // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
+      // Se chegou aqui, o login foi bem-sucedido
+      setLoading(false);
+      setError(""); // Limpar qualquer erro anterior em caso de sucesso
     } catch (err: any) {
-      console.error("Erro ao verificar email:", err);
-      // Em caso de erro na verificação, assumir que o email pode existir
-      // e navegar para tela de senha (melhor UX do que bloquear o usuário)
-      console.warn("Error checking email, navigating directly to password screen");
-      onNavigateToPassword(email);
-    } finally {
+      // Sempre mostrar mensagem de erro quando o login falhar
+      setError("Email ou senha incorretos");
       setLoading(false);
     }
   };
@@ -102,7 +102,6 @@ export default function Login({
     } catch (err: any) {
       const errorMessage = err.message || "Erro ao fazer login com Google";
       setError(errorMessage);
-      console.error("Erro no login com Google:", err);
     } finally {
       setSocialLoading(null);
     }
@@ -130,7 +129,7 @@ export default function Login({
               <View className="mb-8 items-center">
                 <View className="flex-row items-center justify-center mb-4">
                   <Image
-                    source={require("../../../../assets/images/BANNER_MONITY.png")}
+                    source={Images.BANNER_MONITY}
                     style={{
                       width: 200,
                       height: 60,
@@ -138,10 +137,10 @@ export default function Login({
                     resizeMode="contain"
                   />
                 </View>
-                {/* Texto com fonte Emona Regular */}
+                {/* Texto com fonte Stratford */}
                 <Text
                   style={{
-                    fontFamily: fontLoaded ? "EmonaRegular" : undefined,
+                    fontFamily: fontLoaded ? "Stratford" : undefined,
                     color: COLORS.textGray,
                     fontSize: 23,
                     textAlign: "center",
@@ -150,15 +149,6 @@ export default function Login({
                   Sua vida financeira com Monity
                 </Text>
               </View>
-
-              {/* Error Message */}
-              {error && (
-                <View className="p-4 bg-error-light border border-error/30 rounded-lg mb-4">
-                  <Text className="text-error text-center text-sm">
-                    {error}
-                  </Text>
-                </View>
-              )}
 
               {/* Social Login Buttons */}
               <View className="space-y-3 mb-6">
@@ -206,18 +196,28 @@ export default function Login({
               </View>
 
               {/* Email Input */}
-              <View className="space-y-1 mb-6">
+              <View className="space-y-1 mb-4">
                 <View className="relative">
                   <View className="absolute inset-y-0 left-0 pl-4 justify-center z-10">
                     <Mail size={20} color={COLORS.textMuted} />
                   </View>
                   <TextInput
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      // Limpar erro quando o usuário começar a digitar
+                      if (error) {
+                        setError("");
+                      }
+                    }}
                     onFocus={() => setEmailFocused(true)}
                     onBlur={() => setEmailFocused(false)}
                     className={`bg-card-bg border-2 ${
-                      emailFocused ? "border-accent" : "border-border-default"
+                      error
+                        ? "border-error"
+                        : emailFocused
+                        ? "border-accent"
+                        : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Email pessoal"
                     placeholderTextColor={COLORS.textMuted}
@@ -234,7 +234,72 @@ export default function Login({
                 </View>
               </View>
 
-              {/* Continue Button */}
+              {/* Password Input */}
+              <View className="space-y-1 mb-6">
+                <View className="relative">
+                  <View className="absolute inset-y-0 left-0 pl-4 justify-center z-10">
+                    <Lock size={20} color={COLORS.textMuted} />
+                  </View>
+                  <TextInput
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      // Limpar erro quando o usuário começar a digitar
+                      if (error) {
+                        setError("");
+                      }
+                    }}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                    className={`bg-card-bg border-2 ${
+                      error
+                        ? "border-error"
+                        : passwordFocused
+                        ? "border-accent"
+                        : "border-border-default"
+                    } rounded-xl px-4 py-3`}
+                    placeholder="Senha"
+                    placeholderTextColor={COLORS.textMuted}
+                    secureTextEntry={!showPassword}
+                    autoComplete="password"
+                    selectionColor={COLORS.accent}
+                    onSubmitEditing={handleSubmit}
+                    style={{
+                      paddingLeft: 50,
+                      paddingRight: 50,
+                      fontSize: 16,
+                      color: COLORS.textPrimary,
+                    }}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 justify-center"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={20} color={COLORS.textMuted} />
+                    ) : (
+                      <Eye size={20} color={COLORS.textMuted} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              {/* Error Message abaixo dos inputs */}
+              {error ? (
+                <View className="mb-4 px-1">
+                  <Text 
+                    style={{ 
+                      color: COLORS.error,
+                      fontSize: 14,
+                      marginTop: 4,
+                    }}
+                  >
+                    {error}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Login Button */}
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={loading}
@@ -249,7 +314,7 @@ export default function Login({
                   <View className="flex-row items-center justify-center">
                     <ActivityIndicator size="small" color={COLORS.textPrimary} />
                     <Text className="text-text-primary font-semibold text-base ml-2">
-                      Continuando...
+                      Entrando...
                     </Text>
                   </View>
                 ) : (
@@ -257,7 +322,7 @@ export default function Login({
                     className="font-semibold text-base text-center"
                     style={{ color: "#232323" }}
                   >
-                    Continuar
+                    Entrar
                   </Text>
                 )}
               </TouchableOpacity>

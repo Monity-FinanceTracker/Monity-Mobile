@@ -23,6 +23,7 @@ import { geminiService } from "../../services/geminiService";
 import { apiService, Balance, Transaction, Category } from "../../services/apiService";
 import { triggerHaptic } from "../../utils/haptics";
 import { useAuth } from "../../context/AuthContext";
+import { Images } from "../../assets/images";
 
 interface Message {
   id: string;
@@ -827,7 +828,7 @@ export default function Chat() {
         {isLastMessage && (
           <View className="flex-row items-start justify-between mb-4 w-full">
             <Image
-              source={require("../../../../assets/images/LOGO_MONITY_512px512px.png")}
+              source={Images.LOGO_MONITY_512}
               style={{
                 width: 32,
                 height: 40,
@@ -872,7 +873,7 @@ export default function Chat() {
           {messages.length === 1 ? (
             <View className="flex-1 justify-center items-center" style={{ minHeight: 400 }}>
               <Image
-                source={require("../../../../assets/images/LOGO_MONITY_512px512px.png")}
+                source={Images.LOGO_MONITY_512}
                 style={{
                   width: 80,
                   height: 100
@@ -881,6 +882,7 @@ export default function Chat() {
               />
               <Text
                 style={{
+                  fontFamily: "Stratford",
                   color: COLORS.textMuted,
                   fontSize: 35,
                   textAlign: "center",

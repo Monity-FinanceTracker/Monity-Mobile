@@ -22,6 +22,7 @@ import {
 } from "lucide-react-native";
 import { useAuth } from "../../context/AuthContext";
 import { COLORS } from "../../constants/colors";
+import { Images } from "../../assets/images";
 
 interface SignupProps {
   onNavigateToLogin: () => void;
@@ -122,7 +123,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
             <View className="mb-6 items-center">
               <View className="flex-row items-center justify-center mb-2">
                 <Image
-                  source={require("../../../../assets/images/BANNER_MONITY.png")}
+                  source={Images.BANNER_MONITY}
                   style={{
                     width: 200,
                     height: 60,
