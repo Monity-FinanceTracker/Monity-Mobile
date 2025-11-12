@@ -200,7 +200,6 @@ class AuthController {
               email: req.user.email,
               name: req.user.user_metadata?.name || "User",
               phone: req.user.user_metadata?.phone || null,
-              cpf: req.user.user_metadata?.cpf || null,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
