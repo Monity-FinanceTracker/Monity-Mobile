@@ -8,9 +8,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
-  Image,
   ScrollView,
+  Image,
 } from "react-native";
+// TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+// import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
 import * as Font from "expo-font";
@@ -128,6 +130,7 @@ export default function Login({
               {/* Logo Section */}
               <View className="mb-8 items-center">
                 <View className="flex-row items-center justify-center mb-4">
+                  {/* TODO: Trocar para FastImage quando for fazer build (não funciona no Expo Go) */}
                   <Image
                     source={Images.BANNER_MONITY}
                     style={{
@@ -136,6 +139,14 @@ export default function Login({
                     }}
                     resizeMode="contain"
                   />
+                  {/* <FastImage
+                    source={Images.BANNER_MONITY}
+                    style={{
+                      width: 200,
+                      height: 60,
+                    }}
+                    resizeMode={FastImage.resizeMode.contain}
+                  /> */}
                 </View>
                 {/* Texto com fonte Stratford */}
                 <Text

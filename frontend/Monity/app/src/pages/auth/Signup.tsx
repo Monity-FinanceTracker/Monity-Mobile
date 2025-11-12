@@ -10,6 +10,8 @@ import {
   StatusBar,
   Image,
 } from "react-native";
+// TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+// import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Eye,
@@ -42,27 +44,30 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
   const handleSubmit = async () => {
     if (!name || !email || !password || !confirmPassword) {
-      setError("Please fill in all fields");
+      setError("Por favor, preencha todos os campos");
       return;
     }
 
     if (name.length < 2) {
-      setError("Name must be at least 2 characters long");
+      setError("O nome deve ter pelo menos 2 caracteres");
       return;
     }
 
-    if (!isValidEmail(email)) {
-      setError("Please enter a valid email address");
+    // Normalize email before validation
+    const normalizedEmail = email.trim().toLowerCase();
+    
+    if (!isValidEmail(normalizedEmail)) {
+      setError("Por favor, insira um endereço de email válido");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("As senhas não coincidem");
       return;
     }
 
     if (getPasswordStrength(password).score < 2) {
-      setError("Password is too weak. Please use a stronger password.");
+      setError("A senha é muito fraca. Por favor, use uma senha mais forte.");
       return;
     }
 
@@ -70,9 +75,22 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
     setError("");
 
     try {
-      await signup(email, password, name);
+      // Use normalized email for signup
+      await signup(normalizedEmail, password, name.trim());
     } catch (err: any) {
-      setError(err.message || "Failed to create account");
+      // Show user-friendly error messages
+      let errorMessage = err.message || "Falha ao criar conta";
+      
+      // Translate common error messages
+      if (errorMessage.includes("already registered") || 
+          errorMessage.includes("já está cadastrado") ||
+          errorMessage.includes("already exists")) {
+        errorMessage = "Este email já está cadastrado. Por favor, faça login ou use outro email.";
+      } else if (errorMessage.includes("invalid") && errorMessage.includes("email")) {
+        errorMessage = "Este email é inválido ou já está cadastrado. Por favor, verifique e tente novamente.";
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -122,6 +140,7 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
             {/* Logo Section */}
             <View className="mb-6 items-center">
               <View className="flex-row items-center justify-center mb-2">
+                {/* TODO: Trocar para FastImage quando for fazer build (não funciona no Expo Go) */}
                 <Image
                   source={Images.BANNER_MONITY}
                   style={{
@@ -130,6 +149,14 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
                   }}
                   resizeMode="contain"
                 />
+                {/* <FastImage
+                  source={Images.BANNER_MONITY}
+                  style={{
+                    width: 200,
+                    height: 60,
+                  }}
+                  resizeMode={FastImage.resizeMode.contain}
+                /> */}
               </View>
               <Text className="text-text-gray text-lg">Create your account</Text>
             </View>
