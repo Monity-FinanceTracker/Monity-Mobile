@@ -143,16 +143,49 @@ class AuthController {
     }
 
     try {
+      // First, check if email exists in the database
+      const normalizedEmail = email.toLowerCase().trim();
+      let emailExists = false;
+      let page = 0;
+      const pageSize = 1000;
+
+      while (true) {
+        const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: pageSize,
+        });
+
+        if (listError) {
+          // If we can't check email, proceed with login attempt
+          break;
+        }
+
+        emailExists = usersData.users.some(
+          (user: any) => user.email?.toLowerCase() === normalizedEmail
+        );
+
+        if (emailExists || usersData.users.length < pageSize) {
+          break;
+        }
+
+        page++;
+      }
+
+      // If email doesn't exist, return error without attempting login
+      if (!emailExists) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Invalid credentials" 
+        });
+      }
+
+      // Email exists, now try to authenticate
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        logger.warn("Login failed for user", {
-          email: email,
-          error: error as Error["message"],
-        });
         return res.status(400).json({ 
           success: false, 
           error: "Invalid credentials" 
@@ -167,10 +200,6 @@ class AuthController {
         } 
       });
     } catch (error) {
-      logger.error("An unexpected error occurred during login", {
-        email: email,
-        error: error as Error["message"],
-      });
       res.status(500).json({ 
         success: false, 
         error: "Internal Server Error" 

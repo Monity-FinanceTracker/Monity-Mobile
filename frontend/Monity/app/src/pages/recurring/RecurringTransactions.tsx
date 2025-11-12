@@ -150,7 +150,7 @@ export default function RecurringTransactions() {
               <Text
                 style={{ color: colors.textGray, fontSize: 14, marginBottom: 4 }}
               >
-                {transaction.category.name || transaction.category}
+                {transaction.category.name || transaction.category.name}
               </Text>
             )}
             <View className="flex-row items-center gap-4 mt-2">

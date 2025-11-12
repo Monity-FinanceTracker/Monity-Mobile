@@ -9,33 +9,42 @@ import AppNavigation from "./src/navigation";
 import ErrorBoundary from "./src/components/ErrorBoundary";
 import { StripePaymentProvider } from "./src/services/paymentService";
 import { COLORS } from "./src/constants/colors";
+import { preloadImages } from "./src/assets/images";
 
 // Manter o splash screen visível enquanto carregamos
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
-    // Carregar fontes customizadas
-    async function loadFonts() {
+    // Carregar fontes e imagens em paralelo
+    async function loadResources() {
       try {
-        await Font.loadAsync({
-          EmonaRegular: require("../assets/fonts/EmonaRegular.ttf"),
-          EmonaBold: require("../assets/fonts/Emona Bold.ttf"),
-        });
+        // Carregar fontes e imagens simultaneamente
+        await Promise.all([
+          Font.loadAsync({
+            EmonaRegular: require("../assets/fonts/EmonaRegular.ttf"),
+            EmonaBold: require("../assets/fonts/Emona Bold.ttf"),
+            Stratford: require("../assets/fonts/stratford.ttf"),
+          }),
+          preloadImages(),
+        ]);
         setFontsLoaded(true);
+        setImagesLoaded(true);
       } catch (error) {
-        console.warn("Error loading fonts:", error);
+        console.warn("Error loading resources:", error);
         setFontsLoaded(true); // Continuar mesmo se falhar
+        setImagesLoaded(true);
       }
     }
 
-    loadFonts();
+    loadResources();
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded && imagesLoaded) {
       // Esconder o splash screen após o app carregar
       const hideSplash = async () => {
         try {
@@ -52,7 +61,7 @@ export default function App() {
 
       return () => clearTimeout(timer);
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, imagesLoaded]);
 
   return (
     <SafeAreaProvider>

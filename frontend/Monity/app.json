@@ -2,7 +2,7 @@
   "expo": {
     "name": "Monity",
     "slug": "Monity",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
     "scheme": "monity",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.widechain.monity",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "googleServicesFile": "./ids/client_225354640415-hj201o4upab8ok547kuof5o3on9t84pd.apps.googleusercontent.com.plist",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
@@ -33,7 +33,8 @@
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.Monity",
-      "versionCode": 14
+      "versionCode": 15,
+      "googleServicesFile": "./ids/google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -72,7 +73,7 @@
       },
       "router": {},
       "eas": {
-        "projectId": "e2bfd3ea-a052-4ec5-9d67-bcd4067cab20"
+        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
       }
     }
   }

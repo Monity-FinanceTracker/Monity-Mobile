@@ -123,10 +123,6 @@ class ApiService {
       const url = `${this.baseURL}${endpoint}`;
       const headers = await this.getAuthHeaders();
 
-      console.log(`🌐 Making API request to: ${url}`);
-      console.log("📋 Request headers:", headers);
-      console.log("📋 Request options:", options);
-
       const response = await fetch(url, {
         ...options,
         headers: {
@@ -135,12 +131,8 @@ class ApiService {
         },
       });
 
-      console.log(`📊 Response status: ${response.status}`);
-      console.log(`📊 Response ok: ${response.ok}`);
-
       // Check if response is JSON
       const contentType = response.headers.get('content-type');
-      console.log("📊 Content-Type:", contentType);
       
       let data;
       let rawResponse: string | null = null;
@@ -151,7 +143,6 @@ class ApiService {
       
       try {
         data = JSON.parse(rawResponse);
-        console.log("📊 Response data:", data);
       } catch (jsonError) {
         console.error("❌ JSON Parse Error:", jsonError);
         console.error("❌ Raw response:", rawResponse?.substring(0, 500));
@@ -200,16 +191,13 @@ class ApiService {
           };
         }
         
-        console.error(`❌ HTTP error! status: ${response.status}`);
-        console.error("❌ Response data:", JSON.stringify(data, null, 2));
-        console.error("❌ Response headers:", Object.fromEntries(response.headers.entries()));
-        console.error("❌ Full error object:", {
-          error: data.error,
-          errorCode: data.errorCode,
-          errorDetails: data.errorDetails,
-          debug: data.debug,
-          allKeys: Object.keys(data),
-        });
+        // Don't log errors for expected client errors (400 Bad Request - invalid credentials, etc.)
+        // Only log unexpected server errors (500+)
+        if (response.status >= 500) {
+          console.error(`❌ Server error! status: ${response.status}`);
+          console.error("❌ Response data:", JSON.stringify(data, null, 2));
+        }
+        
         return {
           success: false,
           data: null as T,
@@ -222,13 +210,8 @@ class ApiService {
 
       // Check if response has success: false (some endpoints return this format)
       if (data.success === false) {
-        console.error("❌ API returned success: false", {
-          error: data.error,
-          message: data.message,
-          errorCode: data.errorCode,
-          errorDetails: data.errorDetails,
-          fullData: data,
-        });
+        // Don't log expected errors like invalid credentials
+        // Only log unexpected errors (server errors, etc.)
         return {
           success: false,
           data: null as T,
@@ -285,8 +268,6 @@ class ApiService {
     email: string,
     password: string
   ): Promise<ApiResponse<{ user: User; session: any }>> {
-    console.log("🔐 ApiService.login called with:", { email, password: "***" });
-    
     const response = await this.request<{ user: User; session: any }>(
       "/auth/login",
       {
@@ -295,21 +276,13 @@ class ApiService {
       }
     );
 
-    console.log("📡 ApiService.login response:", response);
-
     if (response.success && response.data) {
       const token = response.data.session?.access_token;
-      console.log("🔑 Token extracted:", token ? "Present" : "Missing");
       
       if (token) {
         this.token = token;
         await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
-        console.log("💾 Token saved to AsyncStorage");
-      } else {
-        console.error("❌ No access_token in session");
       }
-    } else {
-      console.error("❌ Login request failed:", response.error);
     }
 
     return response;

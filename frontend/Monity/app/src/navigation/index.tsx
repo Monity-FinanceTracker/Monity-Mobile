@@ -6,7 +6,6 @@ import { Home, Receipt, MessageCircle } from "lucide-react-native";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import LoginScreen from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
-import PasswordLogin from "../pages/auth/PasswordLogin";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Transactions from "../pages/transactions/Transactions";
 import AddExpense from "../pages/expenses/AddExpense";
@@ -28,10 +27,10 @@ import { BlurView } from "expo-blur";
 import { COLORS } from "../constants/colors";
 import { triggerHaptic } from "../utils/haptics";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { Images } from "../assets/images";
 
 export type RootStackParamList = {
   Login: undefined;
-  PasswordLogin: { email: string };
   Signup: undefined;
   Main: undefined;
   Profile: undefined;
@@ -293,7 +292,7 @@ function MainTabs() {
           tabBarIcon: ({ focused, color }) => (
             <AnimatedTabIcon focused={focused} activeColor={focused ? COLORS.accent : color}>
               <Image
-                source={require("../../../assets/images/MONITY_LOGO.png")}
+                source={Images.MONITY_LOGO}
                 style={{
                   width: 50,
                   height: 55,
@@ -340,7 +339,12 @@ function Gate() {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-primary-bg">
-        <Text className="text-text-primary text-base">Loading...</Text>
+        <Text 
+          className="text-text-primary text-base"
+          style={{ fontFamily: "Stratford" }}
+        >
+          Loading...
+        </Text>
       </View>
     );
   }
@@ -369,18 +373,6 @@ function Gate() {
                 onNavigateToSignup={() =>
                   navigation.navigate("Signup" as never)
                 }
-                onNavigateToPassword={(email: string) =>
-                  navigation.navigate("PasswordLogin" as never, { email })
-                }
-              />
-            )}
-          />
-          <RootStack.Screen
-            name="PasswordLogin"
-            children={({ navigation, route }) => (
-              <PasswordLogin
-                email={route.params.email}
-                onNavigateBack={() => navigation.navigate("Login" as never)}
               />
             )}
           />
