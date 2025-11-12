@@ -10,6 +10,7 @@ import AiController from "./aiController";
 import InvitationController from "./invitationController";
 import FinancialProjectionsController from "./financialProjectionsController";
 import UserController from "./userController";
+import RecurringTransactionController from "./recurringTransactionController";
 
 const initializeControllers = (supabase: any) => {
   return {
@@ -27,6 +28,7 @@ const initializeControllers = (supabase: any) => {
       supabase
     ),
     userController: new UserController(supabase),
+    recurringTransactionController: new RecurringTransactionController(),
   };
 };
 

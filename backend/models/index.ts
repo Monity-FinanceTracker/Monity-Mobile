@@ -4,5 +4,6 @@ import Transaction from "./Transaction";
 import Category from "./Category";
 import Group from "./Group";
 import SavingsGoal from "./SavingsGoal";
+import RecurringTransaction from "./RecurringTransaction";
 
-export { User, Transaction, Category, Group, SavingsGoal };
+export { User, Transaction, Category, Group, SavingsGoal, RecurringTransaction };
