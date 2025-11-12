@@ -13,6 +13,7 @@ import balanceRoutes from "./balance";
 import invitationRoutes from "./invitations";
 import financialProjectionsRoutes from "./financialProjections";
 import userRoutes from "./users";
+import recurringTransactionsRoutes from "./recurringTransactions";
 
 export default (controllers: any, middleware: any) => {
   // Version 1 of the API
@@ -87,6 +88,11 @@ export default (controllers: any, middleware: any) => {
     financialProjectionsRoutes(controllers)
   );
   v1Router.use("/users", middleware.auth.authenticate, userRoutes(controllers));
+  v1Router.use(
+    "/recurring-transactions",
+    middleware.auth.authenticate,
+    recurringTransactionsRoutes(controllers)
+  );
 
   // Admin routes with role check
   v1Router.use(
