@@ -67,17 +67,6 @@ export default function Dashboard() {
     return email ? email.charAt(0).toUpperCase() : "U";
   };
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-      return "Bom dia!";
-    } else if (hour >= 12 && hour < 18) {
-      return "Boa tarde!";
-    } else {
-      return "Boa noite!";
-    }
-  };
-
   // Gerar lista de 3 meses (2 anteriores + atual)
   const monthOptions: MonthOption[] = useMemo(() => {
     const options: MonthOption[] = [];
@@ -152,9 +141,9 @@ export default function Dashboard() {
           if (transactionsResponse.success && transactionsResponse.data) {
             transactionsResponse.data.forEach((transaction: Transaction) => {
               const amount = Math.abs(transaction.amount || 0);
-              if (transaction.type === "income") {
+              if (transaction.typeId === 2 || transaction.type === "income") {
                 income += amount;
-              } else if (transaction.type === "expense") {
+              } else if (transaction.typeId === 1 || transaction.type === "expense") {
                 expenses += amount;
               }
             });
@@ -168,9 +157,9 @@ export default function Dashboard() {
         // Fallback: calcular das transações se não houver resposta do balance
         transactionsResponse.data.forEach((transaction: Transaction) => {
           const amount = Math.abs(transaction.amount || 0);
-          if (transaction.type === "income") {
+          if (transaction.typeId === 2 || transaction.type === "income") {
             income += amount;
-          } else if (transaction.type === "expense") {
+          } else if (transaction.typeId === 1 || transaction.type === "expense") {
             expenses += amount;
           }
         });
@@ -322,7 +311,7 @@ export default function Dashboard() {
               <Text 
                 className="text-white text-2xl font-bold"
               >
-                {getGreeting()} {user?.name || "Usuário"}
+                Olá, {user?.name || "Usuário"}!
               </Text>
               <Text 
                 className="text-gray-400 text-lg"

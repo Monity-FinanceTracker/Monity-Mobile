@@ -56,6 +56,7 @@ export interface Transaction {
   description?: string;
   isRecurring?: boolean;
   isFavorite?: boolean;
+  recurrenceDay?: number;
 }
 
 export interface Category {
@@ -680,6 +681,46 @@ class ApiService {
 
   async getToken(): Promise<string | null> {
     return this.token || (await AsyncStorage.getItem(AUTH_TOKEN_KEY));
+  }
+
+  // Recurring Transaction methods
+  async getRecurringTransactions(): Promise<ApiResponse<Transaction[]>> {
+    return this.request<Transaction[]>("/recurring-transactions");
+  }
+
+  async getRecurringTransactionById(id: string): Promise<ApiResponse<Transaction>> {
+    return this.request<Transaction>(`/recurring-transactions/${id}`);
+  }
+
+  async createRecurringTransaction(recurringTransaction: {
+    description: string;
+    amount: number;
+    category: string;
+    categoryId?: string;
+    typeId: number;
+    recurrenceDay: number;
+    isFavorite?: boolean;
+  }): Promise<ApiResponse<Transaction>> {
+    return this.request<Transaction>("/recurring-transactions", {
+      method: "POST",
+      body: JSON.stringify(recurringTransaction),
+    });
+  }
+
+  async updateRecurringTransaction(
+    id: string,
+    recurringTransaction: Partial<Transaction> & { recurrenceDay?: number }
+  ): Promise<ApiResponse<Transaction>> {
+    return this.request<Transaction>(`/recurring-transactions/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(recurringTransaction),
+    });
+  }
+
+  async deleteRecurringTransaction(id: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/recurring-transactions/${id}`, {
+      method: "DELETE",
+    });
   }
 }
 
