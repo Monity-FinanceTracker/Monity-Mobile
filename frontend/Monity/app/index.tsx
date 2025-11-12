@@ -9,14 +9,16 @@ import AppNavigation from "./src/navigation";
 import ErrorBoundary from "./src/components/ErrorBoundary";
 import { StripePaymentProvider } from "./src/services/paymentService";
 import { COLORS } from "./src/constants/colors";
-import { preloadImages } from "./src/assets/images";
+// TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+// import { preloadImages } from "./src/assets/images";
 
 // Manter o splash screen visível enquanto carregamos
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
+  // TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+  // const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
     // Carregar fontes e imagens em paralelo
@@ -29,14 +31,17 @@ export default function App() {
             EmonaBold: require("../assets/fonts/Emona Bold.ttf"),
             Stratford: require("../assets/fonts/stratford.ttf"),
           }),
-          preloadImages(),
+          // TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+          // preloadImages(),
         ]);
         setFontsLoaded(true);
-        setImagesLoaded(true);
+        // TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+        // setImagesLoaded(true);
       } catch (error) {
         console.warn("Error loading resources:", error);
         setFontsLoaded(true); // Continuar mesmo se falhar
-        setImagesLoaded(true);
+        // TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+        // setImagesLoaded(true);
       }
     }
 
@@ -44,7 +49,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded && imagesLoaded) {
+    // TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+    // if (fontsLoaded && imagesLoaded) {
+    if (fontsLoaded) {
       // Esconder o splash screen após o app carregar
       const hideSplash = async () => {
         try {
@@ -61,7 +68,9 @@ export default function App() {
 
       return () => clearTimeout(timer);
     }
-  }, [fontsLoaded, imagesLoaded]);
+    // TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+    // }, [fontsLoaded, imagesLoaded]);
+  }, [fontsLoaded]);
 
   return (
     <SafeAreaProvider>

@@ -8,10 +8,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  Image,
   Animated,
   Keyboard,
+  Image,
 } from "react-native";
+// TODO: Descomentar quando for fazer build (não funciona no Expo Go)
+// import FastImage from 'react-native-fast-image';
 import * as Clipboard from 'expo-clipboard';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowUp, Bot, Loader, Plus, Mic, Image as ImageIcon, Headphones, Copy, ChevronDown } from "lucide-react-native";
@@ -827,6 +829,7 @@ export default function Chat() {
         {/* Logo e disclaimer abaixo da última mensagem */}
         {isLastMessage && (
           <View className="flex-row items-start justify-between mb-4 w-full">
+            {/* TODO: Trocar para FastImage quando for fazer build (não funciona no Expo Go) */}
             <Image
               source={Images.LOGO_MONITY_512}
               style={{
@@ -836,6 +839,15 @@ export default function Chat() {
               }}
               resizeMode="contain"
             />
+            {/* <FastImage
+              source={Images.LOGO_MONITY_512}
+              style={{
+                width: 32,
+                height: 40,
+                marginLeft: 0,
+              }}
+              resizeMode={FastImage.resizeMode.contain}
+            /> */}
             <View className="flex-1 ml-4 mr-6">
               <Text
                 style={{
@@ -872,6 +884,7 @@ export default function Chat() {
         >
           {messages.length === 1 ? (
             <View className="flex-1 justify-center items-center" style={{ minHeight: 400 }}>
+              {/* TODO: Trocar para FastImage quando for fazer build (não funciona no Expo Go) */}
               <Image
                 source={Images.LOGO_MONITY_512}
                 style={{
@@ -880,6 +893,14 @@ export default function Chat() {
                 }}
                 resizeMode="contain"
               />
+              {/* <FastImage
+                source={Images.LOGO_MONITY_512}
+                style={{
+                  width: 80,
+                  height: 100
+                }}
+                resizeMode={FastImage.resizeMode.contain}
+              /> */}
               <Text
                 style={{
                   fontFamily: "Stratford",
