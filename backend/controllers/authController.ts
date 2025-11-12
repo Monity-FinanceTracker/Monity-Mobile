@@ -20,96 +20,23 @@ class AuthController {
 
   async register(req: Request, res: Response) {
     const { email, password, name } = req.body;
-    
-    // Validate required fields
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: "Email and password are required",
-      });
-    }
-
-    // Normalize email (trim and lowercase)
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(normalizedEmail)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid email format",
-      });
-    }
-
     try {
-      // Check if email already exists before attempting registration
-      let emailExists = false;
-      let page = 0;
-      const pageSize = 1000;
-
-      while (true) {
-        const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-          page,
-          perPage: pageSize,
-        });
-
-        if (listError) {
-          logger.warn("Error checking if email exists, proceeding with registration", { 
-            error: listError.message 
-          });
-          break; // Continue with registration attempt if we can't check
-        }
-
-        emailExists = usersData.users.some(
-          (user: any) => user.email?.toLowerCase() === normalizedEmail
-        );
-
-        if (emailExists || usersData.users.length < pageSize) {
-          break;
-        }
-
-        page++;
-      }
-
-      if (emailExists) {
-        return res.status(400).json({
-          success: false,
-          error: "Este email já está cadastrado. Por favor, faça login ou use outro email.",
-        });
-      }
-
-      // Attempt registration with normalized email
       const { data, error } = await this.supabase.auth.signUp({
-        email: normalizedEmail,
+        email,
         password,
         options: {
           data: {
             role: "user",
-            name: name || "",
+            name: name,
           },
         },
       });
 
       if (error) {
-        logger.error("User registration failed", { 
-          error: error.message,
-          errorCode: error.status,
-          email: normalizedEmail 
-        });
-        
-        // Provide more user-friendly error messages
-        let errorMessage = error.message;
-        if (error.message?.toLowerCase().includes("email") && 
-            error.message?.toLowerCase().includes("invalid")) {
-          errorMessage = "Este email já está cadastrado ou é inválido. Por favor, verifique e tente novamente.";
-        } else if (error.message?.toLowerCase().includes("already registered") ||
-                   error.message?.toLowerCase().includes("already exists")) {
-          errorMessage = "Este email já está cadastrado. Por favor, faça login ou use outro email.";
-        }
-        
+        logger.error("User registration failed", { error: error.message });
         return res.status(400).json({ 
           success: false, 
-          error: errorMessage 
+          error: error.message 
         });
       }
 
