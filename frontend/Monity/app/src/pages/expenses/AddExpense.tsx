@@ -45,8 +45,7 @@ const quickActions = [
     title: "Recorrente",
     icon: Repeat,
     onPress: (navigation: any) => {
-      // TODO: Navigate to Recurring page (to be created)
-      console.log("Navigate to Recurring page");
+      navigation.navigate("RecurringTransactions" as never);
     },
   },
   {
