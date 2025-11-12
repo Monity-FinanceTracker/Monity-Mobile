@@ -15,7 +15,7 @@ process.argv = process.argv.slice(0, 2);
 // Debug: Log environment variables (without values for security)
 console.log('🔍 Debug: Checking environment variables...');
 console.log('ANDROID_GOOGLE_SERVICES_JSON exists:', !!process.env.ANDROID_GOOGLE_SERVICES_JSON);
-console.log('IOS_GOOGLE_SERVICES_PLIST exists:', !!process.env.IOS_GOOGLE_SERVICES_PLIST);
+console.log(' exists:', !!process.env.IOS_GOOGLE_SERVICES_PLIST);
 
 const idsDir = path.join(__dirname, '..', 'ids');
 console.log('📁 IDs directory:', idsDir);
