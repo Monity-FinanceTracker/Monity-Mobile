@@ -618,7 +618,7 @@ export default function AddIncomeForm() {
               </ScrollView>
               <Text
                 style={{
-                  color: colors.textMuted,
+                  color: colors.textPrimary,
                   fontSize: 12,
                   marginTop: 8,
                 }}
