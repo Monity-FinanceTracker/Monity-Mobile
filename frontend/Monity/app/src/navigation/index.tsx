@@ -6,6 +6,7 @@ import { Home, Receipt, MessageCircle } from "lucide-react-native";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import LoginScreen from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
+import EmailConfirmation from "../pages/auth/EmailConfirmation";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Transactions from "../pages/transactions/Transactions";
 import AddExpense from "../pages/expenses/AddExpense";
@@ -33,6 +34,7 @@ import { Images } from "../assets/images";
 export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
+  EmailConfirmation: { email: string };
   Main: undefined;
   Profile: undefined;
   SubscriptionPlans: undefined;
@@ -335,9 +337,10 @@ function MainTabs() {
 }
 
 function Gate() {
-  const { user, isLoading } = useAuth();
+  const { user, isInitializing } = useAuth();
 
-  if (isLoading) {
+  // Only show loading during initial bootstrap, not during login/signup
+  if (isInitializing) {
     return (
       <View className="flex-1 items-center justify-center bg-primary-bg">
         <Text 
@@ -381,6 +384,18 @@ function Gate() {
             name="Signup"
             children={({ navigation }) => (
               <Signup
+                onNavigateToLogin={() => navigation.navigate("Login" as never)}
+                onNavigateToEmailConfirmation={(email: string) =>
+                  navigation.navigate("EmailConfirmation" as never, { email } as never)
+                }
+              />
+            )}
+          />
+          <RootStack.Screen
+            name="EmailConfirmation"
+            children={({ navigation, route }) => (
+              <EmailConfirmation
+                email={route.params?.email || ""}
                 onNavigateToLogin={() => navigation.navigate("Login" as never)}
               />
             )}

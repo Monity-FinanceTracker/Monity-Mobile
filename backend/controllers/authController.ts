@@ -21,6 +21,8 @@ class AuthController {
   async register(req: Request, res: Response) {
     const { email, password, name } = req.body;
     try {
+      // Supabase automatically sends confirmation email when signUp is called
+      // The emailRedirectTo is optional but helps with deep linking in mobile apps
       const { data, error } = await this.supabase.auth.signUp({
         email,
         password,
@@ -29,6 +31,9 @@ class AuthController {
             role: "user",
             name: name,
           },
+          // Optional: Set email redirect URL for better mobile app experience
+          // This will be used when user clicks the confirmation link in the email
+          emailRedirectTo: process.env.CLIENT_URL || undefined,
         },
       });
 

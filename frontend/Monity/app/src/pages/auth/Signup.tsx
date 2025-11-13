@@ -28,9 +28,10 @@ import { Images } from "../../assets/images";
 
 interface SignupProps {
   onNavigateToLogin: () => void;
+  onNavigateToEmailConfirmation: (email: string) => void;
 }
 
-export default function Signup({ onNavigateToLogin }: SignupProps) {
+export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmation }: SignupProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,7 +77,11 @@ export default function Signup({ onNavigateToLogin }: SignupProps) {
 
     try {
       // Use normalized email for signup
-      await signup(normalizedEmail, password, name.trim());
+      const result = await signup(normalizedEmail, password, name.trim());
+      // Navigate to email confirmation page
+      if (result && result.email) {
+        onNavigateToEmailConfirmation(result.email);
+      }
     } catch (err: any) {
       // Show user-friendly error messages
       let errorMessage = err.message || "Falha ao criar conta";
