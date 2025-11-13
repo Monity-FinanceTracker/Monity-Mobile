@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../constants/colors";
 import { apiService, Transaction } from "../../services/apiService";
-import { ChevronLeft, ChevronRight, X } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, X, ArrowLeft } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 
@@ -213,18 +213,25 @@ export default function Calendar() {
         <View className="px-6 pt-6">
           {/* Header */}
           <View className="mb-6">
-            <Pressable
-              onPress={() => navigation.goBack()}
-              className="mb-4"
-            >
-              <Text className="text-accent text-base">← Voltar</Text>
-            </Pressable>
-            <Text className="text-white text-2xl font-bold mb-2">
-              Calendário
-            </Text>
-            <Text className="text-text-primary text-sm">
-              Visualize suas transações por dia
-            </Text>
+            <View className="flex-row items-center gap-4 mb-4">
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  navigation.goBack();
+                }}
+                className="p-2"
+              >
+                <ArrowLeft size={20} color={colors.textPrimary} />
+              </Pressable>
+              <View>
+                <Text className="text-white text-2xl font-bold">
+                  Calendário
+                </Text>
+                <Text className="text-text-primary text-sm">
+                  Visualize suas transações por dia
+                </Text>
+              </View>
+            </View>
           </View>
 
           {/* Month Navigation */}

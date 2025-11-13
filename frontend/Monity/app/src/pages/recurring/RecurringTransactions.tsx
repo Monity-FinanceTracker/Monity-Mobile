@@ -44,14 +44,27 @@ export default function RecurringTransactions() {
     try {
       setIsLoading(true);
       const response = await apiService.getRecurringTransactions();
-      if (response.success && response.data) {
-        setRecurringTransactions(response.data);
+      
+      // Se a resposta foi bem-sucedida, usa os dados (mesmo que seja array vazio)
+      // Se não foi bem-sucedida ou não tem dados, define array vazio
+      if (response.success) {
+        // response.data pode ser um array vazio [], o que é válido
+        const transactions = Array.isArray(response.data) ? response.data : [];
+        setRecurringTransactions(transactions);
+        // Log apenas para debug (pode remover depois)
+        if (transactions.length === 0) {
+          console.log("Nenhuma transação recorrente encontrada (isso é normal)");
+        }
       } else {
-        Alert.alert("Erro", "Falha ao carregar transações recorrentes");
+        // Se não houver transações ou houver erro, apenas define array vazio (sem pop-up de erro)
+        // Não exibir erro - apenas mostrar mensagem na tela
+        console.log("Resposta sem sucesso ao carregar transações recorrentes:", response.error);
+        setRecurringTransactions([]);
       }
     } catch (error) {
-      console.error("Error loading recurring transactions:", error);
-      Alert.alert("Erro", "Falha ao carregar transações recorrentes");
+      // Em caso de erro, apenas define array vazio (sem pop-up de erro)
+      console.error("Erro ao carregar transações recorrentes (silencioso):", error);
+      setRecurringTransactions([]);
     } finally {
       setIsLoading(false);
     }

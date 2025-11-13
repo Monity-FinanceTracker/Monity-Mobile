@@ -21,6 +21,7 @@ import Savings from "../pages/savings/Savings";
 import Analytics from "../pages/analytics/Analytics";
 import Calendar from "../pages/overview/Calendar";
 import RecurringTransactions from "../pages/recurring/RecurringTransactions";
+import Help from "../pages/help/Help";
 import { Platform, View, Text, Dimensions, Pressable, StyleSheet, TouchableOpacity, Image } from "react-native";
 import FastImage from 'react-native-fast-image';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -45,6 +46,7 @@ export type RootStackParamList = {
   Analytics: undefined;
   Calendar: undefined;
   RecurringTransactions: undefined;
+  Help: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -367,6 +369,7 @@ function Gate() {
           <RootStack.Screen name="Analytics" component={Analytics} />
           <RootStack.Screen name="Calendar" component={Calendar} />
           <RootStack.Screen name="RecurringTransactions" component={RecurringTransactions} />
+          <RootStack.Screen name="Help" component={Help} />
         </>
       ) : (
         <>
