@@ -467,7 +467,7 @@ export default function AddExpense() {
                   <View className="flex-1">
                     <Text
                       style={{
-                        color: colors.textPrimary,
+                        color: "#FAF9F5",
                         fontSize: 18,
                         fontWeight: '600',
                         marginBottom: 4,
@@ -477,7 +477,7 @@ export default function AddExpense() {
                     </Text>
                     <Text
                       style={{
-                        color: colors.textMuted,
+                        color: "#FAF9F5",
                         fontSize: 14,
                       }}
                     >
@@ -524,7 +524,7 @@ export default function AddExpense() {
                   <View className="flex-1">
                     <Text
                       style={{
-                        color: colors.textPrimary,
+                        color: "#FAF9F5",
                         fontSize: 18,
                         fontWeight: '600',
                         marginBottom: 4,
@@ -534,7 +534,7 @@ export default function AddExpense() {
                     </Text>
                     <Text
                       style={{
-                        color: colors.textMuted,
+                        color: "#FAF9F5",
                         fontSize: 14,
                       }}
                     >
@@ -588,7 +588,7 @@ export default function AddExpense() {
                   </View>
                   <Text
                     style={{
-                      color: colors.textPrimary,
+                      color: "#FAF9F5",
                       fontSize: 14,
                       fontWeight: '600',
                       textAlign: 'center',
@@ -598,7 +598,7 @@ export default function AddExpense() {
                   </Text>
                   <Text
                     style={{
-                      color: colors.textMuted,
+                      color: "#FAF9F5",
                       fontSize: 12,
                       textAlign: 'center',
                     }}
@@ -644,7 +644,7 @@ export default function AddExpense() {
                   </View>
                   <Text
                     style={{
-                      color: colors.textPrimary,
+                      color: "#FAF9F5",
                       fontSize: 14,
                       fontWeight: '600',
                       textAlign: 'center',
@@ -654,7 +654,7 @@ export default function AddExpense() {
                   </Text>
                   <Text
                     style={{
-                      color: colors.textMuted,
+                      color: "#FAF9F5",
                       fontSize: 12,
                       textAlign: 'center',
                     }}
@@ -754,7 +754,7 @@ export default function AddExpense() {
             </Text>
             {isLoadingFavorites ? (
               <View className="py-8 items-center">
-                <Text style={{ color: colors.textMuted }}>Carregando favoritos...</Text>
+                <Text style={{ color: colors.textPrimary }}>Carregando favoritos...</Text>
               </View>
             ) : favoriteTransactions.length > 0 ? (
               <View className="gap-3">
@@ -768,7 +768,7 @@ export default function AddExpense() {
                   
                   // Use arrows instead of category icons
                   const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
-                  const arrowColor = transactionType === "income" ? "#4ADE80" : "#FFFFFF"; // Green-400 for income, white for expense
+                  const arrowColor = transactionType === "income" ? colors.income : "#FFFFFF"; // Teal for income, white for expense
 
                   return (
                     <Pressable
@@ -787,11 +787,14 @@ export default function AddExpense() {
                         <View className="flex-row items-center justify-between">
                           <View className="flex-row items-center gap-3 flex-1">
                             <View
-                              className={`w-10 h-10 rounded-lg items-center justify-center ${
-                                transactionType === "income"
-                                  ? "bg-green-500/10"
-                                  : "bg-white/10"
-                              }`}
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 8,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: transactionType === "income" ? colors.incomeBg : 'rgba(255, 255, 255, 0.1)',
+                              }}
                             >
                               <ArrowIcon size={18} color={arrowColor} />
                             </View>
@@ -799,7 +802,7 @@ export default function AddExpense() {
                               <View className="flex-row items-center gap-2">
                                 <Text
                                   style={{
-                                    color: colors.textPrimary,
+                                    color: "#FAF9F5",
                                     fontSize: 14,
                                     fontWeight: '500',
                                   }}
@@ -810,7 +813,7 @@ export default function AddExpense() {
                               </View>
                               <Text
                                 style={{
-                                  color: colors.textMuted,
+                                  color: "#FAF9F5",
                                   fontSize: 12,
                                   marginTop: 2,
                                 }}

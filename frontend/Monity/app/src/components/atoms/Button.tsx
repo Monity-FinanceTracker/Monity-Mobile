@@ -29,38 +29,10 @@ const Button = ({
   const [isPressed, setIsPressed] = useState(false);
 
   // Get border color based on variant and state
+  // All buttons use #FAF9F5 border as per design requirements
   const getBorderColor = () => {
-    if (disabled) return COLORS.border;
-    if (isPressed) {
-      switch (variant) {
-        case "primary":
-          return COLORS.accent;
-        case "secondary":
-          return COLORS.accent;
-        case "danger":
-          return COLORS.error;
-        case "ghost":
-          return COLORS.border;
-        case "outline":
-          return COLORS.accent;
-        default:
-          return COLORS.border;
-      }
-    }
-    switch (variant) {
-      case "primary":
-        return COLORS.accent;
-      case "secondary":
-        return COLORS.border;
-      case "danger":
-        return COLORS.error;
-      case "ghost":
-        return COLORS.border;
-      case "outline":
-        return COLORS.accent;
-      default:
-        return COLORS.border;
-    }
+    if (disabled) return COLORS.buttonBorder;
+    return COLORS.buttonBorder;
   };
 
 
@@ -100,7 +72,7 @@ const Button = ({
 
   // Define variant-specific text styles
   const textStyles = {
-    primary: "text-[#232323]",
+    primary: "text-text-primary",
     secondary: "text-text-primary",
     danger: "text-text-primary",
     ghost: "text-accent",
@@ -154,7 +126,7 @@ const Button = ({
         {disabled ? (
           <ActivityIndicator
             size="small"
-            color={variant === "primary" ? "#232323" : COLORS.accent}
+            color={variant === "primary" ? COLORS.textPrimary : COLORS.accent}
           />
         ) : // Render children if they exist, otherwise render the title
         children && typeof children !== 'function' ? (

@@ -256,7 +256,7 @@ export default function Profile() {
       >
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large"  />
-          <Text className="text-white mt-4">Carregando perfil...</Text>
+          <Text style={{ color: colors.textPrimary, marginTop: 16 }}>Carregando perfil...</Text>
         </View>
       </SafeAreaView>
     );
@@ -294,7 +294,7 @@ export default function Profile() {
                 <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 }}>
                   {profileData.name || user?.name || "Usuário"}
                 </Text>
-                <Text style={{ color: colors.textMuted, textAlign: 'center', marginBottom: 4 }}>{profileData.email}</Text>
+                <Text style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: 4 }}>{profileData.email}</Text>
               </View>
             </View>
           </Card>
@@ -307,25 +307,25 @@ export default function Profile() {
                   <Crown size={24} color={colors.textPrimary} />
                   <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>Upgrade para Premium</Text>
                 </View>
-                <Text style={{ color: colors.textGray, marginBottom: 16 }}>
+                <Text style={{ color: colors.textPrimary, marginBottom: 16 }}>
                   Desbloqueie recursos exclusivos e tenha controle total das suas finanças
                 </Text>
                 <View className="gap-2 mb-4">
                   <View className="flex-row items-center gap-2">
                     <Star size={16} color={colors.textPrimary} />
-                    <Text style={{ color: colors.textGray, fontSize: 14 }}>IA para categorização automática</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 14 }}>IA para categorização automática</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
                     <Star size={16} color={colors.textPrimary} />
-                    <Text style={{ color: colors.textGray, fontSize: 14 }}>Projeções financeiras avançadas</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 14 }}>Projeções financeiras avançadas</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
                     <Star size={16} color={colors.textPrimary} />
-                    <Text style={{ color: colors.textGray, fontSize: 14 }}>Relatórios detalhados</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 14 }}>Relatórios detalhados</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
                     <Star size={16} color={colors.textPrimary} />
-                    <Text style={{ color: colors.textGray, fontSize: 14 }}>Backup automático na nuvem</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 14 }}>Backup automático na nuvem</Text>
                   </View>
                 </View>
                 <Pressable
@@ -349,11 +349,11 @@ export default function Profile() {
                   <Crown size={24} color={colors.textPrimary} />
                   <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>Premium Ativo</Text>
                 </View>
-                <Text style={{ color: colors.textGray, marginBottom: 8 }}>
+                <Text style={{ color: colors.textPrimary, marginBottom: 8 }}>
                   Você tem acesso a todos os recursos premium!
                 </Text>
                 {user?.subscriptionExpiresAt && (
-                  <Text style={{ color: colors.textMuted, fontSize: 14 }}>
+                  <Text style={{ color: colors.textPrimary, fontSize: 14 }}>
                     Válido até: {new Date(user.subscriptionExpiresAt).toLocaleDateString("pt-BR")}
                   </Text>
                 )}
@@ -381,14 +381,14 @@ export default function Profile() {
                   ) : (
                     <Edit3 size={14} color={colors.textPrimary} />
                   )}
-                  <Text style={{ color: colors.textGray, fontSize: 12 }}>
+                  <Text style={{ color: colors.textPrimary, fontSize: 12 }}>
                     {isEditing ? "Salvar" : "Editar"}
                   </Text>
                 </Pressable>
               </View>
               <View className="gap-4">
                 <View>
-                  <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                  <Text style={{ color: colors.textPrimary, fontSize: 14, marginBottom: 8 }}>
                     Nome Completo
                   </Text>
                   <TextInput
@@ -403,7 +403,7 @@ export default function Profile() {
                   />
                 </View>
                 <View>
-                  <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>Email</Text>
+                  <Text style={{ color: colors.textPrimary, fontSize: 14, marginBottom: 8 }}>Email</Text>
                   <TextInput
                     value={profileData.email}
                     onChangeText={(text) => handleUpdateProfile("email", text)}
@@ -438,7 +438,7 @@ export default function Profile() {
                       <Text style={{ fontWeight: '500', color: colors.textPrimary }}>
                         Notificações
                       </Text>
-                      <Text style={{ fontSize: 14, color: colors.textMuted }}>
+                      <Text style={{ fontSize: 14, color: colors.textPrimary }}>
                         Receber alertas e lembretes
                       </Text>
                     </View>
@@ -458,7 +458,7 @@ export default function Profile() {
                       <Text style={{ fontWeight: '500', color: colors.textPrimary }}>
                         Autenticação Biométrica
                       </Text>
-                      <Text style={{ fontSize: 14, color: colors.textMuted }}>
+                      <Text style={{ fontSize: 14, color: colors.textPrimary }}>
                         Usar digital ou Face ID
                       </Text>
                     </View>
@@ -487,7 +487,7 @@ export default function Profile() {
                   className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <Download size={20} color={colors.textPrimary} />
-                  <Text style={{ color: colors.textGray, marginLeft: 12 }}>Exportar Dados</Text>
+                  <Text style={{ color: colors.textPrimary, marginLeft: 12 }}>Exportar Dados</Text>
                 </Pressable>
                 <Pressable
                   onPress={handleChangePassword}
@@ -495,7 +495,7 @@ export default function Profile() {
                   className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <Shield size={20} color={colors.textPrimary} />
-                  <Text style={{ color: colors.textGray, marginLeft: 12 }}>Alterar Senha</Text>
+                  <Text style={{ color: colors.textPrimary, marginLeft: 12 }}>Alterar Senha</Text>
                 </Pressable>
                 <Pressable
                   onPress={handleLogout}
@@ -503,7 +503,7 @@ export default function Profile() {
                   className="w-full bg-card-bg border border-border-default rounded-lg px-4 py-3 flex-row items-center"
                 >
                   <LogOut size={20} color={colors.textPrimary} />
-                  <Text style={{ color: colors.textGray, marginLeft: 12 }}>Sair da Conta</Text>
+                  <Text style={{ color: colors.textPrimary, marginLeft: 12 }}>Sair da Conta</Text>
                 </Pressable>
                 <Pressable
                   onPress={handleDeleteAccount}
@@ -521,8 +521,8 @@ export default function Profile() {
           <Card className="mb-6">
             <View className="p-4">
               <View className="items-center">
-                <Text style={{ fontSize: 14, color: colors.textMuted }}>Monity v1.0.0</Text>
-                <Text style={{ fontSize: 14, color: colors.textMuted }}>
+                <Text style={{ fontSize: 14, color: colors.textPrimary }}>Monity v1.0.0</Text>
+                <Text style={{ fontSize: 14, color: colors.textPrimary }}>
                   © 2025 Monity. Todos os direitos reservados.
                 </Text>
               </View>
@@ -565,7 +565,7 @@ export default function Profile() {
 
                 <View className="gap-4">
                   <View>
-                    <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                    <Text style={{ color: colors.textPrimary, fontSize: 14, marginBottom: 8 }}>
                       Senha Atual
                     </Text>
                     <TextInput
@@ -582,7 +582,7 @@ export default function Profile() {
                   </View>
 
                   <View>
-                    <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                    <Text style={{ color: colors.textPrimary, fontSize: 14, marginBottom: 8 }}>
                       Nova Senha
                     </Text>
                     <TextInput
@@ -599,7 +599,7 @@ export default function Profile() {
                   </View>
 
                   <View>
-                    <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                    <Text style={{ color: colors.textPrimary, fontSize: 14, marginBottom: 8 }}>
                       Confirmar Nova Senha
                     </Text>
                     <TextInput
@@ -621,7 +621,7 @@ export default function Profile() {
                       disabled={isLoading}
                       className="flex-1 bg-card-bg border border-border-default py-3 rounded-xl items-center"
                     >
-                      <Text style={{ color: colors.textGray, fontSize: 14, fontWeight: '600' }}>
+                      <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600' }}>
                         Cancelar
                       </Text>
                     </Pressable>
@@ -679,12 +679,12 @@ export default function Profile() {
                 </View>
 
                 <View className="gap-4">
-                  <Text style={{ color: colors.textGray, fontSize: 14, marginBottom: 8 }}>
+                  <Text style={{ color: colors.textPrimary, fontSize: 14, marginBottom: 8 }}>
                     Digite sua senha para confirmar a exclusão da conta:
                   </Text>
 
                   <View>
-                    <Text style={{ color: colors.textMuted, fontSize: 14, marginBottom: 8 }}>
+                    <Text style={{ color: colors.textPrimary, fontSize: 14, marginBottom: 8 }}>
                       Senha
                     </Text>
                     <TextInput
@@ -704,7 +704,7 @@ export default function Profile() {
                       disabled={isLoading}
                       className="flex-1 bg-card-bg border border-border-default py-3 rounded-xl items-center"
                     >
-                      <Text style={{ color: colors.textGray, fontSize: 14, fontWeight: '600' }}>
+                      <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600' }}>
                         Cancelar
                       </Text>
                     </Pressable>

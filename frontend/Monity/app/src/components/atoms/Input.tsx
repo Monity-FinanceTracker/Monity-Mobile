@@ -26,10 +26,10 @@ const Input = (props: InputProps) => {
   return (
     <View className="relative">
       <TextInput
-        className={`w-full bg-card-bg/80 rounded-xl px-4 py-4 text-text-primary text-base border ${getBorderColor()} ${
+        className={`w-full bg-input-bg rounded-xl px-4 py-4 text-text-primary text-base border ${getBorderColor()} ${
           className || ""
         }`}
-        placeholderTextColor={COLORS.textMuted}
+        placeholderTextColor="#8F8D85"
         onFocus={onFocus}
         onBlur={onBlur}
         selectionColor={COLORS.accent}

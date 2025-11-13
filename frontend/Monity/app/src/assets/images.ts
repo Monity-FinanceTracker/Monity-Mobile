@@ -7,6 +7,7 @@ export const Images = {
   BANNER_MONITY: require('../../../assets/images/BANNER_MONITY.png'),
   MONITY_LOGO: require('../../../assets/images/MONITY_LOGO.png'),
   LOGO_MONITY_512: require('../../../assets/images/LOGO_MONITY_512px512px.png'),
+  GOOGLE_LOGO: require('../../../assets/images/google_logo.png'),
 } as const;
 
 // TODO: Descomentar quando for fazer build (não funciona no Expo Go)

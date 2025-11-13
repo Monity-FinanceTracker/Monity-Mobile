@@ -353,7 +353,7 @@ export default function Savings() {
               </Pressable>
               <View>
                 <Text className="text-white text-2xl font-bold">Poupança</Text>
-                <Text className="text-gray-400 text-sm">
+                <Text className="text-text-primary text-sm">
                   Gerencie suas economias
                 </Text>
               </View>
@@ -372,7 +372,7 @@ export default function Savings() {
           {/* Savings Goals List */}
           {isLoading ? (
             <View className="items-center py-8">
-              <Text className="text-gray-400">Carregando...</Text>
+              <Text className="text-text-primary">Carregando...</Text>
             </View>
           ) : savingsGoals.length === 0 ? (
             <View className="items-center py-12">
@@ -382,7 +382,7 @@ export default function Savings() {
               <Text className="text-white text-base font-semibold mb-2">
                 Nenhuma poupança ainda
               </Text>
-              <Text className="text-gray-400 text-center mb-4 text-sm">
+              <Text className="text-text-primary text-center mb-4 text-sm">
                 Comece criando sua primeira poupança!
               </Text>
               <Pressable
@@ -409,7 +409,7 @@ export default function Savings() {
                           <Text className="text-white text-lg font-semibold mb-1">
                             {goal.goal_name}
                           </Text>
-                          <Text className="text-gray-400 text-xs">
+                          <Text className="text-text-primary text-xs">
                             Meta: {formatDate(goal.target_date)}
                           </Text>
                         </View>
@@ -433,11 +433,11 @@ export default function Savings() {
                           />
                         </View>
                         <View className="flex-row justify-between mt-2">
-                          <Text className="text-gray-400 text-xs">
+                          <Text className="text-text-primary text-xs">
                             {formatCurrency(goal.current_amount)} de{" "}
                             {formatCurrency(goal.target_amount)}
                           </Text>
-                          <Text className="text-gray-400 text-xs">
+                          <Text className="text-text-primary text-xs">
                             {progress.toFixed(0)}%
                           </Text>
                         </View>
@@ -454,8 +454,8 @@ export default function Savings() {
                           }}
                           className="flex-1 bg-white/10 px-4 py-2 rounded-lg flex-row items-center justify-center gap-2"
                         >
-                          <TrendingUp size={16} color="#4ADE80" />
-                          <Text className="text-green-400 text-sm font-medium">
+                          <TrendingUp size={16} color={colors.income} />
+                          <Text style={{ color: colors.income, fontSize: 14, fontWeight: '500' }}>
                             Adicionar
                           </Text>
                         </Pressable>
@@ -476,7 +476,7 @@ export default function Savings() {
                           <Text
                             className={`text-sm font-medium ${
                               goal.current_amount === 0
-                                ? "text-gray-500"
+                                ? "text-text-primary"
                                 : "text-white"
                             }`}
                           >
@@ -529,7 +529,7 @@ export default function Savings() {
 
                 <View className="gap-4">
               <View>
-                <Text className="text-gray-400 text-sm mb-2">Nome da Poupança</Text>
+                <Text className="text-text-primary text-sm mb-2">Nome da Poupança</Text>
                 <TextInput
                   value={newGoal.goal_name}
                   onChangeText={(text) =>
@@ -542,7 +542,7 @@ export default function Savings() {
               </View>
 
               <View>
-                <Text className="text-gray-400 text-sm mb-2">Valor Alvo</Text>
+                <Text className="text-text-primary text-sm mb-2">Valor Alvo</Text>
                 <TextInput
                   value={newGoal.target_amount}
                   onChangeText={(text) =>
@@ -556,7 +556,7 @@ export default function Savings() {
               </View>
 
               <View>
-                <Text className="text-gray-400 text-sm mb-2">Data Alvo</Text>
+                <Text className="text-text-primary text-sm mb-2">Data Alvo</Text>
                 <Pressable
                   onPress={() => {
                     triggerHaptic();
@@ -677,13 +677,13 @@ export default function Savings() {
                 {showAddModal && (
                   <View className="gap-4">
                 <View>
-                  <Text className="text-gray-400 text-sm mb-2">
+                  <Text className="text-text-primary text-sm mb-2">
                     Poupança: {showAddModal.goal_name}
                   </Text>
                 </View>
 
                 <View>
-                  <Text className="text-gray-400 text-sm mb-2">Valor</Text>
+                  <Text className="text-text-primary text-sm mb-2">Valor</Text>
                   <TextInput
                     value={amount}
                     onChangeText={setAmount}
@@ -714,13 +714,13 @@ export default function Savings() {
                     <Text className="text-white font-medium">
                       Usar do saldo
                     </Text>
-                    <Text className="text-gray-400 text-xs">
+                    <Text className="text-text-primary text-xs">
                       Saldo disponível: {formatCurrency(balance?.total || 0)}
                     </Text>
                   </View>
                 </Pressable>
                 {!useBalance && (
-                  <Text className="text-gray-400 text-xs text-center">
+                  <Text className="text-text-primary text-xs text-center">
                     Se não marcar, será adicionado dinheiro novo (saldo aumenta)
                   </Text>
                 )}
@@ -785,16 +785,16 @@ export default function Savings() {
                 {showWithdrawModal && (
                   <View className="gap-4">
                 <View>
-                  <Text className="text-gray-400 text-sm mb-2">
+                  <Text className="text-text-primary text-sm mb-2">
                     Poupança: {showWithdrawModal.goal_name}
                   </Text>
-                  <Text className="text-gray-400 text-xs">
+                  <Text className="text-text-primary text-xs">
                     Disponível: {formatCurrency(showWithdrawModal.current_amount)}
                   </Text>
                 </View>
 
                 <View>
-                  <Text className="text-gray-400 text-sm mb-2">Valor</Text>
+                  <Text className="text-text-primary text-sm mb-2">Valor</Text>
                   <TextInput
                     value={amount}
                     onChangeText={setAmount}
