@@ -88,6 +88,7 @@ class RecurringTransactionController {
       recurrenceDay,
       isFavorite,
       frequency,
+      startDate,
     } = req.body;
 
     if (!description || !amount || !category || !typeId || !recurrenceDay) {
@@ -148,6 +149,18 @@ class RecurringTransactionController {
         });
       }
 
+      // Format startDate - use provided date or current date
+      let formattedStartDate: string | undefined;
+      if (startDate) {
+        if (startDate instanceof Date) {
+          formattedStartDate = startDate.toISOString().split('T')[0];
+        } else {
+          formattedStartDate = String(startDate).split('T')[0]; // Extract date part if it's a datetime string
+        }
+      } else {
+        formattedStartDate = new Date().toISOString().split('T')[0];
+      }
+
       const newRecurringTransaction = {
         userId,
         description: String(description).trim(),
@@ -158,6 +171,7 @@ class RecurringTransactionController {
         recurrenceDay: parsedRecurrenceDay,
         is_favorite: isFavorite === true,
         frequency: frequency || 'monthly',
+        startDate: formattedStartDate,
       };
 
       console.log("🔍 RecurringTransactionController.create - Prepared data:", {

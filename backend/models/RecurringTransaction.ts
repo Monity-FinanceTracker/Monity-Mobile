@@ -14,6 +14,7 @@ export default class RecurringTransaction {
     recurrenceDay: number;
     is_favorite?: boolean;
     frequency?: string;
+    startDate?: string | Date;
   }) {
     const {
       userId,
@@ -25,6 +26,7 @@ export default class RecurringTransaction {
       recurrenceDay,
       is_favorite = false,
       frequency = 'monthly',
+      startDate,
     } = recurringTransactionData;
 
     // Encrypt sensitive fields
@@ -32,6 +34,18 @@ export default class RecurringTransaction {
       description,
       category,
     });
+
+    // Format startDate - use provided date or current date
+    let formattedStartDate: string;
+    if (startDate) {
+      if (startDate instanceof Date) {
+        formattedStartDate = startDate.toISOString().split('T')[0];
+      } else {
+        formattedStartDate = String(startDate).split('T')[0]; // Extract date part if it's a datetime string
+      }
+    } else {
+      formattedStartDate = new Date().toISOString().split('T')[0];
+    }
 
     const finalInsertValue = {
       userId,
@@ -42,6 +56,7 @@ export default class RecurringTransaction {
       recurrenceDay,
       is_favorite: is_favorite === true,
       frequency: frequency || 'monthly',
+      startDate: formattedStartDate,
     };
 
     console.log("🔍 RecurringTransaction.create - Inserting:", {
