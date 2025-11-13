@@ -13,6 +13,7 @@ export default class RecurringTransaction {
     typeId: number;
     recurrenceDay: number;
     is_favorite?: boolean;
+    frequency?: string;
   }) {
     const {
       userId,
@@ -23,6 +24,7 @@ export default class RecurringTransaction {
       typeId,
       recurrenceDay,
       is_favorite = false,
+      frequency = 'monthly',
     } = recurringTransactionData;
 
     // Encrypt sensitive fields
@@ -39,6 +41,7 @@ export default class RecurringTransaction {
       typeId,
       recurrenceDay,
       is_favorite: is_favorite === true,
+      frequency: frequency || 'monthly',
     };
 
     console.log("🔍 RecurringTransaction.create - Inserting:", {
