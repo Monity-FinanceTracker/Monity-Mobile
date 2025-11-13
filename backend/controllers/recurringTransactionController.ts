@@ -87,6 +87,7 @@ class RecurringTransactionController {
       typeId,
       recurrenceDay,
       isFavorite,
+      frequency,
     } = req.body;
 
     if (!description || !amount || !category || !typeId || !recurrenceDay) {
@@ -156,6 +157,7 @@ class RecurringTransactionController {
         typeId: parsedTypeId,
         recurrenceDay: parsedRecurrenceDay,
         is_favorite: isFavorite === true,
+        frequency: frequency || 'monthly',
       };
 
       console.log("🔍 RecurringTransactionController.create - Prepared data:", {
