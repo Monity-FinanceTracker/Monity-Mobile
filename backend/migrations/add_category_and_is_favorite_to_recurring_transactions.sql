@@ -1,4 +1,4 @@
--- Add category, is_favorite, recurrenceDay, and frequency columns to recurring_transactions table if they don't exist
+-- Add category, is_favorite, recurrenceDay, frequency, and startDate columns to recurring_transactions table if they don't exist
 -- This migration adds all columns needed for recurring transactions
 
 DO $$
@@ -113,6 +113,36 @@ BEGIN
     ELSE
         RAISE NOTICE 'Column frequency already exists in recurring_transactions table';
     END IF;
+
+    -- Add startDate column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_schema = 'public'
+        AND table_name = 'recurring_transactions' 
+        AND column_name = 'startDate'
+    ) THEN
+        -- Add the startDate column as nullable first
+        ALTER TABLE recurring_transactions 
+        ADD COLUMN "startDate" DATE;
+        
+        -- Update existing records with current date as default
+        UPDATE recurring_transactions 
+        SET "startDate" = CURRENT_DATE 
+        WHERE "startDate" IS NULL;
+        
+        -- Now make it NOT NULL
+        ALTER TABLE recurring_transactions 
+        ALTER COLUMN "startDate" SET NOT NULL;
+        
+        -- Set default value for future inserts
+        ALTER TABLE recurring_transactions 
+        ALTER COLUMN "startDate" SET DEFAULT CURRENT_DATE;
+        
+        RAISE NOTICE 'Column startDate added to recurring_transactions table';
+    ELSE
+        RAISE NOTICE 'Column startDate already exists in recurring_transactions table';
+    END IF;
 END $$;
 
 -- Add comments to the columns
@@ -120,4 +150,5 @@ COMMENT ON COLUMN recurring_transactions.category IS 'Category name for the recu
 COMMENT ON COLUMN recurring_transactions.is_favorite IS 'Indicates if the recurring transaction is marked as favorite';
 COMMENT ON COLUMN recurring_transactions."recurrenceDay" IS 'Day of the month (1-31) when the recurring transaction should occur';
 COMMENT ON COLUMN recurring_transactions.frequency IS 'Frequency of the recurring transaction (e.g., monthly, weekly, daily)';
+COMMENT ON COLUMN recurring_transactions."startDate" IS 'Start date for the recurring transaction';
 
