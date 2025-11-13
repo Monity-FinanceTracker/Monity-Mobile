@@ -123,18 +123,51 @@ class RecurringTransactionController {
       // For expenses (typeId === 1), store as negative value
       // For income (typeId === 2), store as positive value
       const numericAmount = parseFloat(amount);
+      if (isNaN(numericAmount)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid amount value",
+        });
+      }
       const finalAmount = typeId === 1 ? -Math.abs(numericAmount) : Math.abs(numericAmount);
+
+      const parsedRecurrenceDay = parseInt(recurrenceDay);
+      if (isNaN(parsedRecurrenceDay)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid recurrenceDay value",
+        });
+      }
+
+      const parsedTypeId = parseInt(typeId);
+      if (isNaN(parsedTypeId) || (parsedTypeId !== 1 && parsedTypeId !== 2)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid typeId value. Must be 1 (expense) or 2 (income)",
+        });
+      }
 
       const newRecurringTransaction = {
         userId,
-        description,
+        description: String(description).trim(),
         amount: finalAmount,
-        category,
-        categoryId: finalCategoryId,
-        typeId,
-        recurrenceDay: parseInt(recurrenceDay),
+        category: String(category).trim(),
+        categoryId: finalCategoryId || null,
+        typeId: parsedTypeId,
+        recurrenceDay: parsedRecurrenceDay,
         is_favorite: isFavorite === true,
       };
+
+      console.log("🔍 RecurringTransactionController.create - Prepared data:", {
+        userId,
+        description: newRecurringTransaction.description,
+        amount: newRecurringTransaction.amount,
+        category: newRecurringTransaction.category,
+        categoryId: newRecurringTransaction.categoryId,
+        typeId: newRecurringTransaction.typeId,
+        recurrenceDay: newRecurringTransaction.recurrenceDay,
+        is_favorite: newRecurringTransaction.is_favorite,
+      });
 
       const createdRecurringTransaction = await RecurringTransaction.create(
         newRecurringTransaction
@@ -158,13 +191,15 @@ class RecurringTransactionController {
 
       res.status(201).json({ success: true, data: transactionWithType });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       logger.error("Failed to create recurring transaction", {
         userId,
-        error: error as Error["message"],
+        error: errorMessage,
+        errorDetails: error,
       });
       res.status(500).json({
         success: false,
-        error: "Failed to create recurring transaction",
+        error: errorMessage || "Failed to create recurring transaction",
       });
     }
   }

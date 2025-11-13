@@ -41,10 +41,21 @@ export default class RecurringTransaction {
       is_favorite: is_favorite === true,
     };
 
+    console.log("🔍 RecurringTransaction.create - Inserting:", {
+      userId,
+      hasDescription: !!finalInsertValue.description,
+      hasCategory: !!finalInsertValue.category,
+      amount: finalInsertValue.amount,
+      typeId: finalInsertValue.typeId,
+      recurrenceDay: finalInsertValue.recurrenceDay,
+      categoryId: finalInsertValue.categoryId,
+      is_favorite: finalInsertValue.is_favorite,
+    });
+
     const { data, error } = await supabaseAdmin
       .from(RecurringTransaction.TABLE_NAME)
       .insert([finalInsertValue])
-      .select("*, is_favorite, categoryId")
+      .select("*")
       .single();
 
     if (error) {

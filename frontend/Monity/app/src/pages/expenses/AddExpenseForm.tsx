@@ -615,7 +615,7 @@ export default function AddExpenseForm() {
               </ScrollView>
               <Text
                 style={{
-                  color: colors.textMuted,
+                  color: colors.textPrimary,
                   fontSize: 12,
                   marginTop: 8,
                 }}
