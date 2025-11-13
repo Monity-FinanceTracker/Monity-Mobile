@@ -53,8 +53,8 @@ const quickActions = [
     title: "Ajuda",
     icon: HelpCircle,
     onPress: (navigation: any) => {
-      // TODO: Navigate to Help page (to be created)
-      console.log("Navigate to Help page");
+      triggerHaptic();
+      navigation.navigate("Help" as never);
     },
   },
 ];

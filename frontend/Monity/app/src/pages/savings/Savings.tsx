@@ -347,9 +347,9 @@ export default function Savings() {
                   triggerHaptic();
                   navigation.goBack();
                 }}
-                className="w-10 h-10 bg-card-bg rounded-full items-center justify-center"
+                className="p-2"
               >
-                <ArrowLeft size={20} color="white" />
+                <ArrowLeft size={20} color={colors.textPrimary} />
               </Pressable>
               <View>
                 <Text className="text-white text-2xl font-bold">Poupança</Text>
