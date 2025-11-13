@@ -5,7 +5,6 @@ import Constants from "expo-constants";
 const API_BASE_URL =
   Constants.expoConfig?.extra?.apiUrl || "http://localhost:3000/api/v1";
 
-console.log("🌐 API_BASE_URL:", API_BASE_URL);
 const AUTH_TOKEN_KEY = "auth_token";
 
 // Types
@@ -103,7 +102,7 @@ class ApiService {
     try {
       this.token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
     } catch (error) {
-      console.error("Error loading auth token:", error);
+      // Silent fail - token will be null
     }
   }
 
@@ -144,9 +143,6 @@ class ApiService {
       try {
         data = JSON.parse(rawResponse);
       } catch (jsonError) {
-        console.error("❌ JSON Parse Error:", jsonError);
-        console.error("❌ Raw response:", rawResponse?.substring(0, 500));
-        
         // If it's a 404, it's probably an HTML page from the server
         if (response.status === 404) {
           return {
@@ -163,7 +159,6 @@ class ApiService {
       if (!response.ok) {
         // Handle unauthorized (token expired or invalid)
         if (response.status === 401) {
-          console.warn("⚠️ Unauthorized (401): Token expired or invalid. Clearing token...");
           // Clear token from memory and storage
           await this.clearToken();
           return {
@@ -178,10 +173,7 @@ class ApiService {
         // Handle rate limiting
         if (response.status === 429) {
           const retryAfter = response.headers.get('retry-after');
-          const rateLimitReset = response.headers.get('ratelimit-reset');
           const errorMsg = data.message || data.error || "Too many requests. Please try again later.";
-          console.error(`⚠️ Rate limit exceeded! status: ${response.status}`);
-          console.error("Rate limit info:", { retryAfter, rateLimitReset, message: errorMsg });
           return {
             success: false,
             data: null as T,
@@ -189,13 +181,6 @@ class ApiService {
             errorCode: "RATE_LIMIT_EXCEEDED",
             errorDetails: retryAfter ? `Please try again after ${retryAfter} seconds (${Math.ceil(parseInt(retryAfter) / 60)} minutes)` : undefined,
           };
-        }
-        
-        // Don't log errors for expected client errors (400 Bad Request - invalid credentials, etc.)
-        // Only log unexpected server errors (500+)
-        if (response.status >= 500) {
-          console.error(`❌ Server error! status: ${response.status}`);
-          console.error("❌ Response data:", JSON.stringify(data, null, 2));
         }
         
         return {
@@ -221,39 +206,12 @@ class ApiService {
         };
       }
       
-      // Handle rate limiting specifically
-      if (response.status === 429) {
-        const retryAfter = response.headers.get('retry-after');
-        const rateLimitReset = response.headers.get('ratelimit-reset');
-        const errorMsg = data.message || data.error || "Too many requests. Please try again later.";
-        console.error("⚠️ Rate limit exceeded", {
-          retryAfter,
-          rateLimitReset,
-          message: errorMsg,
-        });
-        return {
-          success: false,
-          data: null as T,
-          error: errorMsg,
-          errorCode: "RATE_LIMIT_EXCEEDED",
-          errorDetails: retryAfter ? `Please try again after ${retryAfter} seconds` : undefined,
-        };
-      }
-
-      console.log("✅ Request successful");
       return {
         success: true,
         data: data.data || data,
         message: data.message,
       };
     } catch (error) {
-      console.error("❌ API request failed:", error);
-      console.error("❌ Error details:", {
-        endpoint,
-        baseURL: this.baseURL,
-        fullURL: `${this.baseURL}${endpoint}`,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
       return {
         success: false,
         data: null as T,
@@ -317,9 +275,15 @@ class ApiService {
 
     if (response.success && response.data) {
       const token = response.data.session?.access_token;
+      // Only save token if session exists (email is confirmed)
+      // If email confirmation is required, session will be null
       if (token) {
         this.token = token;
         await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+      } else {
+        // Clear any existing token if no session (email not confirmed)
+        this.token = null;
+        await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
       }
     }
 
@@ -341,26 +305,14 @@ class ApiService {
   }
 
   async getProfile(): Promise<ApiResponse<User>> {
-    console.log("👤 ApiService.getProfile called");
-    const token = await this.getToken();
-    console.log("🔑 Current token:", token ? "Present" : "Missing");
-    
     const response = await this.request<User>("/auth/profile");
-    console.log("📡 ApiService.getProfile response:", response);
-    
     return response;
   }
 
   async updateProfile(profileData: Partial<User>): Promise<ApiResponse<User>> {
-    console.log("🔄 apiService.updateProfile called with:", profileData);
     const result = await this.request<User>("/auth/profile", {
       method: "PUT",
       body: JSON.stringify(profileData),
-    });
-    console.log("📊 apiService.updateProfile result:", {
-      success: result.success,
-      hasData: !!result.data,
-      error: result.error,
     });
     return result;
   }

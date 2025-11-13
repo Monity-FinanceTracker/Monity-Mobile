@@ -36,7 +36,7 @@ export default function Login({
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [fontLoaded, setFontLoaded] = useState(false);
-  const { login, loginWithGoogle, isLoading: authLoading } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   React.useEffect(() => {
     const loadFont = async () => {
@@ -46,21 +46,11 @@ export default function Login({
         });
         setFontLoaded(true);
       } catch (error) {
-        console.warn("Error loading Emona font:", error);
         setFontLoaded(true); // Continuar mesmo se falhar
       }
     };
     loadFont();
   }, []);
-
-  // Garantir que o loading local seja sincronizado com o loading do AuthContext
-  React.useEffect(() => {
-    if (!authLoading && loading) {
-      // Se o AuthContext terminou de carregar mas ainda estamos em loading local,
-      // pode ser que houve um erro que não foi capturado
-      // Não fazer nada aqui, o catch já deve ter tratado
-    }
-  }, [authLoading, loading]);
 
   const handleSubmit = async () => {
     if (!email) {

@@ -15,8 +15,9 @@ type AuthUser = User | null;
 type AuthContextValue = {
   user: AuthUser;
   isLoading: boolean;
+  isInitializing: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name?: string) => Promise<void>;
+  signup: (email: string, password: string, name?: string) => Promise<{ email: string }>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<User>) => Promise<void>;
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 function AuthProviderInner({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const { signInWithGoogle: socialGoogleSignIn } = useSocialAuth();
 
   useEffect(() => {
@@ -67,14 +69,13 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         await apiService.clearToken();
       } finally {
         setIsLoading(false);
+        setIsInitializing(false);
       }
     };
     bootstrap();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    setIsLoading(true);
-    
     try {
       const response = await apiService.login(email, password);
       
@@ -84,17 +85,13 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         
         if (profileResponse.success && profileResponse.data) {
           setUser(profileResponse.data);
-          setIsLoading(false);
         } else {
-          setIsLoading(false);
           throw new Error("Failed to fetch user profile: " + profileResponse.error);
         }
       } else {
-        setIsLoading(false);
         throw new Error(response.error || "Login failed");
       }
     } catch (error) {
-      setIsLoading(false);
       throw error;
     }
   }, []);
@@ -102,24 +99,16 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
   const signup = useCallback(
     async (email: string, password: string, name?: string) => {
       try {
-        setIsLoading(true);
         const response = await apiService.register(email, password, name);
         if (response.success && response.data) {
-          // After successful registration, fetch the user profile
-          const profileResponse = await apiService.getProfile();
-          if (profileResponse.success && profileResponse.data) {
-            setUser(profileResponse.data);
-          } else {
-            throw new Error("Failed to fetch user profile");
-          }
+          // Return email for confirmation page - don't try to login automatically
+          // User needs to confirm email first
+          return { email };
         } else {
           throw new Error(response.error || "Signup failed");
         }
       } catch (error) {
-        console.error("Signup error:", error);
         throw error;
-      } finally {
-        setIsLoading(false);
       }
     },
     []
@@ -127,7 +116,6 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = useCallback(async () => {
     try {
-      setIsLoading(true);
       await socialGoogleSignIn();
       // After successful sign in, refresh user profile
       const profileResponse = await apiService.getProfile();
@@ -138,8 +126,6 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   }, [socialGoogleSignIn]);
 
@@ -149,26 +135,16 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       await apiService.logout();
       setUser(null);
     } catch (error) {
-      console.error("Logout error:", error);
+      // Silent fail
     }
   }, []);
 
   const updateProfile = useCallback(async (profileData: Partial<User>) => {
-    console.log("🔐 AuthContext.updateProfile called with:", profileData);
     try {
-      console.log("📡 Calling apiService.updateProfile...");
       const response = await apiService.updateProfile(profileData);
-      console.log("📡 AuthContext received response:", {
-        success: response.success,
-        hasData: !!response.data,
-        error: response.error,
-        responseKeys: response.data ? Object.keys(response.data) : [],
-      });
       
       if (response.success && response.data) {
-        console.log("✅ Profile update successful, updating user state");
         setUser(response.data);
-        console.log("✅ User state updated");
       } else {
         // Check if it's an unauthorized error
         if (response.errorCode === "UNAUTHORIZED") {
@@ -178,15 +154,9 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
           throw new Error("Sua sessão expirou. Por favor, faça login novamente.");
         }
         const errorMsg = response.error || "Profile update failed";
-        console.error("❌ Profile update failed:", errorMsg);
         throw new Error(errorMsg);
       }
     } catch (error: any) {
-      console.error("❌ Profile update error in AuthContext:", {
-        message: error?.message,
-        error: error,
-        stack: error?.stack,
-      });
       throw error;
     }
   }, []);
@@ -202,7 +172,6 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
           throw new Error(response.error || "Password change failed");
         }
       } catch (error) {
-        console.error("Password change error:", error);
         throw error;
       }
     },
@@ -219,7 +188,6 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         throw new Error(response.error || "Account deletion failed");
       }
     } catch (error) {
-      console.error("Account deletion error:", error);
       throw error;
     }
   }, []);
@@ -235,7 +203,7 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         await apiService.clearToken();
       }
     } catch (error) {
-      console.error("Refresh user error:", error);
+      // Silent fail
     }
   }, []);
 
@@ -243,6 +211,7 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       isLoading,
+      isInitializing,
       login,
       signup,
       loginWithGoogle,
@@ -255,6 +224,7 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
     [
       user,
       isLoading,
+      isInitializing,
       login,
       signup,
       loginWithGoogle,
