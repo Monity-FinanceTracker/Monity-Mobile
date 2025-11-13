@@ -7,34 +7,36 @@ module.exports = {
     extend: {
       colors: {
         // Backgrounds
-        background: '#0A0A0A',
-        'primary-bg': '#191E29',
-        'secondary-bg': '#23263a',
-        'card-bg': '#171717',
+        background: '#262624',
+        'primary-bg': '#262624',
+        'secondary-bg': '#1F1E1D',
+        'card-bg': '#1F1E1D',
+        'input-bg': '#30302E',
 
         // Borders
         'border-default': '#262626',
+        'button-border': '#FAF9F5',
 
         // Accent
         accent: {
-          DEFAULT: '#01C38D',
-          hover: '#01A071',
-          light: 'rgba(1, 195, 141, 0.1)',
-          medium: 'rgba(1, 195, 141, 0.2)',
+          DEFAULT: '#56a69f',
+          hover: '#4a8f88',
+          light: 'rgba(86, 166, 159, 0.1)',
+          medium: 'rgba(86, 166, 159, 0.2)',
         },
 
         // Text
         text: {
-          primary: '#FFFFFF',
-          secondary: '#696E79',
-          muted: '#9CA3AF',
-          gray: '#D1D5DB',
+          primary: '#FAF9F5',
+          secondary: '#FAF9F5',
+          muted: '#30302E',
+          gray: '#FAF9F5',
         },
 
         // Status
         success: {
-          DEFAULT: '#10B981',
-          light: 'rgba(16, 185, 129, 0.2)',
+          DEFAULT: '#56a69f',
+          light: 'rgba(86, 166, 159, 0.2)',
         },
         error: {
           DEFAULT: '#EF4444',
@@ -51,12 +53,12 @@ module.exports = {
 
         // Transactions
         income: {
-          DEFAULT: '#4ADE80',
-          bg: 'rgba(34, 197, 94, 0.2)',
+          DEFAULT: '#56a69f',
+          bg: 'rgba(86, 166, 159, 0.2)',
         },
         expense: {
-          DEFAULT: '#FFFFFF',
-          bg: 'rgba(255, 255, 255, 0.1)',
+          DEFAULT: '#FAF9F5',
+          bg: 'rgba(250, 249, 245, 0.1)',
         },
         savings: {
           DEFAULT: '#60A5FA',
@@ -65,8 +67,8 @@ module.exports = {
 
         // Financial Health
         health: {
-          excellent: '#4ADE80',
-          good: '#60A5FA',
+          excellent: '#56a69f',
+          good: '#56a69f',
           fair: '#FBBF24',
           poor: '#F87171',
         },
@@ -78,6 +80,7 @@ module.exports = {
       },
       borderColor: {
         DEFAULT: '#262626',
+        'button': '#FAF9F5',
       },
     },
   },

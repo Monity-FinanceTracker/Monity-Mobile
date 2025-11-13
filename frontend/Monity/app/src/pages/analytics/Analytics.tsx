@@ -115,7 +115,65 @@ export default function Analytics() {
       ]);
 
       if (balanceRes.status === "fulfilled" && balanceRes.value.success) {
-        setBalance(balanceRes.value.data);
+        const currentBalance = balanceRes.value.data;
+        
+        // Calcular saldo do mês anterior para calcular percentual de crescimento
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        
+        // Calcular mês anterior
+        let previousMonth = currentMonth - 1;
+        let previousYear = currentYear;
+        if (previousMonth === 0) {
+          previousMonth = 12;
+          previousYear = currentYear - 1;
+        }
+        
+        // Buscar saldo do mês anterior
+        try {
+          // Calcular saldo total até o final do mês anterior
+          const lastDayOfPreviousMonth = new Date(previousYear, previousMonth, 0).getDate();
+          const endDatePreviousMonth = `${previousYear}-${String(previousMonth).padStart(2, "0")}-${String(lastDayOfPreviousMonth).padStart(2, "0")}`;
+          
+          // Buscar todas as transações até o final do mês anterior
+          const transactionsUntilPreviousMonth = await apiService.getTransactions({
+            endDate: endDatePreviousMonth,
+          });
+          
+          let previousMonthTotalBalance = 0;
+          if (transactionsUntilPreviousMonth.success && transactionsUntilPreviousMonth.data) {
+            transactionsUntilPreviousMonth.data.forEach((transaction: Transaction) => {
+              const amount = transaction.amount || 0;
+              const transactionAny = transaction as any; // Para acessar typeId se existir
+              if (transactionAny.typeId === 2 || transaction.type === "income") {
+                previousMonthTotalBalance += Math.abs(amount);
+              } else if (transactionAny.typeId === 1 || transaction.type === "expense") {
+                previousMonthTotalBalance -= Math.abs(amount);
+              }
+            });
+          }
+          
+          // Calcular percentual de crescimento
+          let changePercentage: number | undefined = undefined;
+          if (previousMonthTotalBalance !== 0) {
+            changePercentage = ((currentBalance.total - previousMonthTotalBalance) / Math.abs(previousMonthTotalBalance)) * 100;
+          } else if (currentBalance.total !== 0 && transactionsUntilPreviousMonth.success && transactionsUntilPreviousMonth.data && transactionsUntilPreviousMonth.data.length > 0) {
+            // Se o saldo anterior era 0 mas havia transações, considerar como crescimento de 100%
+            changePercentage = currentBalance.total > 0 ? 100 : -100;
+          }
+          
+          // Atualizar balance com o changePercentage calculado
+          setBalance({
+            ...currentBalance,
+            changePercentage: changePercentage !== undefined ? changePercentage : currentBalance.changePercentage,
+            change: currentBalance.total - previousMonthTotalBalance,
+          });
+        } catch (error) {
+          console.error("Error calculating change percentage:", error);
+          // Se houver erro, usar o balance sem changePercentage
+          setBalance(currentBalance);
+        }
       }
       if (transactionsRes.status === "fulfilled" && transactionsRes.value.success) {
         setTransactions(transactionsRes.value.data || []);
@@ -248,7 +306,7 @@ export default function Analytics() {
     if (data.length === 0) {
       return (
         <View className="h-[200px] items-center justify-center">
-          <Text className="text-gray-400">Sem dados disponíveis</Text>
+          <Text className="text-text-primary">Sem dados disponíveis</Text>
         </View>
       );
     }
@@ -362,7 +420,7 @@ export default function Analytics() {
     if (data.length === 0) {
       return (
         <View className="h-[200px] items-center justify-center">
-          <Text className="text-gray-400">Sem dados disponíveis</Text>
+          <Text className="text-text-primary">Sem dados disponíveis</Text>
         </View>
       );
     }
@@ -438,7 +496,7 @@ export default function Analytics() {
                   {slice.category}
                 </Text>
               </View>
-              <Text className="text-gray-400 text-sm">
+              <Text className="text-text-primary text-sm">
                 {slice.percentage.toFixed(1)}%
               </Text>
             </View>
@@ -490,7 +548,7 @@ export default function Analytics() {
     if (data.length === 0) {
       return (
         <View className="h-[200px] items-center justify-center">
-          <Text className="text-gray-400">Sem dados disponíveis</Text>
+          <Text className="text-text-primary">Sem dados disponíveis</Text>
         </View>
       );
     }
@@ -570,11 +628,11 @@ export default function Analytics() {
         <View className="flex-row items-center justify-center gap-4 mt-4">
           <View className="flex-row items-center gap-2">
             <View className="w-3 h-3 rounded" style={{ backgroundColor: "#10B981" }} />
-            <Text className="text-gray-400 text-xs">Receitas</Text>
+            <Text className="text-text-primary text-xs">Receitas</Text>
           </View>
           <View className="flex-row items-center gap-2">
             <View className="w-3 h-3 rounded" style={{ backgroundColor: "#EF4444" }} />
-            <Text className="text-gray-400 text-xs">Despesas</Text>
+            <Text className="text-text-primary text-xs">Despesas</Text>
           </View>
         </View>
       </View>
@@ -589,7 +647,7 @@ export default function Analytics() {
       >
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.accent} />
-          <Text className="text-gray-400 mt-4">Carregando analytics...</Text>
+          <Text className="text-text-primary mt-4">Carregando analytics...</Text>
         </View>
       </SafeAreaView>
     );
@@ -621,7 +679,7 @@ export default function Analytics() {
               </Pressable>
               <View>
                 <Text className="text-white text-2xl font-bold">Analytics</Text>
-                <Text className="text-gray-400 text-sm">
+                <Text className="text-text-primary text-sm">
                   Análise completa das suas finanças
                 </Text>
               </View>
@@ -633,27 +691,32 @@ export default function Analytics() {
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-2">
                 <DollarSign size={16} color={colors.accent} />
-                <Text className="text-gray-400 text-xs">Saldo Total</Text>
+                <Text className="text-text-primary text-xs">Saldo Total</Text>
               </View>
               <Text className="text-white text-2xl font-bold">
                 {formatCurrency(balance?.total)}
               </Text>
-              <View className="flex-row items-center gap-1 mt-1">
-                {balance && balance.change >= 0 ? (
-                  <TrendingUp size={12} color="#10B981" />
-                ) : (
-                  <TrendingDown size={12} color="#EF4444" />
-                )}
-                <Text
-                  className={`text-xs ${
-                    balance && balance.change >= 0
-                      ? "text-green-400"
-                      : "text-red-400"
-                  }`}
-                >
-                  {balance?.changePercentage?.toFixed(1) || 0}%
-                </Text>
-              </View>
+              {balance && balance.changePercentage !== undefined && (
+                <View className="flex-row items-center gap-1 mt-1">
+                  {(balance.changePercentage || 0) >= 0 ? (
+                    <TrendingUp size={12} color={colors.income} />
+                  ) : (
+                    <TrendingDown size={12} color={colors.error} />
+                  )}
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: (balance.changePercentage || 0) >= 0
+                        ? colors.income
+                        : colors.error,
+                    }}
+                  >
+                    {(balance.changePercentage || 0) >= 0 ? "+" : ""}
+                    {(balance.changePercentage || 0).toFixed(1)}%
+                  </Text>
+                </View>
+              )}
             </View>
           </Card>
 
@@ -665,12 +728,12 @@ export default function Analytics() {
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2 mb-2">
                     <TrendingUp size={16} color="#10B981" />
-                    <Text className="text-gray-400 text-xs">Receitas</Text>
+                    <Text className="text-text-primary text-xs">Receitas</Text>
                   </View>
                   <Text className="text-white text-xl font-bold">
                     {formatCurrency(balance?.income)}
                   </Text>
-                  <Text className="text-gray-400 text-xs mt-1">
+                  <Text className="text-text-primary text-xs mt-1">
                     {transactions.filter((t) => t.type === "income").length}{" "}
                     transações
                   </Text>
@@ -683,12 +746,12 @@ export default function Analytics() {
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2 mb-2">
                     <TrendingDown size={16} color="#EF4444" />
-                    <Text className="text-gray-400 text-xs">Despesas</Text>
+                    <Text className="text-text-primary text-xs">Despesas</Text>
                   </View>
                   <Text className="text-white text-xl font-bold">
                     {formatCurrency(balance?.expenses)}
                   </Text>
-                  <Text className="text-gray-400 text-xs mt-1">
+                  <Text className="text-text-primary text-xs mt-1">
                     {transactions.filter((t) => t.type === "expense").length}{" "}
                     transações
                   </Text>
@@ -761,7 +824,7 @@ export default function Analytics() {
                       <Text className="text-white font-medium">
                         {stat.category}
                       </Text>
-                      <Text className="text-gray-400 text-xs">
+                      <Text className="text-text-primary text-xs">
                         {stat.count} transações
                       </Text>
                     </View>
@@ -769,7 +832,7 @@ export default function Analytics() {
                       <Text className="text-white font-semibold">
                         {formatCurrency(stat.total)}
                       </Text>
-                      <Text className="text-gray-400 text-xs">
+                      <Text className="text-text-primary text-xs">
                         {stat.percentage.toFixed(1)}%
                       </Text>
                     </View>
@@ -793,7 +856,7 @@ export default function Analytics() {
                 <View className="gap-3">
                   {aiStats?.totalSuggestions && (
                     <View className="flex-row justify-between py-2">
-                      <Text className="text-gray-400">Sugestões Totais</Text>
+                      <Text className="text-text-primary">Sugestões Totais</Text>
                       <Text className="text-white font-medium">
                         {aiStats.totalSuggestions}
                       </Text>
@@ -801,7 +864,7 @@ export default function Analytics() {
                   )}
                   {aiStats?.acceptedSuggestions && (
                     <View className="flex-row justify-between py-2">
-                      <Text className="text-gray-400">Aceitas</Text>
+                      <Text className="text-text-primary">Aceitas</Text>
                       <Text className="text-green-400 font-medium">
                         {aiStats.acceptedSuggestions}
                       </Text>
@@ -809,7 +872,7 @@ export default function Analytics() {
                   )}
                   {aiStats?.accuracy && (
                     <View className="flex-row justify-between py-2">
-                      <Text className="text-gray-400">Precisão</Text>
+                      <Text className="text-text-primary">Precisão</Text>
                       <Text className="text-white font-medium">
                         {(aiStats.accuracy * 100).toFixed(1)}%
                       </Text>
@@ -835,7 +898,7 @@ export default function Analytics() {
                   {financialHealth?.metrics && (
                     <>
                       <View className="flex-row justify-between py-2">
-                        <Text className="text-gray-400">Taxa de Poupança</Text>
+                        <Text className="text-text-primary">Taxa de Poupança</Text>
                         <Text className="text-white font-medium">
                           {(() => {
                             // Use totalSavings from financialHealth first, then fallback to allocated savings
@@ -851,25 +914,25 @@ export default function Analytics() {
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2">
-                        <Text className="text-gray-400">Taxa de Despesas</Text>
+                        <Text className="text-text-primary">Taxa de Despesas</Text>
                         <Text className="text-white font-medium">
                           {financialHealth?.metrics?.expenseRatio?.toFixed(1) || "0"}%
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2">
-                        <Text className="text-gray-400">Total de Receitas</Text>
+                        <Text className="text-text-primary">Total de Receitas</Text>
                         <Text className="text-green-400 font-medium">
                           {formatCurrency(financialHealth?.metrics?.totalIncome || 0)}
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2">
-                        <Text className="text-gray-400">Total de Despesas</Text>
+                        <Text className="text-text-primary">Total de Despesas</Text>
                         <Text className="text-red-400 font-medium">
                           {formatCurrency(financialHealth?.metrics?.totalExpenses || 0)}
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2">
-                        <Text className="text-gray-400">Total de Poupança</Text>
+                        <Text className="text-text-primary">Total de Poupança</Text>
                         <Text className="text-white font-medium">
                           {(() => {
                             // Use the exact same calculation as savings rate
@@ -883,7 +946,7 @@ export default function Analytics() {
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2">
-                        <Text className="text-gray-400">Total de Transações</Text>
+                        <Text className="text-text-primary">Total de Transações</Text>
                         <Text className="text-white font-medium">
                           {financialHealth?.metrics?.transactionCount || 0}
                         </Text>
@@ -893,7 +956,7 @@ export default function Analytics() {
                   {financialHealth?.recommendations &&
                     financialHealth?.recommendations.length > 0 && (
                       <View className="mt-2">
-                        <Text className="text-gray-400 text-sm mb-2">
+                        <Text className="text-text-primary text-sm mb-2">
                           Recomendações:
                         </Text>
                         {financialHealth?.recommendations.map(
@@ -911,11 +974,11 @@ export default function Analytics() {
                                 <Text className="text-white text-xs font-semibold mb-1">
                                   {rec.title || "Recomendação"}
                                 </Text>
-                                <Text className="text-gray-300 text-xs mb-1">
+                                <Text className="text-text-primary text-xs mb-1">
                                   {rec.description || rec.actionable || ""}
                                 </Text>
                                 {rec.actionable && rec.actionable !== rec.description && (
-                                  <Text className="text-gray-400 text-xs italic">
+                                  <Text className="text-text-primary text-xs italic">
                                     {rec.actionable}
                                   </Text>
                                 )}
@@ -942,25 +1005,25 @@ export default function Analytics() {
               </View>
               <View className="gap-3">
                 <View className="flex-row justify-between py-2">
-                  <Text className="text-gray-400">Total de Transações</Text>
+                  <Text className="text-text-primary">Total de Transações</Text>
                   <Text className="text-white font-medium">
                     {transactions.length}
                   </Text>
                 </View>
                 <View className="flex-row justify-between py-2">
-                  <Text className="text-gray-400">Receitas</Text>
-                  <Text className="text-green-400 font-medium">
+                  <Text className="text-text-primary">Receitas</Text>
+                  <Text style={{ color: colors.income, fontWeight: '500' }}>
                     {transactions.filter((t) => t.type === "income").length}
                   </Text>
                 </View>
                 <View className="flex-row justify-between py-2">
-                  <Text className="text-gray-400">Despesas</Text>
+                  <Text className="text-text-primary">Despesas</Text>
                   <Text className="text-red-400 font-medium">
                     {transactions.filter((t) => t.type === "expense").length}
                   </Text>
                 </View>
                 <View className="flex-row justify-between py-2">
-                  <Text className="text-gray-400">Média por Transação</Text>
+                  <Text className="text-text-primary">Média por Transação</Text>
                   <Text className="text-white font-medium">
                     {formatCurrency(
                       transactions.length > 0
@@ -973,8 +1036,8 @@ export default function Analytics() {
                   </Text>
                 </View>
                 <View className="flex-row justify-between py-2">
-                  <Text className="text-gray-400">Maior Receita</Text>
-                  <Text className="text-green-400 font-medium">
+                  <Text className="text-text-primary">Maior Receita</Text>
+                  <Text style={{ color: colors.income, fontWeight: '500' }}>
                     {formatCurrency(
                       Math.max(
                         ...transactions
@@ -986,7 +1049,7 @@ export default function Analytics() {
                   </Text>
                 </View>
                 <View className="flex-row justify-between py-2">
-                  <Text className="text-gray-400">Maior Despesa</Text>
+                  <Text className="text-text-primary">Maior Despesa</Text>
                   <Text className="text-red-400 font-medium">
                     {formatCurrency(
                       Math.max(
@@ -1015,7 +1078,7 @@ export default function Analytics() {
                 <View className="gap-3">
                   {aiStats.totalSuggestions && (
                     <View className="flex-row justify-between py-2">
-                      <Text className="text-gray-400">Sugestões Totais</Text>
+                      <Text className="text-text-primary">Sugestões Totais</Text>
                       <Text className="text-white font-medium">
                         {aiStats.totalSuggestions}
                       </Text>
@@ -1023,7 +1086,7 @@ export default function Analytics() {
                   )}
                   {aiStats.acceptedSuggestions && (
                     <View className="flex-row justify-between py-2">
-                      <Text className="text-gray-400">Aceitas</Text>
+                      <Text className="text-text-primary">Aceitas</Text>
                       <Text className="text-green-400 font-medium">
                         {aiStats.acceptedSuggestions}
                       </Text>
@@ -1031,7 +1094,7 @@ export default function Analytics() {
                   )}
                   {aiStats.accuracy && (
                     <View className="flex-row justify-between py-2">
-                      <Text className="text-gray-400">Precisão</Text>
+                      <Text className="text-text-primary">Precisão</Text>
                       <Text className="text-white font-medium">
                         {(aiStats.accuracy * 100).toFixed(1)}%
                       </Text>
@@ -1058,14 +1121,14 @@ export default function Analytics() {
                     <Text className="text-white text-4xl font-bold mb-2">
                       {financialHealth?.score || 0}/100
                     </Text>
-                    <Text className="text-gray-400 text-sm">
+                    <Text className="text-text-primary text-sm">
                       {financialHealth?.category || "N/A"}
                     </Text>
                   </View>
                   {financialHealth?.metrics && (
                     <View className="w-full gap-2">
                       <View className="flex-row justify-between py-2 border-b border-white/10">
-                        <Text className="text-gray-400">Taxa de Poupança</Text>
+                        <Text className="text-text-primary">Taxa de Poupança</Text>
                         <Text className="text-white font-medium">
                           {(() => {
                             const totalSavings = 
@@ -1080,7 +1143,7 @@ export default function Analytics() {
                         </Text>
                       </View>
                       <View className="flex-row justify-between py-2 border-b border-white/10">
-                        <Text className="text-gray-400">Taxa de Despesas</Text>
+                        <Text className="text-text-primary">Taxa de Despesas</Text>
                         <Text className="text-white font-medium">
                           {financialHealth?.metrics?.expenseRatio?.toFixed(1) || "0"}%
                         </Text>

@@ -6,25 +6,20 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { RootStackParamList } from "../../navigation";
 import { COLORS } from "../../constants/colors";
 import { apiService, Category } from "../../services/apiService";
 import {
   TrendingUp,
   ArrowLeft,
-  Coffee,
-  Car,
-  Home,
-  ShoppingCart,
-  Gamepad2,
-  Heart,
-  GraduationCap,
-  Briefcase,
   Calendar,
   Star,
+  Repeat,
 } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
 
@@ -49,8 +44,12 @@ export default function AddIncomeForm() {
     const day = String(now.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   });
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceDay, setRecurrenceDay] = useState<number>(() => new Date().getDate());
 
   const loadCategories = async () => {
     try {
@@ -108,6 +107,9 @@ export default function AddIncomeForm() {
         // Format date to YYYY-MM-DD if needed
         const dateStr = favoriteData.date.split('T')[0];
         setDate(dateStr);
+        // Also set selectedDate for the picker
+        const [year, month, day] = dateStr.split('-').map(Number);
+        setSelectedDate(new Date(year, month - 1, day));
       }
       
       // Set isFavorite
@@ -129,36 +131,6 @@ export default function AddIncomeForm() {
       }
     }
   }, [favoriteData, categories]);
-
-  const getCategoryIcon = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      Coffee: Coffee,
-      Car: Car,
-      Home: Home,
-      ShoppingCart: ShoppingCart,
-      Gamepad2: Gamepad2,
-      Heart: Heart,
-      GraduationCap: GraduationCap,
-      Briefcase: Briefcase,
-      TrendingUp: TrendingUp,
-    };
-    return iconMap[iconName] || Coffee;
-  };
-
-  const getBackgroundColorClass = (color: string) => {
-    const colorMap: { [key: string]: string } = {
-      "bg-orange-500": "bg-orange-500/20",
-      "bg-blue-500": "bg-blue-500/20",
-      "bg-green-500": "bg-green-500/20",
-      "bg-purple-500": "bg-purple-500/20",
-      "bg-pink-500": "bg-pink-500/20",
-      "bg-red-500": "bg-red-500/20",
-      "bg-indigo-500": "bg-indigo-500/20",
-      "bg-gray-500": "bg-gray-500/20",
-      "bg-yellow-500": "bg-yellow-500/20",
-    };
-    return colorMap[color] || "bg-gray-500/20";
-  };
 
   const handleAmountChange = (value: string) => {
     // Format as Brazilian currency
@@ -195,6 +167,60 @@ export default function AddIncomeForm() {
         return;
       }
 
+      // If it's a recurring transaction, create it as recurring
+      if (isRecurring) {
+        // Validate recurrenceDay
+        if (!recurrenceDay || recurrenceDay < 1 || recurrenceDay > 31) {
+          Alert.alert("Erro", "Por favor, selecione um dia de recorrência válido (1-31)");
+          return;
+        }
+
+        const recurringTransactionData = {
+          description: name,
+          amount: numericAmount, // Will be kept as positive in backend for income
+          category: selectedCategoryData.name,
+          categoryId: selectedCategoryData.id,
+          typeId: 2, // 2 = income
+          recurrenceDay: Number(recurrenceDay), // Ensure it's a number
+          isFavorite: isFavorite === true,
+        };
+
+        console.log("Saving recurring income:", recurringTransactionData);
+
+        try {
+          const response = await apiService.createRecurringTransaction(recurringTransactionData);
+
+          if (response.success) {
+            console.log("Recurring income saved successfully:", response.data);
+            Alert.alert(
+              "Sucesso",
+              "Receita recorrente salva com sucesso!",
+              [
+                {
+                  text: "OK",
+                  onPress: () => navigation.goBack(),
+                },
+              ]
+            );
+          } else {
+            console.error("Failed to save recurring income:", {
+              error: response.error,
+              fullResponse: response,
+            });
+            const errorMessage = response.error || "Erro desconhecido ao salvar receita recorrente";
+            Alert.alert("Erro", `Falha ao salvar receita recorrente: ${errorMessage}`);
+          }
+        } catch (error: any) {
+          console.error("Exception saving recurring income:", error);
+          Alert.alert(
+            "Erro",
+            `Erro ao salvar receita recorrente: ${error?.message || "Erro desconhecido"}`
+          );
+        }
+        return;
+      }
+
+      // Regular transaction
       const transactionData = {
         description: name, // Using name as description
         amount: numericAmount, // Store income as positive values
@@ -274,7 +300,7 @@ export default function AddIncomeForm() {
               value={name}
               onChangeText={setName}
               placeholder="Ex: Salário Janeiro"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textSecondary}
               className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
               style={{ color: colors.textPrimary }}
             />
@@ -300,7 +326,7 @@ export default function AddIncomeForm() {
                 style={{
                   fontSize: 18,
                   fontWeight: "bold",
-                  color: colors.textMuted,
+                  color: colors.textPrimary,
                   marginRight: 8,
                   lineHeight: 22,
                 }}
@@ -311,7 +337,7 @@ export default function AddIncomeForm() {
                 value={amount}
                 onChangeText={handleAmountChange}
                 placeholder="0,00"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
                 className="flex-1 text-lg font-bold text-white"
                 keyboardType="numeric"
                 style={{
@@ -341,7 +367,7 @@ export default function AddIncomeForm() {
               value={description}
               onChangeText={setDescription}
               placeholder="Descrição adicional (opcional)"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textSecondary}
               className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 h-20 text-left"
               multiline
               textAlignVertical="top"
@@ -360,17 +386,61 @@ export default function AddIncomeForm() {
             >
               Data
             </Text>
-            <View className="flex-row items-center gap-2">
-              <Calendar size={20} color={colors.textMuted} />
-              <TextInput
-                value={date}
-                onChangeText={setDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
-                className="flex-1 bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
-                style={{ color: colors.textPrimary }}
-              />
-            </View>
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                setShowDatePicker(true);
+              }}
+              className="bg-card-bg border border-border-default rounded-xl px-4 py-3 flex-row items-center justify-between"
+            >
+              <View className="flex-row items-center gap-2">
+                <Calendar size={20} color={colors.textPrimary} />
+                <Text style={{ color: colors.textPrimary, fontSize: 14 }}>
+                  {selectedDate.toLocaleDateString("pt-BR")}
+                </Text>
+              </View>
+            </Pressable>
+            {showDatePicker && (
+              <>
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={(event, selectedDateValue) => {
+                    if (Platform.OS === "android") {
+                      setShowDatePicker(false);
+                      if (event.type === "set" && selectedDateValue) {
+                        setSelectedDate(selectedDateValue);
+                        const year = selectedDateValue.getFullYear();
+                        const month = String(selectedDateValue.getMonth() + 1).padStart(2, "0");
+                        const day = String(selectedDateValue.getDate()).padStart(2, "0");
+                        setDate(`${year}-${month}-${day}`);
+                      }
+                    } else {
+                      // iOS
+                      if (selectedDateValue) {
+                        setSelectedDate(selectedDateValue);
+                        const year = selectedDateValue.getFullYear();
+                        const month = String(selectedDateValue.getMonth() + 1).padStart(2, "0");
+                        const day = String(selectedDateValue.getDate()).padStart(2, "0");
+                        setDate(`${year}-${month}-${day}`);
+                      }
+                    }
+                  }}
+                  locale="pt-BR"
+                />
+                {Platform.OS === "ios" && (
+                  <Pressable
+                    onPress={() => setShowDatePicker(false)}
+                    className="bg-accent rounded-xl p-3 mt-3"
+                  >
+                    <Text style={{ color: "#191E29", fontWeight: "600", fontSize: 16, textAlign: "center" }}>
+                      Concluído
+                    </Text>
+                  </Pressable>
+                )}
+              </>
+            )}
           </View>
 
           {/* Categorias */}
@@ -387,7 +457,7 @@ export default function AddIncomeForm() {
             </Text>
             {isLoading ? (
               <View className="items-center py-8">
-                <Text style={{ color: colors.textMuted }}>
+                <Text style={{ color: colors.textPrimary }}>
                   Carregando categorias...
                 </Text>
               </View>
@@ -398,32 +468,23 @@ export default function AddIncomeForm() {
                 contentContainerStyle={{ gap: 12 }}
               >
                 {filteredCategories.map((category) => {
-                  const Icon = getCategoryIcon(category.icon);
                   const isSelected = selectedCategory === category.id;
                   return (
                     <Pressable
                       key={category.id}
                       onPress={() => setSelectedCategory(category.id)}
-                      className={`w-24 h-24 rounded-xl items-center justify-center flex-col gap-2 ${
+                      className={`px-4 py-3 rounded-xl items-center justify-center ${
                         isSelected
                           ? "bg-accent"
                           : "bg-card-bg border border-border-default"
                       }`}
                     >
-                      <View
-                        className={`w-10 h-10 rounded-lg items-center justify-center ${getBackgroundColorClass(
-                          category.color
-                        )}`}
-                      >
-                        <Icon size={20} color={colors.textPrimary} />
-                      </View>
                       <Text
                         style={{
-                          fontSize: 12,
+                          fontSize: 14,
                           textAlign: "center",
-                          paddingHorizontal: 4,
                           color: isSelected ? "#191E29" : colors.textGray,
-                          fontWeight: isSelected ? "500" : "normal",
+                          fontWeight: isSelected ? "600" : "normal",
                         }}
                         numberOfLines={2}
                       >
@@ -458,7 +519,7 @@ export default function AddIncomeForm() {
           </View>
 
           {/* Favoritar */}
-          <View className="mb-6">
+          <View className="mb-4">
             <Pressable
               onPress={() => setIsFavorite(!isFavorite)}
               className="flex-row items-center gap-3"
@@ -467,11 +528,14 @@ export default function AddIncomeForm() {
                 className={`w-6 h-6 rounded border-2 items-center justify-center ${
                   isFavorite
                     ? "bg-accent border-accent"
-                    : "border-border-default"
+                    : ""
                 }`}
+                style={{
+                  borderColor: isFavorite ? colors.accent : colors.textPrimary,
+                }}
               >
                 {isFavorite && (
-                  <Star size={14} color="#191E29" fill="#191E29" />
+                  <Star size={14} color={colors.textPrimary} fill={colors.textPrimary} />
                 )}
               </View>
               <Text style={{ color: colors.textGray }}>
@@ -479,6 +543,90 @@ export default function AddIncomeForm() {
               </Text>
             </Pressable>
           </View>
+
+          {/* Salvar como Recorrente */}
+          <View className="mb-4">
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                setIsRecurring(!isRecurring);
+              }}
+              className="flex-row items-center gap-3"
+            >
+              <View
+                className={`w-6 h-6 rounded border-2 items-center justify-center ${
+                  isRecurring
+                    ? "bg-accent border-accent"
+                    : ""
+                }`}
+                style={{
+                  borderColor: isRecurring ? colors.accent : colors.textPrimary,
+                }}
+              >
+                {isRecurring && (
+                  <Repeat size={14} color={colors.textPrimary} />
+                )}
+              </View>
+              <Text style={{ color: colors.textGray }}>
+                Salvar como recorrente
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Dia de Recorrência - Mostrar apenas se isRecurring for true */}
+          {isRecurring && (
+            <View className="mb-6">
+              <Text
+                style={{
+                  color: colors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: "600",
+                  marginBottom: 8,
+                }}
+              >
+                Dia de Recorrência *
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8, paddingRight: 8 }}
+              >
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                  <Pressable
+                    key={day}
+                    onPress={() => {
+                      triggerHaptic();
+                      setRecurrenceDay(day);
+                    }}
+                    className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
+                      recurrenceDay === day
+                        ? "bg-accent"
+                        : "bg-card-bg border border-border-default"
+                    }`}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: recurrenceDay === day ? "#191E29" : colors.textGray,
+                        fontWeight: recurrenceDay === day ? "600" : "normal",
+                      }}
+                    >
+                      {day}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  fontSize: 12,
+                  marginTop: 8,
+                }}
+              >
+                A transação será criada automaticamente todo dia {recurrenceDay} de cada mês
+              </Text>
+            </View>
+          )}
 
           {/* Submit Buttons */}
           <View className="mt-3 flex-row gap-3">
@@ -505,7 +653,7 @@ export default function AddIncomeForm() {
               <Text
                 className={`font-medium ${
                   !name || !amount || !selectedCategory
-                    ? "text-gray-500"
+                    ? "text-text-primary"
                     : "text-[#191E29]"
                 }`}
               >

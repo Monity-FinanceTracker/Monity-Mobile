@@ -108,7 +108,7 @@ export default function SubscriptionPlans() {
       >
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large"  />
-          <Text className="text-white mt-4">Carregando planos...</Text>
+          <Text style={{ color: COLORS.textPrimary, marginTop: 16 }}>Carregando planos...</Text>
         </View>
       </SafeAreaView>
     );
@@ -152,7 +152,7 @@ export default function SubscriptionPlans() {
                 </Text>
               </View>
               {user?.subscriptionTier === "premium" && user?.subscriptionExpiresAt && (
-                <Text className="text-gray-400 text-sm">
+                <Text className="text-text-primary text-sm">
                   Válido até: {new Date(user.subscriptionExpiresAt).toLocaleDateString("pt-BR")}
                 </Text>
               )}
@@ -183,7 +183,7 @@ export default function SubscriptionPlans() {
                         <Text className="text-white text-lg font-bold">
                           {plan.name}
                         </Text>
-                        <Text className="text-gray-400 text-sm">
+                        <Text className="text-text-primary text-sm">
                           {plan.id === "free" ? "Para sempre" : "Por mês"}
                         </Text>
                       </View>
@@ -209,7 +209,7 @@ export default function SubscriptionPlans() {
                       {plan.features.map((feature, index) => (
                         <View key={index} className="flex-row items-center gap-3">
                           <Check size={16} color="white" />
-                          <Text className="text-gray-300 text-sm flex-1">
+                          <Text className="text-text-primary text-sm flex-1">
                             {feature}
                           </Text>
                         </View>
@@ -220,12 +220,12 @@ export default function SubscriptionPlans() {
                   {/* Limitations (only for free plan) */}
                   {plan.limitations && plan.limitations.length > 0 && (
                     <View className="mb-6">
-                      <Text className="text-gray-400 font-semibold mb-3">Limitações:</Text>
+                      <Text className="text-text-primary font-semibold mb-3">Limitações:</Text>
                       <View className="gap-2">
                         {plan.limitations.map((limitation, index) => (
                           <View key={index} className="flex-row items-center gap-3">
                             <X size={16} color="white" />
-                            <Text className="text-gray-500 text-sm flex-1">
+                            <Text className="text-text-primary text-sm flex-1">
                               {limitation}
                             </Text>
                           </View>
@@ -285,25 +285,25 @@ export default function SubscriptionPlans() {
               <View className="gap-3">
                 <View className="flex-row items-center gap-3">
                   <Zap size={20} color="white" />
-                  <Text className="text-gray-300 flex-1">
+                  <Text className="text-text-primary flex-1">
                     IA avançada para categorização automática de transações
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-3">
                   <Zap size={20} color="white" />
-                  <Text className="text-gray-300 flex-1">
+                  <Text className="text-text-primary flex-1">
                     Projeções financeiras inteligentes para planejamento
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-3">
                   <Zap size={20} color="white" />
-                  <Text className="text-gray-300 flex-1">
+                  <Text className="text-text-primary flex-1">
                     Relatórios detalhados e análises avançadas
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-3">
                   <Zap size={20} color="white" />
-                  <Text className="text-gray-300 flex-1">
+                  <Text className="text-text-primary flex-1">
                     Backup automático na nuvem para segurança total
                   </Text>
                 </View>

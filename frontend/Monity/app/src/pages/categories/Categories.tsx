@@ -336,32 +336,38 @@ export default function Categories() {
                   {category.name}
                 </Text>
                 <View
-                  className={`px-2 py-1 rounded-md ${
-                    category.type === "income"
-                      ? "bg-green-500/20"
-                      : "bg-gray-500/20"
-                  }`}
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 6,
+                    backgroundColor: category.type === "income"
+                      ? colors.incomeBg
+                      : 'rgba(107, 114, 128, 0.2)',
+                  }}
                 >
                   <Text
-                    className={`text-xs ${
-                      category.type === "income"
-                        ? "text-green-400"
-                        : "text-gray-400"
-                    }`}
+                    style={{
+                      fontSize: 12,
+                      color: category.type === "income"
+                        ? colors.income
+                        : colors.textPrimary,
+                    }}
                   >
                     {category.type === "income" ? "Receita" : "Despesa"}
                   </Text>
                 </View>
               </View>
-              <Text className="text-xs text-gray-400 mb-2">
+              <Text className="text-xs text-text-primary mb-2">
                 {category.transactionCount || 0} transações •{" "}
                 {(category.percentage || 0).toFixed(1)}% do total
               </Text>
               <View className="flex-row items-center justify-between">
                 <Text
-                  className={`text-sm font-semibold ${
-                    category.type === "income" ? "text-green-400" : "text-white"
-                  }`}
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: category.type === "income" ? colors.income : colors.textPrimary,
+                  }}
                   numberOfLines={1}
                   adjustsFontSizeToFit
                 >
@@ -405,7 +411,7 @@ export default function Categories() {
                       <Text className="text-sm font-medium text-white">
                         {category.name}
                       </Text>
-                      <Text className="text-sm text-gray-400">
+                      <Text className="text-sm text-text-primary">
                         {(category.percentage || 0).toFixed(1)}%
                       </Text>
                     </View>
@@ -473,15 +479,15 @@ export default function Categories() {
               <Card>
                 <View className="p-4">
                   <View className="flex-row items-center gap-2">
-                    <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center flex-shrink-0">
+                    <View style={{ width: 40, height: 40, backgroundColor: colors.incomeBg, borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <TrendingUp size={20} color="white" />
                     </View>
                     <View className="flex-1 min-w-0">
-                      <Text className="text-xs text-gray-400">Receitas</Text>
-                      <Text className="text-xs font-semibold text-green-400" numberOfLines={1} adjustsFontSizeToFit>
+                      <Text className="text-xs text-text-primary">Receitas</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: colors.income }} numberOfLines={1} adjustsFontSizeToFit>
                         {formatCurrency(totalIncome)}
                       </Text>
-                      <Text className="text-xs text-gray-400">
+                      <Text className="text-xs text-text-primary">
                         {incomeCategories.length} categorias
                       </Text>
                     </View>
@@ -498,11 +504,11 @@ export default function Categories() {
                       <TrendingDown size={20} color="white" />
                     </View>
                     <View className="flex-1 min-w-0">
-                      <Text className="text-xs text-gray-400">Despesas</Text>
+                      <Text className="text-xs text-text-primary">Despesas</Text>
                       <Text className="text-xs font-semibold text-white" numberOfLines={1} adjustsFontSizeToFit>
                         {formatCurrency(totalExpenses)}
                       </Text>
-                      <Text className="text-xs text-gray-400">
+                      <Text className="text-xs text-text-primary">
                         {expenseCategories.length} categorias
                       </Text>
                     </View>
@@ -522,11 +528,11 @@ export default function Categories() {
                       <PieChart size={20} color="white" />
                     </View>
                     <View>
-                      <Text className="text-xs text-gray-400">Poupança</Text>
+                      <Text className="text-xs text-text-primary">Poupança</Text>
                       <Text className="text-sm font-semibold text-blue-400">
                         {formatCurrency(totalSavings)}
                       </Text>
-                      <Text className="text-xs text-gray-400">
+                      <Text className="text-xs text-text-primary">
                         {savingsCategories.length} categorias
                       </Text>
                     </View>
@@ -560,7 +566,7 @@ export default function Categories() {
                   className={`text-sm ${
                     filterType === "all"
                       ? "text-[#191E29] font-medium"
-                      : "text-gray-300"
+                      : "text-text-primary"
                   }`}
                 >
                   Todas
@@ -578,7 +584,7 @@ export default function Categories() {
                   className={`text-sm ${
                     filterType === "income"
                       ? "text-[#191E29] font-medium"
-                      : "text-gray-300"
+                      : "text-text-primary"
                   }`}
                 >
                   Receitas
@@ -596,7 +602,7 @@ export default function Categories() {
                   className={`text-sm ${
                     filterType === "expense"
                       ? "text-[#191E29] font-medium"
-                      : "text-gray-300"
+                      : "text-text-primary"
                   }`}
                 >
                   Despesas
@@ -614,7 +620,7 @@ export default function Categories() {
                   className={`text-sm ${
                     filterType === "savings"
                       ? "text-[#191E29] font-medium"
-                      : "text-gray-300"
+                      : "text-text-primary"
                   }`}
                 >
                   Poupança
@@ -652,7 +658,7 @@ export default function Categories() {
             <View>
               {isLoading ? (
                 <View className="items-center py-12">
-                  <Text className="text-gray-400">
+                  <Text className="text-text-primary">
                     Carregando categorias...
                   </Text>
                 </View>
@@ -666,7 +672,7 @@ export default function Categories() {
                   <Text className="text-base font-medium text-white mb-2">
                     Nenhuma categoria encontrada
                   </Text>
-                  <Text className="text-gray-400 text-center mb-4 text-sm">
+                  <Text className="text-text-primary text-center mb-4 text-sm">
                     Crie categorias para organizar suas transações
                   </Text>
                   <Pressable
@@ -726,7 +732,7 @@ export default function Categories() {
 
                 <View className="gap-4">
                   <View>
-                    <Text className="text-gray-400 text-sm mb-2">
+                    <Text className="text-text-primary text-sm mb-2">
                       Nome da Categoria
                     </Text>
                     <TextInput
@@ -735,13 +741,13 @@ export default function Categories() {
                         setNewCategory({ ...newCategory, name: text })
                       }
                       placeholder="Ex: Educação, Pets, Viagem..."
-                      placeholderTextColor="#9CA3AF"
-                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      placeholderTextColor="#8F8D85"
+                      className="bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3"
                     />
                   </View>
 
                   <View>
-                    <Text className="text-gray-400 text-sm mb-2">Tipo</Text>
+                    <Text className="text-text-primary text-sm mb-2">Tipo</Text>
                     <View className="flex-row gap-2">
                       <Pressable
                         onPress={() =>
@@ -761,7 +767,7 @@ export default function Categories() {
                           className={`font-medium ${
                             newCategory.type === "expense"
                               ? "text-[#191E29]"
-                              : "text-gray-300"
+                              : "text-text-primary"
                           }`}
                         >
                           Despesa
@@ -785,7 +791,7 @@ export default function Categories() {
                           className={`font-medium ${
                             newCategory.type === "income"
                               ? "text-[#191E29]"
-                              : "text-gray-300"
+                              : "text-text-primary"
                           }`}
                         >
                           Receita
@@ -795,7 +801,7 @@ export default function Categories() {
                   </View>
 
                   <View>
-                    <Text className="text-gray-400 text-sm mb-2">Cor</Text>
+                    <Text className="text-text-primary text-sm mb-2">Cor</Text>
                     <View className="flex-row flex-wrap gap-2">
                       {availableColors.map((color) => {
                         const isSelected = newCategory.color === color;
@@ -828,7 +834,7 @@ export default function Categories() {
                       }}
                       className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"
                     >
-                      <Text className="text-gray-300 font-medium">
+                      <Text className="text-text-primary font-medium">
                         Cancelar
                       </Text>
                     </Pressable>
@@ -845,7 +851,7 @@ export default function Categories() {
                     >
                       <Text
                         className={`font-medium ${
-                          !newCategory.name ? "text-gray-500" : "text-[#191E29]"
+                          !newCategory.name ? "text-text-primary opacity-50" : "text-[#191E29]"
                         }`}
                       >
                         {editingCategory

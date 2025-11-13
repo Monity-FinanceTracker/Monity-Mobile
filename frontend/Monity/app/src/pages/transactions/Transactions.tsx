@@ -422,7 +422,7 @@ export default function Transactions() {
 
     // Use arrows instead of category icons
     const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
-    const arrowColor = transactionType === "income" ? "#4ADE80" : "#FFFFFF"; // Green-400 for income, white for expense
+    const arrowColor = transactionType === "income" ? COLORS.accent : COLORS.textPrimary; // Green for income, white for expense
     
     return (
       <Pressable 
@@ -432,11 +432,14 @@ export default function Transactions() {
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-3 flex-1">
             <View
-              className={`w-8 h-8 rounded-lg items-center justify-center ${
-                transactionType === "income"
-                  ? "bg-green-500/10"
-                  : "bg-white/10"
-              }`}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: transactionType === "income" ? colors.incomeBg : 'rgba(255, 255, 255, 0.1)',
+              }}
             >
               <ArrowIcon
                 size={16}
@@ -450,16 +453,18 @@ export default function Transactions() {
                   <Star size={12} color={colors.accent} fill={colors.accent} />
                 )}
               </View>
-              <Text className="text-[10px] text-gray-400">
+              <Text className="text-[10px] text-text-primary">
                 {categoryName as string}
               </Text>
             </View>
           </View>
           <View className="items-end">
             <Text
-              className={`font-semibold text-xs ${
-                transactionType === "income" ? "text-green-400" : "text-white"
-              }`}
+              style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: transactionType === "income" ? colors.income : colors.textPrimary,
+              }}
             >
               {transactionType === "income" ? "+" : "-"}
               R$ {Math.abs(amount).toFixed(2)}
@@ -481,7 +486,7 @@ export default function Transactions() {
           <View className="h-px bg-border-default my-3" />
         )}
         <View className="mb-2">
-          <Text className="text-[14px] text-gray-400 mb-2">
+          <Text className="text-[14px] text-text-primary mb-2">
             {formattedDate}
           </Text>
           {transactions.map((transaction, idx) => (
@@ -513,10 +518,11 @@ export default function Transactions() {
             <View className="flex-1 relative">
               <TextInput
                 placeholder="Buscar transações..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#8F8D85"
                 value={searchTerm}
                 onChangeText={setSearchTerm}
-                className="bg-card-bg border border-border-default rounded-xl pl-4 pr-4 py-3 text-white"
+                className="bg-card-bg border border-border-default rounded-xl pl-4 pr-4 py-3 text-text-primary"
+                style={{ color: COLORS.textPrimary }}
               />
             </View>
             <Pressable 
@@ -557,7 +563,7 @@ export default function Transactions() {
           {/* Transactions List */}
           {isLoading ? (
             <View className="items-center py-12">
-              <Text style={{ color: colors.textMuted }}>Carregando transações...</Text>
+              <Text style={{ color: colors.textPrimary }}>Carregando transações...</Text>
             </View>
           ) : filteredTransactions.length > 0 ? (
             <View>
@@ -678,8 +684,8 @@ export default function Transactions() {
                       onPress={handleEditTransaction}
                       className="bg-accent rounded-xl p-4 flex-row items-center justify-center gap-3"
                     >
-                      <Edit size={20} color="#191E29" />
-                      <Text style={{ color: "#191E29", fontWeight: "600", fontSize: 16 }}>
+                      <Edit size={20} color={COLORS.textPrimary} />
+                      <Text style={{ color: COLORS.textPrimary, fontWeight: "600", fontSize: 16 }}>
                         Editar Transação
                       </Text>
                     </Pressable>

@@ -197,12 +197,12 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                         : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Enter your full name"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#8F8D85"
                     autoCapitalize="words"
                     style={{
                       paddingLeft: 15,
                       fontSize: 16,
-                      color: "#ffffff",
+                      color: "#FAF9F5",
                     }}
                   />
                   {name && name.length >= 2 && (
@@ -233,14 +233,14 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                         : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Enter your email"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#8F8D85"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
                     style={{
                       paddingLeft: 15,
                       fontSize: 16,
-                      color: "#ffffff",
+                      color: "#FAF9F5",
                       // Soft white glow effect for borders
                     }}
                   />
@@ -272,14 +272,14 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                         : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Create a password"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#8F8D85"
                     secureTextEntry={!showPassword}
                     autoComplete="new-password"
                     style={{
                       paddingLeft: 15,
                       paddingRight: 15,
                       fontSize: 16,
-                      color: "#ffffff",
+                      color: "#FAF9F5",
                     }}
                   />
                   <TouchableOpacity
@@ -333,7 +333,7 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
 
               {/* Confirm Password Input */}
               <View className="space-y-1 mt-2">
-                <Text className="text-gray-300 font-medium text-xs mb-1">
+                <Text className="text-text-primary font-medium text-xs mb-1">
                   Confirm password
                 </Text>
                 <View className="relative">
@@ -353,14 +353,14 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                           : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Confirm your password"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#8F8D85"
                     secureTextEntry={!showConfirmPassword}
                     autoComplete="new-password"
                     style={{
                       paddingLeft: 15,
                       paddingRight: 15,
                       fontSize: 16,
-                      color: "#ffffff",
+                      color: "#FAF9F5",
                     }}
                   />
                   <TouchableOpacity
@@ -436,11 +436,11 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
             {/* Login link */}
             <View className="mt-8">
               <View className="flex-row items-center justify-center">
-                <Text className="text-gray-400 text-sm">
+                <Text className="text-text-primary text-sm">
                   Already have an account?
                 </Text>
                 <TouchableOpacity onPress={onNavigateToLogin} className="ml-2">
-                  <Text className="text-[#01C38D] font-semibold text-sm">
+                  <Text className="text-accent font-semibold text-sm">
                     Sign in
                   </Text>
                 </TouchableOpacity>

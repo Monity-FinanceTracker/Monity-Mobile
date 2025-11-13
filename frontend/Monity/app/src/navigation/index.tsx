@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { Home, Receipt, MessageCircle } from "lucide-react-native";
+import { Home, Receipt, MessageCircle, ArrowLeftRight } from "lucide-react-native";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import LoginScreen from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
@@ -196,7 +196,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             });
           };
 
-          const color = isFocused ? '#01C38D' : '#9CA3AF';
+          const color = isFocused ? COLORS.accent : "#FAF9F5";
           const icon = options.tabBarIcon?.({ focused: isFocused, color, size: 24 });
 
           return (
@@ -251,8 +251,8 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: '#01C38D',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarActiveTintColor: COLORS.accent,
+        tabBarInactiveTintColor: COLORS.textMuted,
         tabBarLabelStyle: {
           display: 'none',
         },
@@ -282,7 +282,7 @@ function MainTabs() {
         options={{
           tabBarIcon: ({ focused, color }) => (
             <AnimatedTabIcon focused={focused} activeColor={focused ? COLORS.accent : color}>
-              <Receipt size={24} color={color} />
+              <ArrowLeftRight size={24} color={color} />
             </AnimatedTabIcon>
           ),
           tabBarLabel: "",

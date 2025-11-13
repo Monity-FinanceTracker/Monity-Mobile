@@ -222,7 +222,7 @@ export default function Calendar() {
             <Text className="text-white text-2xl font-bold mb-2">
               Calendário
             </Text>
-            <Text className="text-gray-400 text-sm">
+            <Text className="text-text-primary text-sm">
               Visualize suas transações por dia
             </Text>
           </View>
@@ -263,7 +263,7 @@ export default function Calendar() {
             <View className="flex-row mb-2">
               {WEEKDAYS.map((day) => (
                 <View key={day} className="flex-1 items-center py-2">
-                  <Text className="text-gray-400 text-xs font-medium">
+                  <Text className="text-text-primary text-xs font-medium">
                     {day}
                   </Text>
                 </View>
@@ -353,7 +353,7 @@ export default function Calendar() {
             </Text>
             <View className="flex-row justify-between">
               <View>
-                <Text className="text-gray-400 text-sm mb-1">Receitas</Text>
+                <Text className="text-text-primary text-sm mb-1">Receitas</Text>
                 <Text
                   style={{ color: colors.income }}
                   className="text-lg font-semibold"
@@ -366,7 +366,7 @@ export default function Calendar() {
                 </Text>
               </View>
               <View>
-                <Text className="text-gray-400 text-sm mb-1">Despesas</Text>
+                <Text className="text-text-primary text-sm mb-1">Despesas</Text>
                 <Text
                   style={{ color: colors.expense }}
                   className="text-lg font-semibold"
@@ -417,7 +417,7 @@ export default function Calendar() {
                 <Text className="text-white text-xl font-bold">
                   {selectedDate ? formatDate(selectedDate) : ""}
                 </Text>
-                <Text className="text-gray-400 text-sm mt-1">
+                <Text className="text-text-primary text-sm mt-1">
                   {selectedDateTransactions.length}{" "}
                   {selectedDateTransactions.length === 1
                     ? "transação"
@@ -436,7 +436,7 @@ export default function Calendar() {
             {/* Transactions List */}
             {selectedDateTransactions.length === 0 ? (
               <View className="px-6 py-8 items-center">
-                <Text className="text-gray-400 text-base">
+                <Text className="text-text-primary text-base">
                   Nenhuma transação neste dia
                 </Text>
               </View>
@@ -460,7 +460,7 @@ export default function Calendar() {
                           {item.title}
                         </Text>
                         {item.description && (
-                          <Text className="text-gray-400 text-sm mb-2">
+                          <Text className="text-text-primary text-sm mb-2">
                             {item.description}
                           </Text>
                         )}
@@ -475,7 +475,7 @@ export default function Calendar() {
                                 marginRight: 6,
                               }}
                             />
-                            <Text className="text-gray-400 text-sm">
+                            <Text className="text-text-primary text-sm">
                               {item.category.name}
                             </Text>
                           </View>

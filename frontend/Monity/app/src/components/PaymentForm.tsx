@@ -194,17 +194,17 @@ export default function PaymentForm({
                 <Text className="text-yellow-400 text-center mb-4 font-semibold">
                   ⚠️ Build Nativo Necessário
                 </Text>
-                <Text className="text-gray-300 text-center mb-4">
+                <Text className="text-text-primary text-center mb-4">
                   Pagamentos in-app não estão disponíveis no Expo Go.
                 </Text>
-                <Text className="text-gray-400 text-sm text-center mb-4">
+                <Text className="text-text-primary text-sm text-center mb-4">
                   Para testar pagamentos, você precisa fazer um build nativo usando EAS Build:
                 </Text>
                 <View className="bg-card-bg p-3 rounded-lg mb-4">
-                  <Text className="text-gray-300 text-xs font-mono">
+                  <Text className="text-text-primary text-xs font-mono">
                     eas build --platform android --profile preview
                   </Text>
-                  <Text className="text-gray-300 text-xs font-mono mt-2">
+                  <Text className="text-text-primary text-xs font-mono mt-2">
                     eas build --platform ios --profile preview
                   </Text>
                 </View>
@@ -282,11 +282,11 @@ export default function PaymentForm({
                   {displayPrice}
                 </Text>
               </View>
-              <Text className="text-gray-400 text-sm">
+              <Text className="text-text-primary text-sm">
                 Cobrança mensal
               </Text>
               {product?.description && (
-                <Text className="text-gray-500 text-xs mt-2">
+                <Text className="text-text-primary text-xs mt-2">
                   {product.description}
                 </Text>
               )}
@@ -305,25 +305,25 @@ export default function PaymentForm({
               <View className="gap-2">
                 <View className="flex-row items-center gap-2">
                   <Check size={16} color="#01C38D" />
-                  <Text className="text-gray-300 text-sm">
+                  <Text className="text-text-primary text-sm">
                     Pagamento processado pela {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
                   <Check size={16} color="#01C38D" />
-                  <Text className="text-gray-300 text-sm">
+                  <Text className="text-text-primary text-sm">
                     Renovação automática mensal
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
                   <Check size={16} color="#01C38D" />
-                  <Text className="text-gray-300 text-sm">
+                  <Text className="text-text-primary text-sm">
                     Cancelamento a qualquer momento
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
                   <Check size={16} color="#01C38D" />
-                  <Text className="text-gray-300 text-sm">
+                  <Text className="text-text-primary text-sm">
                     Acesso imediato após confirmação
                   </Text>
                 </View>
@@ -338,7 +338,7 @@ export default function PaymentForm({
                 <Shield size={20} color="white" />
                 <Text className="text-white font-semibold">Segurança</Text>
               </View>
-              <Text className="text-gray-300 text-sm">
+              <Text className="text-text-primary text-sm">
                 Seu pagamento é processado de forma segura pela {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}. 
                 Não armazenamos informações de pagamento.
               </Text>
@@ -368,7 +368,7 @@ export default function PaymentForm({
               <Lock size={20} color={isLoading || !product ? "#999" : "#191E29"} />
             )}
             <Text className={`font-bold text-lg ${
-              isLoading || !product ? 'text-gray-400' : 'text-[#191E29]'
+              isLoading || !product ? 'text-text-primary' : 'text-[#191E29]'
             }`}>
               {isLoading ? 'Processando...' : `Assinar por ${displayPrice}`}
             </Text>
@@ -381,7 +381,7 @@ export default function PaymentForm({
             className="w-full py-3 rounded-xl border border-border-default mt-4 flex-row items-center justify-center gap-2"
           >
             <RefreshCw size={16} color="#999" />
-            <Text className="text-gray-300 font-medium">
+            <Text className="text-text-primary font-medium">
               Restaurar Compras
             </Text>
           </Pressable>
@@ -392,13 +392,13 @@ export default function PaymentForm({
             disabled={isLoading}
             className="w-full py-3 rounded-xl border border-border-default mt-4"
           >
-            <Text className="text-gray-300 font-medium text-center">
+            <Text className="text-text-primary font-medium text-center">
               Cancelar
             </Text>
           </Pressable>
 
           {/* Info Text */}
-          <Text className="text-gray-500 text-xs text-center mt-4">
+          <Text className="text-text-primary text-xs text-center mt-4">
             Ao assinar, você concorda com os termos de serviço e política de privacidade.
             A assinatura será renovada automaticamente a menos que seja cancelada.
           </Text>

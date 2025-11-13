@@ -92,7 +92,7 @@ export default function Overview() {
             <Text className="text-white text-2xl font-bold mb-2">
               Informações
             </Text>
-            <Text className="text-gray-400 text-sm">
+            <Text className="text-text-primary text-sm">
               Gerencie suas finanças e explore funcionalidades
             </Text>
           </View>
@@ -110,10 +110,12 @@ export default function Overview() {
                 >
                   <View
                     style={{
-                      backgroundColor: '#171717',
+                      backgroundColor: colors.cardBg,
                       borderRadius: 16,
                       padding: 16,
                       height: 120,
+                      borderWidth: 1,
+                      borderColor: colors.border,
                     }}
                   >
                     <View className="flex-1 justify-between">
@@ -127,7 +129,7 @@ export default function Overview() {
                           {box.title}
                         </Text>
                         {box.comingSoon && (
-                          <Text className="text-gray-400 text-xs mt-1">
+                          <Text className="text-text-primary text-xs mt-1">
                             Em breve
                           </Text>
                         )}

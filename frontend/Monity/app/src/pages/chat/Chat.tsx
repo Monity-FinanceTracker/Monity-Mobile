@@ -42,22 +42,58 @@ const getFirstName = (fullName: string | undefined | null): string => {
   return fullName.split(" ")[0] || "Usuário";
 };
 
+// Get greeting message based on time of day
+const getGreetingMessage = (firstName: string): string => {
+  const hour = new Date().getHours();
+  const greetings = {
+    morning: [
+      `Bom dia, ${firstName}!`,
+      `Olá, ${firstName}! Bom dia!`,
+      `Bom dia! Como posso te ajudar hoje, ${firstName}?`,
+      `Bom dia, ${firstName}! Como está?`,
+    ],
+    afternoon: [
+      `Boa tarde, ${firstName}!`,
+      `Olá, ${firstName}! Como está sua tarde?`,
+      `Boa tarde! Como posso te ajudar, ${firstName}?`,
+      `Olá, ${firstName}! Tudo bem nesta tarde?`,
+    ],
+    evening: [
+      `Boa noite, ${firstName}!`,
+      `Olá, ${firstName}! Como posso te ajudar tão tarde da noite?`,
+      `Boa noite! Como está, ${firstName}?`,
+      `Olá, ${firstName}! Boa noite, como posso ajudar?`,
+    ],
+    night: [
+      `Olá, ${firstName}! Ainda acordado?`,
+      `Boa madrugada, ${firstName}!`,
+      `Olá, ${firstName}! Como posso te ajudar nesta hora?`,
+      `Boa madrugada! Tudo bem, ${firstName}?`,
+    ],
+  };
+
+  let selectedGreetings: string[];
+  if (hour >= 5 && hour < 12) {
+    selectedGreetings = greetings.morning;
+  } else if (hour >= 12 && hour < 18) {
+    selectedGreetings = greetings.afternoon;
+  } else if (hour >= 18 && hour < 24) {
+    selectedGreetings = greetings.evening;
+  } else {
+    selectedGreetings = greetings.night;
+  }
+
+  // Return a random greeting from the selected time period
+  return selectedGreetings[Math.floor(Math.random() * selectedGreetings.length)];
+};
+
 export default function Chat() {
   const colors = COLORS;
   const { user } = useAuth();
   
   const firstName = getFirstName(user?.name);
   
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content:
-        `Olá ${firstName}! Sou seu assistente financeiro IA. Como posso ajudar você hoje?`,
-      user: "ai",
-      timestamp: new Date(),
-      type: "text",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -92,21 +128,6 @@ export default function Chat() {
     }, 100);
   }, [messages]);
 
-  // Update initial message when user is loaded
-  useEffect(() => {
-    if (messages.length === 1 && messages[0].id === "1") {
-      const currentFirstName = getFirstName(user?.name);
-      setMessages([
-        {
-          id: "1",
-          content: `Olá ${currentFirstName}! Sou seu assistente financeiro IA. Como posso ajudar você hoje?`,
-          user: "ai",
-          timestamp: new Date(),
-          type: "text",
-        },
-      ]);
-    }
-  }, [user?.name]);
 
   // Load user financial context when component mounts
   useEffect(() => {
@@ -751,83 +772,160 @@ export default function Chat() {
         <View
           className={`flex-row mb-4 ${isUser ? "justify-end" : "justify-start"}`}
         >
-          <View
-            className={`max-w-[80%] rounded-2xl p-3 relative ${
-              isUser ? "bg-accent rounded-br-md" : "bg-card-bg border border-border-default rounded-bl-md"
-            }`}
-          >
-            {/* Copy button - only for AI messages */}
-            {!isUser && (
+          {isUser ? (
+            <View
+              className="max-w-[80%] rounded-2xl p-3 relative rounded-br-md"
+              style={{ backgroundColor: "#141413" }}
+            >
+              {/* Image message */}
+              {messageType === "image" && (
+                <View className="flex-row items-center mb-2">
+                  <ImageIcon 
+                    size={18} 
+                    color="#FAF9F5" 
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text
+                    style={{
+                      color: "#FAF9F5",
+                      fontSize: 18,
+                      fontWeight: '500',
+                    }}
+                  >
+                    Foto
+                  </Text>
+                </View>
+              )}
+              
+              {/* Audio message */}
+              {messageType === "audio" && (
+                <View className="flex-row items-center mb-2">
+                  <Headphones 
+                    size={18} 
+                    color="#FAF9F5" 
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text
+                    style={{
+                      color: "#FAF9F5",
+                      fontSize: 18,
+                      fontWeight: '500',
+                    }}
+                  >
+                    Áudio
+                  </Text>
+                </View>
+              )}
+              
+              {/* Message content */}
+              <Text
+                style={{
+                  color: "#FAF9F5",
+                  fontSize: 18,
+                  lineHeight: 26,
+                }}
+              >
+                {message.content}
+              </Text>
+              
+              {/* Timestamp */}
+              <Text
+                style={{
+                  color: "#FAF9F5",
+                  opacity: 0.7,
+                  fontSize: 12,
+                  marginTop: 4,
+                }}
+              >
+                {formatTime(message.timestamp)}
+              </Text>
+            </View>
+          ) : (
+            <View className="max-w-[80%] relative">
+              {/* Copy button - only for AI messages */}
               <TouchableOpacity
                 onPress={() => handleCopyMessage(message.content)}
-                className="absolute top-2 right-2 p-1"
+                className="absolute top-0 right-0 p-1"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Copy 
                   size={14} 
-                  color={COLORS.textMuted} 
+                  color="#FAF9F5" 
                 />
               </TouchableOpacity>
-            )}
 
-            {/* Image message */}
-            {messageType === "image" && (
-              <View className="flex-row items-center mb-2">
-                <ImageIcon 
-                  size={18} 
-                  color={isUser ? "#232323" : COLORS.accent} 
-                  style={{ marginRight: 8 }}
-                />
-                <Text
-                  className={`text-sm font-medium ${
-                    isUser ? "text-[#232323]" : "text-text-primary"
-                  }`}
-                >
-                  Foto
-                </Text>
-              </View>
-            )}
-            
-            {/* Audio message */}
-            {messageType === "audio" && (
-              <View className="flex-row items-center mb-2">
-                <Headphones 
-                  size={18} 
-                  color={isUser ? "#232323" : COLORS.accent} 
-                  style={{ marginRight: 8 }}
-                />
-                <Text
-                  className={`text-sm font-medium ${
-                    isUser ? "text-[#232323]" : "text-text-primary"
-                  }`}
-                >
-                  Áudio
-                </Text>
-              </View>
-            )}
-            
-            {/* Message content */}
-            <Text
-              className={`text-sm leading-5 pr-6 ${
-                isUser ? "text-[#232323]" : "text-text-primary"
-              }`}
-            >
-              {message.content}
-            </Text>
-            
-            {/* Timestamp */}
-            <Text
-              className={`text-xs mt-1 ${
-                isUser ? "text-[#232323]/70" : "text-text-muted"
-              }`}
-            >
-              {formatTime(message.timestamp)}
-            </Text>
-          </View>
+              {/* Image message */}
+              {messageType === "image" && (
+                <View className="flex-row items-center mb-2">
+                  <ImageIcon 
+                    size={18} 
+                    color={COLORS.accent} 
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text
+                    style={{
+                      fontFamily: "Stratford",
+                      color: COLORS.textPrimary,
+                      fontSize: 18,
+                      fontWeight: '500',
+                    }}
+                  >
+                    Foto
+                  </Text>
+                </View>
+              )}
+              
+              {/* Audio message */}
+              {messageType === "audio" && (
+                <View className="flex-row items-center mb-2">
+                  <Headphones 
+                    size={18} 
+                    color={COLORS.accent} 
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text
+                    style={{
+                      fontFamily: "Stratford",
+                      color: COLORS.textPrimary,
+                      fontSize: 18,
+                      fontWeight: '500',
+                    }}
+                  >
+                    Áudio
+                  </Text>
+                </View>
+              )}
+              
+              {/* Message content */}
+              <Text
+                style={{
+                  fontFamily: "Stratford",
+                  color: COLORS.textPrimary,
+                  fontSize: 18,
+                  lineHeight: 26,
+                  paddingRight: 24,
+                }}
+              >
+                {message.content}
+              </Text>
+              
+              {/* Timestamp */}
+              <Text
+                style={{
+                  fontFamily: "Stratford",
+                  color: "#FAF9F5",
+                  fontSize: 12,
+                  marginTop: 4,
+                }}
+              >
+                {formatTime(message.timestamp)}
+              </Text>
+            </View>
+          )}
         </View>
         
         {/* Logo e disclaimer abaixo da última mensagem */}
-        {isLastMessage && (
+        {isLastMessage && !isUser && (
           <View className="flex-row items-start justify-between mb-4 w-full">
             {/* TODO: Trocar para FastImage quando for fazer build (não funciona no Expo Go) */}
             <Image
@@ -851,10 +949,10 @@ export default function Chat() {
             <View className="flex-1 ml-4 mr-6">
               <Text
                 style={{
-                  color: COLORS.textMuted,
+                  color: "#FAF9F5",
                   fontSize: 10,
                   opacity: 0.7,
-                  lineHeight: 14,
+                  lineHeight: 12,
                 }}
               >
                 A IA pode cometer erros. Sempre verifique duas vezes.
@@ -882,7 +980,7 @@ export default function Chat() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 180, flexGrow: 1 }}
         >
-          {messages.length === 1 ? (
+          {messages.length === 0 ? (
             <View className="flex-1 justify-center items-center" style={{ minHeight: 400 }}>
               {/* TODO: Trocar para FastImage quando for fazer build (não funciona no Expo Go) */}
               <Image
@@ -904,12 +1002,13 @@ export default function Chat() {
               <Text
                 style={{
                   fontFamily: "Stratford",
-                  color: COLORS.textMuted,
-                  fontSize: 35,
+                  color: COLORS.textSecondary,
+                  fontSize: 30,
+                  marginTop: 10,
                   textAlign: "center",
                 }}
               >
-                Olá, {firstName}! 
+                {getGreetingMessage(firstName)}
               </Text>
             </View>
           ) : (
@@ -918,15 +1017,14 @@ export default function Chat() {
 
           {isLoading && (
             <View className="flex-row justify-start mb-4">
-              <View className="bg-card-bg rounded-2xl rounded-bl-md p-3 border border-border-default">
-                <View className="flex-row items-center">
-                  <Bot size={16} color={COLORS.accent} className="mr-2" />
-                  <Text className="text-text-primary text-xs font-medium mr-2 ml-2">
-                    IA Assistente está digitando
-                  </Text>
-                  <Loader size={14} color={COLORS.accent} className="animate-spin" />
-                </View>
-              </View>
+              <Image
+                source={Images.MONITY_LOGO}
+                style={{
+                  width: 40,
+                  height: 50
+                }}
+                resizeMode="contain"
+              />
             </View>
           )}
         </ScrollView>
@@ -936,7 +1034,7 @@ export default function Chat() {
           style={{ 
             position: 'absolute',
             bottom: isKeyboardVisible 
-              ? keyboardHeight + (Platform.OS === "android" ? 5 : 5)
+              ? keyboardHeight - (Platform.OS === "android" ? 25 : 20)
               : (Platform.OS === "android" ? 100 : 90),
             left: 0,
             right: 0,
@@ -965,7 +1063,7 @@ export default function Chat() {
               disabled={isLoading || isRecording}
               className={`mr-2 ${isLoading || isRecording ? "opacity-50" : ""}`}
             >
-              <Plus size={20} color={COLORS.accent} />
+              <Plus size={20} color="#FAF9F5" />
             </TouchableOpacity>
 
             {/* Botão Áudio */}
@@ -974,7 +1072,7 @@ export default function Chat() {
               disabled={isLoading}
               className={`mr-2 ${isLoading ? "opacity-50" : ""}`}
             >
-              <Mic size={20} color={isRecording ? COLORS.error : COLORS.accent} />
+              <Mic size={20} color={isRecording ? COLORS.error : "#FAF9F5"} />
             </TouchableOpacity>
 
             {/* Input de Texto ou Audio Waves */}
@@ -1007,7 +1105,7 @@ export default function Chat() {
                   value={inputText}
                   onChangeText={setInputText}
                   placeholder="Pergunte para Monity..."
-                  placeholderTextColor={COLORS.textMuted}
+                  placeholderTextColor="#8F8D85"
                   className="text-text-primary text-base max-h-20"
                   multiline
                   textAlignVertical="center"

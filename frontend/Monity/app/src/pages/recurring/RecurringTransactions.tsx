@@ -7,6 +7,7 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -33,6 +34,11 @@ export default function RecurringTransactions() {
     (Transaction & { recurrenceDay?: number }) | null
   >(null);
   const [showActionModal, setShowActionModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editRecurrenceDay, setEditRecurrenceDay] = useState<number>(1);
+  const [isSaving, setIsSaving] = useState(false);
 
   const loadRecurringTransactions = async () => {
     try {
@@ -75,8 +81,66 @@ export default function RecurringTransactions() {
     if (!selectedTransaction) return;
     triggerHaptic();
     setShowActionModal(false);
-    // TODO: Navigate to edit screen
-    Alert.alert("Editar", "Funcionalidade de edição será implementada em breve");
+    
+    // Populate edit fields with current transaction data
+    setEditName(selectedTransaction.description || selectedTransaction.title || "");
+    const amount = Math.abs(selectedTransaction.amount || 0);
+    setEditAmount(amount.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }));
+    setEditRecurrenceDay(selectedTransaction.recurrenceDay || new Date().getDate());
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedTransaction || !editName || !editAmount) {
+      Alert.alert("Erro", "Por favor, preencha todos os campos");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const numericAmount = Number.parseFloat(
+        editAmount.replace(/\./g, "").replace(",", ".")
+      );
+
+      const updateData = {
+        description: editName,
+        amount: selectedTransaction.type === "expense" ? -numericAmount : numericAmount,
+        recurrenceDay: editRecurrenceDay,
+      };
+
+      const response = await apiService.updateRecurringTransaction(
+        selectedTransaction.id,
+        updateData
+      );
+
+      if (response.success) {
+        Alert.alert("Sucesso", "Transação recorrente atualizada com sucesso!");
+        setShowEditModal(false);
+        loadRecurringTransactions();
+      } else {
+        Alert.alert("Erro", response.error || "Falha ao atualizar transação recorrente");
+      }
+    } catch (error) {
+      console.error("Error updating recurring transaction:", error);
+      Alert.alert("Erro", "Falha ao atualizar transação recorrente");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAmountChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    const formattedValue = (Number(numericValue) / 100).toLocaleString(
+      "pt-BR",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }
+    );
+    setEditAmount(formattedValue);
   };
 
   const handleDeleteTransaction = () => {
@@ -206,7 +270,7 @@ export default function RecurringTransactions() {
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color={colors.accent} />
             <Text
-              style={{ color: colors.textMuted, marginTop: 16, fontSize: 14 }}
+              style={{ color: colors.textPrimary, marginTop: 16, fontSize: 14 }}
             >
               Carregando transações recorrentes...
             </Text>
@@ -316,9 +380,195 @@ export default function RecurringTransactions() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        visible={showEditModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            justifyContent: "flex-end",
+          }}
+          onPress={() => setShowEditModal(false)}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            className="bg-card-bg rounded-t-3xl p-6 max-h-[90%]"
+            style={{ borderTopWidth: 1, borderTopColor: colors.border }}
+          >
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text
+                style={{
+                  color: colors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  marginBottom: 24,
+                }}
+              >
+                Editar Transação Recorrente
+              </Text>
+
+              {/* Nome */}
+              <View className="mb-4">
+                <Text
+                  style={{
+                    color: colors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: "600",
+                    marginBottom: 8,
+                  }}
+                >
+                  Nome *
+                </Text>
+                <TextInput
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="Nome da transação"
+                  placeholderTextColor={colors.textSecondary}
+                  className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                  style={{ color: colors.textPrimary }}
+                />
+              </View>
+
+              {/* Valor */}
+              <View className="mb-4">
+                <Text
+                  style={{
+                    color: colors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: "600",
+                    marginBottom: 8,
+                  }}
+                >
+                  Valor *
+                </Text>
+                <View
+                  className="flex-row bg-card-bg border border-border-default rounded-xl px-4"
+                  style={{ height: 48, alignItems: "center" }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: colors.textPrimary,
+                      marginRight: 8,
+                      lineHeight: 22,
+                    }}
+                  >
+                    R$
+                  </Text>
+                  <TextInput
+                    value={editAmount}
+                    onChangeText={handleAmountChange}
+                    placeholder="0,00"
+                    placeholderTextColor={colors.textSecondary}
+                    className="flex-1 text-lg font-bold text-white"
+                    keyboardType="numeric"
+                    style={{
+                      paddingVertical: 0,
+                      paddingTop: 0,
+                      paddingBottom: 0,
+                      marginVertical: 0,
+                      lineHeight: 22,
+                    }}
+                  />
+                </View>
+              </View>
+
+              {/* Dia de Recorrência */}
+              <View className="mb-6">
+                <Text
+                  style={{
+                    color: colors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: "600",
+                    marginBottom: 8,
+                  }}
+                >
+                  Dia de Recorrência *
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8, paddingRight: 8 }}
+                >
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                    <Pressable
+                      key={day}
+                      onPress={() => {
+                        triggerHaptic();
+                        setEditRecurrenceDay(day);
+                      }}
+                      className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
+                        editRecurrenceDay === day
+                          ? "bg-accent"
+                          : "bg-card-bg border border-border-default"
+                      }`}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: editRecurrenceDay === day ? "#191E29" : colors.textGray,
+                          fontWeight: editRecurrenceDay === day ? "600" : "normal",
+                        }}
+                      >
+                        {day}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Buttons */}
+              <View className="flex-row gap-3 mb-4">
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    setShowEditModal(false);
+                  }}
+                  className="flex-1 h-12 rounded-lg items-center justify-center bg-card-bg border border-border-default"
+                >
+                  <Text style={{ color: colors.textGray, fontWeight: "500" }}>
+                    Cancelar
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleSaveEdit}
+                  disabled={!editName || !editAmount || isSaving}
+                  className={`flex-1 h-12 rounded-lg items-center justify-center ${
+                    !editName || !editAmount || isSaving
+                      ? "bg-[#4B5563]"
+                      : "bg-accent"
+                  }`}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#191E29" />
+                  ) : (
+                    <Text
+                      className={`font-medium ${
+                        !editName || !editAmount || isSaving
+                          ? "text-text-primary"
+                          : "text-[#191E29]"
+                      }`}
+                    >
+                      Salvar
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
+
 
 
 

@@ -71,7 +71,7 @@ export default function EmailConfirmation({
               className="text-center mb-2"
               style={{
                 fontSize: 16,
-                color: COLORS.textGray,
+                color: COLORS.textPrimary,
                 lineHeight: 24,
               }}
             >
@@ -92,7 +92,7 @@ export default function EmailConfirmation({
               className="text-center"
               style={{
                 fontSize: 14,
-                color: COLORS.textMuted,
+                color: COLORS.textPrimary,
                 lineHeight: 20,
               }}
             >
@@ -123,7 +123,7 @@ export default function EmailConfirmation({
             <Text
               className="text-center text-xs"
               style={{
-                color: COLORS.textMuted,
+                color: COLORS.textPrimary,
                 lineHeight: 18,
               }}
             >

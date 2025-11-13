@@ -167,12 +167,23 @@ export default function Login({
                   {socialLoading === "google" ? (
                     <ActivityIndicator size="small" color={COLORS.textPrimary} />
                   ) : (
-                    <Text
-                      className="font-semibold text-base"
-                      style={{ color: COLORS.textPrimary }}
-                    >
-                      Continue com Google
-                    </Text>
+                    <>
+                      <Image
+                        source={Images.GOOGLE_LOGO}
+                        style={{
+                          width: 20,
+                          height: 20,
+                          marginRight: 12,
+                        }}
+                        resizeMode="contain"
+                      />
+                      <Text
+                        className="font-semibold text-base"
+                        style={{ color: COLORS.textPrimary }}
+                      >
+                        Continue com Google
+                      </Text>
+                    </>
                   )}
                 </TouchableOpacity>
 
@@ -182,17 +193,25 @@ export default function Login({
               <View className="flex-row items-center mb-6">
                 <View
                   className="flex-1"
-                  style={{ height: 1, backgroundColor: COLORS.border }}
+                  style={{ 
+                    height: 1, 
+                    backgroundColor: COLORS.textPrimary,
+                    opacity: 0.5,
+                  }}
                 />
                 <Text
                   className="px-4"
-                  style={{ color: COLORS.textMuted, fontSize: 14 }}
+                  style={{ color: COLORS.textPrimary, fontSize: 14 }}
                 >
                   OR
                 </Text>
                 <View
                   className="flex-1"
-                  style={{ height: 1, backgroundColor: COLORS.border }}
+                  style={{ 
+                    height: 1, 
+                    backgroundColor: COLORS.textPrimary,
+                    opacity: 0.5,
+                  }}
                 />
               </View>
 
@@ -221,7 +240,7 @@ export default function Login({
                         : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Email pessoal"
-                    placeholderTextColor={COLORS.textMuted}
+                    placeholderTextColor="#8F8D85"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
@@ -260,7 +279,7 @@ export default function Login({
                         : "border-border-default"
                     } rounded-xl px-4 py-3`}
                     placeholder="Senha"
-                    placeholderTextColor={COLORS.textMuted}
+                    placeholderTextColor="#8F8D85"
                     secureTextEntry={!showPassword}
                     autoComplete="password"
                     selectionColor={COLORS.accent}
@@ -321,7 +340,7 @@ export default function Login({
                 ) : (
                   <Text
                     className="font-semibold text-base text-center"
-                    style={{ color: "#232323" }}
+                    style={{ color: COLORS.textPrimary }}
                   >
                     Entrar
                   </Text>
@@ -331,7 +350,7 @@ export default function Login({
               {/* Terms and Privacy Text */}
               <Text
                 className="text-center text-xs px-4"
-                style={{ color: COLORS.textMuted, lineHeight: 18 }}
+                style={{ color: COLORS.textPrimary, lineHeight: 18 }}
               >
                 Ao continuar, você concorda com os{" "}
                 <Text style={{ textDecorationLine: "underline" }}>
@@ -342,7 +361,7 @@ export default function Login({
               {/* Sign up link */}
               <View className="mt-8">
                 <View className="flex-row items-center justify-center">
-                  <Text className="text-text-muted text-sm">
+                  <Text className="text-text-primary text-sm">
                     Não tem uma conta?
                   </Text>
                   <TouchableOpacity onPress={onNavigateToSignup} className="ml-2">

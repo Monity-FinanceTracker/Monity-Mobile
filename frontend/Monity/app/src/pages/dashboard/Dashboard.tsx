@@ -98,7 +98,71 @@ export default function Dashboard() {
       // Load total balance (sem filtro de mês)
       const balanceResponse = await apiService.getBalance();
       if (balanceResponse.success && balanceResponse.data) {
-        setBalance(balanceResponse.data);
+        const currentBalance = balanceResponse.data;
+        
+        // Calcular saldo do mês anterior para calcular percentual de crescimento
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        
+        // Calcular mês anterior
+        let previousMonth = currentMonth - 1;
+        let previousYear = currentYear;
+        if (previousMonth === 0) {
+          previousMonth = 12;
+          previousYear = currentYear - 1;
+        }
+        
+        // Buscar saldo do mês anterior
+        try {
+          const previousMonthBalanceResponse = await apiService.getMonthlyBalance(
+            previousMonth,
+            previousYear
+          );
+          
+          // Calcular saldo total até o final do mês anterior
+          // Para isso, precisamos buscar todas as transações até o final do mês anterior
+          const lastDayOfPreviousMonth = new Date(previousYear, previousMonth, 0).getDate();
+          const endDatePreviousMonth = `${previousYear}-${String(previousMonth).padStart(2, "0")}-${String(lastDayOfPreviousMonth).padStart(2, "0")}`;
+          
+          // Buscar todas as transações até o final do mês anterior
+          const transactionsUntilPreviousMonth = await apiService.getTransactions({
+            endDate: endDatePreviousMonth,
+          });
+          
+          let previousMonthTotalBalance = 0;
+          if (transactionsUntilPreviousMonth.success && transactionsUntilPreviousMonth.data) {
+            transactionsUntilPreviousMonth.data.forEach((transaction: Transaction) => {
+              const amount = transaction.amount || 0;
+              const transactionAny = transaction as any; // Para acessar typeId se existir
+              if (transactionAny.typeId === 2 || transaction.type === "income") {
+                previousMonthTotalBalance += Math.abs(amount);
+              } else if (transactionAny.typeId === 1 || transaction.type === "expense") {
+                previousMonthTotalBalance -= Math.abs(amount);
+              }
+            });
+          }
+          
+          // Calcular percentual de crescimento
+          let changePercentage: number | undefined = undefined;
+          if (previousMonthTotalBalance !== 0) {
+            changePercentage = ((currentBalance.total - previousMonthTotalBalance) / Math.abs(previousMonthTotalBalance)) * 100;
+          } else if (currentBalance.total !== 0 && transactionsUntilPreviousMonth.success && transactionsUntilPreviousMonth.data && transactionsUntilPreviousMonth.data.length > 0) {
+            // Se o saldo anterior era 0 mas havia transações, considerar como crescimento de 100%
+            changePercentage = currentBalance.total > 0 ? 100 : -100;
+          }
+          
+          // Atualizar balance com o changePercentage calculado
+          setBalance({
+            ...currentBalance,
+            changePercentage: changePercentage !== undefined ? changePercentage : currentBalance.changePercentage,
+            change: currentBalance.total - previousMonthTotalBalance,
+          });
+        } catch (error) {
+          console.error("Error calculating change percentage:", error);
+          // Se houver erro, usar o balance sem changePercentage
+          setBalance(currentBalance);
+        }
       }
 
       // Load recent transactions (last 5)
@@ -141,9 +205,10 @@ export default function Dashboard() {
           if (transactionsResponse.success && transactionsResponse.data) {
             transactionsResponse.data.forEach((transaction: Transaction) => {
               const amount = Math.abs(transaction.amount || 0);
-              if (transaction.typeId === 2 || transaction.type === "income") {
+              const transactionAny = transaction as any; // Para acessar typeId se existir
+              if (transactionAny.typeId === 2 || transaction.type === "income") {
                 income += amount;
-              } else if (transaction.typeId === 1 || transaction.type === "expense") {
+              } else if (transactionAny.typeId === 1 || transaction.type === "expense") {
                 expenses += amount;
               }
             });
@@ -157,9 +222,10 @@ export default function Dashboard() {
         // Fallback: calcular das transações se não houver resposta do balance
         transactionsResponse.data.forEach((transaction: Transaction) => {
           const amount = Math.abs(transaction.amount || 0);
-          if (transaction.typeId === 2 || transaction.type === "income") {
+          const transactionAny = transaction as any; // Para acessar typeId se existir
+          if (transactionAny.typeId === 2 || transaction.type === "income") {
             income += amount;
-          } else if (transaction.typeId === 1 || transaction.type === "expense") {
+          } else if (transactionAny.typeId === 1 || transaction.type === "expense") {
             expenses += amount;
           }
         });
@@ -248,7 +314,7 @@ export default function Dashboard() {
 
     // Use arrows instead of category icons
     const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
-    const arrowColor = transactionType === "income" ? "#4ADE80" : "#FFFFFF"; // Green-400 for income, white for expense
+    const arrowColor = transactionType === "income" ? colors.income : colors.textPrimary; // Teal for income, white for expense
     
     return (
       <View key={transaction.id} style={{ marginBottom: 12 }}>
@@ -256,11 +322,14 @@ export default function Dashboard() {
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-2">
               <View
-                className={`w-8 h-8 rounded-lg items-center justify-center ${
-                  transactionType === "income"
-                    ? "bg-green-500/10"
-                    : "bg-white/10"
-                }`}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: transactionType === "income" ? colors.incomeBg : 'rgba(255, 255, 255, 0.1)',
+                }}
               >
                 <ArrowIcon
                   size={16}
@@ -269,21 +338,23 @@ export default function Dashboard() {
               </View>
               <View>
                 <Text className="font-medium text-white text-xs">{title}</Text>
-                <Text className="text-[10px] text-gray-400">
+                <Text className="text-[10px] text-text-primary">
                   {categoryName as string}
                 </Text>
               </View>
             </View>
             <View className="items-end">
               <Text
-                className={`font-semibold text-xs ${
-                  transactionType === "income" ? "text-green-400" : "text-white"
-                }`}
+                style={{
+                  fontSize: 12,
+                  fontWeight: '600',
+                  color: transactionType === "income" ? colors.income : colors.textPrimary,
+                }}
               >
                 {transactionType === "income" ? "+" : "-"}
                 {formatCurrency(Math.abs(amount))}
               </Text>
-              <Text className="text-[10px] text-gray-400">
+              <Text className="text-[10px] text-text-primary">
                 {formatTransactionDate(transaction.date)}
               </Text>
             </View>
@@ -314,7 +385,7 @@ export default function Dashboard() {
                 Olá, {user?.name || "Usuário"}!
               </Text>
               <Text 
-                className="text-gray-400 text-lg"
+                className="text-text-primary text-lg"
               >
                 Bem-vindo de volta a Monity
               </Text>
@@ -323,14 +394,14 @@ export default function Dashboard() {
               onPress={() => navigation.navigate("Profile" as never)}
               className="w-10 h-10 bg-accent rounded-full items-center justify-center"
             >
-              <Text className="text-[#191E29] font-semibold text-lg">
+              <Text className="text-text-primary font-semibold text-lg">
                 {getInitials(user?.name || "")}
               </Text>
             </Pressable>
           </View>
 
           {/* Balance Card */}
-          <Card className="bg-gradient-to-r from-[#01C38D] to-[#01C38D]/80 border-0 mb-3">
+          <Card className="bg-gradient-to-r from-accent to-accent/80 border-0 mb-3">
             <View className="p-6">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-white text-lg">Saldo Total</Text>
@@ -350,20 +421,22 @@ export default function Dashboard() {
                       : "R$ 0,00"
                     : "••••••"}
                 </Text>
-                {balance && (
+                {balance && balance.changePercentage !== undefined && (
                   <View className="flex-row items-center gap-1">
                     {(balance.changePercentage || 0) >= 0 ? (
-                      <TrendingUp size={16} color="white" />
+                      <TrendingUp size={16} color={colors.income} />
                     ) : (
-                      <TrendingDown size={16} color="white" />
+                      <TrendingDown size={16} color={colors.error} />
                     )}
-                      <Text
-                        className={`text-3xs ${
-                          (balance.changePercentage || 0) >= 0
-                            ? "text-green-400"
-                            : "text-white"
-                        }`}
-                      >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: (balance.changePercentage || 0) >= 0
+                          ? colors.income
+                          : colors.error,
+                      }}
+                    >
                       {(balance.changePercentage || 0) >= 0 ? "+" : ""}
                       {(balance.changePercentage || 0).toFixed(1)}%
                     </Text>
@@ -384,7 +457,7 @@ export default function Dashboard() {
                   onPress={() => handleMonthChange(option.month, option.year)}
                   className="flex-1 px-3 py-3"
                   style={{
-                    backgroundColor: isSelected ? '#171717' : colors.background,
+                    backgroundColor: isSelected ? COLORS.cardBg : colors.background,
                     borderRadius: isSelected ? 12 : 0,
                     borderTopLeftRadius: isSelected ? 12 : 0,
                     borderTopRightRadius: isSelected ? 12 : 0,
@@ -400,7 +473,7 @@ export default function Dashboard() {
                   <View className="items-center justify-center">
                     <Text
                       className={`text-xs font-medium ${
-                        isSelected ? 'text-white' : 'text-gray-400'
+                        isSelected ? 'text-white' : 'text-text-primary'
                       }`}
                       numberOfLines={1}
                     >
@@ -413,31 +486,31 @@ export default function Dashboard() {
           </View>
 
           {/* Income & Expenses Card */}
-          <View 
-            style={{
-              backgroundColor: '#171717',
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: '#262626',
-              padding: 16,
-            }}
-          >
+          <Card className="bg-gradient-to-r from-accent to-accent/80 border-0">
+            <View className="p-2">
             <View className="flex-row gap-4">
               {/* Receitas */}
               <View className="flex-1">
                 <View className="flex-row items-center gap-3">
-                  <View className="w-10 h-10 bg-green-500/10 rounded-lg items-center justify-center">
-                    <TrendingUp size={20} color="#4ADE80" />
+                  <View style={{ width: 40, height: 40, backgroundColor: colors.incomeBg, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}>
+                    <TrendingUp size={20} color={colors.income} />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-xs text-gray-400">Receitas</Text>
-                    <Text className="text-sm font-semibold text-green-400">
+                    <Text className="text-xs text-text-primary mb-1">Receitas</Text>
+                    <Text 
+                      style={{ 
+                        fontSize: 16, 
+                        fontWeight: '700', 
+                        color: colors.income,
+                        marginBottom: 2,
+                      }}
+                    >
                       {showBalance
                         ? formatCurrency(monthlyIncomeExpenses.income)
                         : "••••••"}
                     </Text>
                     {showBalance && monthlyIncomeExpenses.income === 0 && (
-                      <Text className="text-xs text-gray-500 mt-1">
+                      <Text className="text-xs text-text-primary mt-1">
                         Nenhuma receita
                       </Text>
                     )}
@@ -452,14 +525,19 @@ export default function Dashboard() {
                     <TrendingDown size={20} color="white" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-xs text-gray-400">Despesas</Text>
-                    <Text className="text-sm font-semibold text-white">
+                    <Text className="text-xs text-text-primary">Despesas</Text>
+                    <Text    style={{ 
+                        fontSize: 16, 
+                        fontWeight: '700', 
+                        color: colors.textPrimary,
+                        marginBottom: 2,
+                      }}>
                       {showBalance
                         ? formatCurrency(monthlyIncomeExpenses.expenses)
                         : "••••••"}
                     </Text>
                     {showBalance && monthlyIncomeExpenses.expenses === 0 && (
-                      <Text className="text-xs text-gray-500 mt-1">
+                      <Text className="text-xs text-text-primary mt-1">
                         Nenhuma despesa
                       </Text>
                     )}
@@ -468,6 +546,7 @@ export default function Dashboard() {
               </View>
             </View>
           </View>
+          </Card>
 
           {/* Recent Transactions */}
           <View className="mt-3">
@@ -479,14 +558,14 @@ export default function Dashboard() {
                 onPress={() => navigation.navigate("Transactions" as never)}
                 className="flex-row items-center gap-1"
               >
-                <Text className="text-gray-400 text-xs">Ver todas</Text>
+                <Text className="text-text-primary text-xs">Ver todas</Text>
               </Pressable>
             </View>
 
             <View>
               {isLoading ? (
                 <View className="items-center py-8">
-                  <Text className="text-gray-400">
+                  <Text className="text-text-primary">
                     Carregando transações...
                   </Text>
                 </View>
@@ -500,7 +579,7 @@ export default function Dashboard() {
                   <Text className="text-white text-base font-semibold mb-2">
                     Nenhuma transação ainda
                   </Text>
-                  <Text className="text-gray-400 text-center mb-4 text-sm">
+                  <Text className="text-text-primary text-center mb-4 text-sm">
                     Você ainda não tem transações registradas.{"\n"}
                     Comece adicionando sua primeira receita ou despesa!
                   </Text>
