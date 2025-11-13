@@ -22,6 +22,7 @@ const SENSITIVE_FIELDS: Record<string, string[]> = {
   categories: ["name"],
   savings_goals: ["goal_name"],
   groups: ["name"],
+  recurring_transactions: ["description", "category"],
 };
 
 function encrypt(text: string): string {
