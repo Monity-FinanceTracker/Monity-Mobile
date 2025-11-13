@@ -56,6 +56,7 @@ export interface Transaction {
   isRecurring?: boolean;
   isFavorite?: boolean;
   recurrenceDay?: number;
+  startDate?: string;
 }
 
 export interface Category {

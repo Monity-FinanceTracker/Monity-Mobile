@@ -210,7 +210,7 @@ export default function RecurringTransactions() {
             <View className="flex-row items-center gap-2 mb-2">
               <Icon
                 size={20}
-                color={isExpense ? colors.error : colors.success}
+                color={isExpense ? colors.textPrimary : colors.success}
               />
               <Text
                 style={{
@@ -233,7 +233,7 @@ export default function RecurringTransactions() {
             <View className="flex-row items-center gap-4 mt-2">
               <Text
                 style={{
-                  color: isExpense ? colors.error : colors.success,
+                  color: isExpense ? colors.textPrimary : colors.success,
                   fontSize: 18,
                   fontWeight: "bold",
                 }}
@@ -242,8 +242,8 @@ export default function RecurringTransactions() {
                 {formatCurrency(transaction.amount || 0)}
               </Text>
               <View className="flex-row items-center gap-1">
-                <Repeat size={14} color={colors.textMuted} />
-                <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                <Repeat size={14} color={colors.textSecondary} />
+                <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
                   Dia {transaction.recurrenceDay || "N/A"}
                 </Text>
               </View>

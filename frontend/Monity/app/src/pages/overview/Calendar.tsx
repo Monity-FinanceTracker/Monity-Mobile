@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../constants/colors";
 import { apiService, Transaction } from "../../services/apiService";
-import { ChevronLeft, ChevronRight, X, ArrowLeft } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, X, ArrowLeft, Repeat } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 
@@ -37,6 +37,9 @@ export default function Calendar() {
   const navigation = useNavigation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [recurringTransactions, setRecurringTransactions] = useState<
+    (Transaction & { recurrenceDay?: number; startDate?: string })[]
+  >([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDateTransactions, setSelectedDateTransactions] = useState<
     Transaction[]
@@ -75,13 +78,20 @@ export default function Calendar() {
         .toISOString()
         .split("T")[0];
 
-      const response = await apiService.getTransactions({
-        startDate,
-        endDate,
-      });
+      const [transactionsResponse, recurringResponse] = await Promise.all([
+        apiService.getTransactions({
+          startDate,
+          endDate,
+        }),
+        apiService.getRecurringTransactions(),
+      ]);
 
-      if (response.success && response.data) {
-        setTransactions(response.data);
+      if (transactionsResponse.success && transactionsResponse.data) {
+        setTransactions(transactionsResponse.data);
+      }
+
+      if (recurringResponse.success && recurringResponse.data) {
+        setRecurringTransactions(recurringResponse.data);
       }
     } catch (error) {
       console.error("Error loading transactions:", error);
@@ -101,9 +111,55 @@ export default function Calendar() {
     loadTransactions();
   }, [currentDate, loadTransactions]);
 
-  // Group transactions by date
+  // Generate virtual transactions from recurring transactions for the current month
+  const generateRecurringTransactionsForMonth = useMemo(() => {
+    const virtualTransactions: Transaction[] = [];
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    recurringTransactions.forEach((recurring) => {
+      if (!recurring.recurrenceDay) return;
+
+      const day = recurring.recurrenceDay;
+      const recurringStartDate = recurring.startDate 
+        ? new Date(recurring.startDate + "T00:00:00")
+        : null;
+
+      // Check if the day exists in this month (e.g., Feb 30 doesn't exist)
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      if (day > daysInMonth) return;
+
+      // Create date for this month (normalize to start of day)
+      const transactionDate = new Date(year, month, day);
+      transactionDate.setHours(0, 0, 0, 0);
+      
+      // Check if transaction should be shown (after startDate if it exists)
+      if (recurringStartDate) {
+        recurringStartDate.setHours(0, 0, 0, 0);
+        if (transactionDate < recurringStartDate) {
+          return;
+        }
+      }
+
+      // Create virtual transaction
+      const virtualTransaction: Transaction = {
+        ...recurring,
+        id: `${recurring.id}-${year}-${month}-${day}`, // Unique ID for virtual transaction
+        date: transactionDate.toISOString().split("T")[0],
+        isRecurring: true,
+      };
+
+      virtualTransactions.push(virtualTransaction);
+    });
+
+    return virtualTransactions;
+  }, [recurringTransactions, currentDate]);
+
+  // Group transactions by date (including virtual recurring transactions)
   const transactionsByDate = useMemo(() => {
     const grouped: { [key: string]: Transaction[] } = {};
+    
+    // Add regular transactions
     transactions.forEach((transaction) => {
       const date = transaction.date.split("T")[0]; // Get YYYY-MM-DD
       if (!grouped[date]) {
@@ -111,8 +167,18 @@ export default function Calendar() {
       }
       grouped[date].push(transaction);
     });
+
+    // Add virtual recurring transactions
+    generateRecurringTransactionsForMonth.forEach((transaction) => {
+      const date = transaction.date.split("T")[0];
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(transaction);
+    });
+
     return grouped;
-  }, [transactions]);
+  }, [transactions, generateRecurringTransactionsForMonth]);
 
   // Get calendar days
   const calendarDays = useMemo(() => {
@@ -156,8 +222,14 @@ export default function Calendar() {
     triggerHaptic();
     const dateStr = date.toISOString().split("T")[0];
     const dayTransactions = transactionsByDate[dateStr] || [];
+    // Sort transactions: recurring first, then by amount
+    const sortedTransactions = [...dayTransactions].sort((a, b) => {
+      if (a.isRecurring && !b.isRecurring) return -1;
+      if (!a.isRecurring && b.isRecurring) return 1;
+      return Math.abs(b.amount) - Math.abs(a.amount);
+    });
     setSelectedDate(date);
-    setSelectedDateTransactions(dayTransactions);
+    setSelectedDateTransactions(sortedTransactions);
   };
 
   const closeModal = () => {
@@ -328,17 +400,24 @@ export default function Calendar() {
                         {date.getDate()}
                       </Text>
                       {hasTransactions && (
-                        <View
-                          style={{
-                            width: 4,
-                            height: 4,
-                            borderRadius: 2,
-                            backgroundColor: isSelectedDay
-                              ? colors.background
-                              : colors.accent,
-                            marginTop: 2,
-                          }}
-                        />
+                        <View className="flex-row items-center gap-1 mt-1">
+                          {dayTransactions.some((t) => t.isRecurring) && (
+                            <Repeat 
+                              size={8} 
+                              color={isSelectedDay ? colors.background : colors.accent}
+                            />
+                          )}
+                          <View
+                            style={{
+                              width: 4,
+                              height: 4,
+                              borderRadius: 2,
+                              backgroundColor: isSelectedDay
+                                ? colors.background
+                                : colors.accent,
+                            }}
+                          />
+                        </View>
                       )}
                     </View>
                   </Pressable>
@@ -366,7 +445,7 @@ export default function Calendar() {
                   className="text-lg font-semibold"
                 >
                   {formatCurrency(
-                    transactions
+                    [...transactions, ...generateRecurringTransactionsForMonth]
                       .filter((t) => t.type === "income")
                       .reduce((sum, t) => sum + t.amount, 0)
                   )}
@@ -379,9 +458,9 @@ export default function Calendar() {
                   className="text-lg font-semibold"
                 >
                   {formatCurrency(
-                    transactions
+                    [...transactions, ...generateRecurringTransactionsForMonth]
                       .filter((t) => t.type === "expense")
-                      .reduce((sum, t) => sum + t.amount, 0)
+                      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
                   )}
                 </Text>
               </View>
@@ -429,6 +508,9 @@ export default function Calendar() {
                   {selectedDateTransactions.length === 1
                     ? "transação"
                     : "transações"}
+                  {selectedDateTransactions.some((t) => t.isRecurring) && (
+                    <Text className="text-text-secondary"> • Recorrentes</Text>
+                  )}
                 </Text>
               </View>
               <Pressable
@@ -463,10 +545,15 @@ export default function Calendar() {
                   >
                     <View className="flex-row items-center justify-between">
                       <View className="flex-1">
-                        <Text className="text-white text-base font-semibold mb-1">
-                          {item.title}
-                        </Text>
-                        {item.description && (
+                        <View className="flex-row items-center gap-2 mb-1">
+                          <Text className="text-white text-base font-semibold">
+                            {item.title || item.description}
+                          </Text>
+                          {item.isRecurring && (
+                            <Repeat size={14} color={colors.accent} />
+                          )}
+                        </View>
+                        {item.description && item.title && (
                           <Text className="text-text-primary text-sm mb-2">
                             {item.description}
                           </Text>
