@@ -22,6 +22,7 @@ import {
   Mail,
   ArrowDown,
   ArrowUp,
+  Wallet,
 } from "lucide-react-native";
 
 interface MonthOption {
@@ -417,7 +418,7 @@ export default function Dashboard() {
                 <Text className="text-3xl font-bold text-white">
                   {showBalance
                     ? balance
-                      ? formatCurrency(balance?.total)
+                      ? formatCurrency(balance?.availableBalance || balance?.total)
                       : "R$ 0,00"
                     : "••••••"}
                 </Text>
@@ -443,6 +444,39 @@ export default function Dashboard() {
                   </View>
                 )}
               </View>
+            </View>
+          </Card>
+
+          {/* Savings Amount Card */}
+          <Card className="bg-gradient-to-r from-accent to-accent/80 border-0 mb-3">
+            <View className="p-4">
+              <View className="flex-row items-center justify-between mb-2">
+                <Text className="text-white text-base font-medium">
+                  Total em Economias
+                </Text>
+                <Pressable onPress={() => navigation.navigate("Savings" as never)}>
+                  <Wallet size={20} color="white" />
+                </Pressable>
+              </View>
+              <Text className="text-2xl font-bold text-white">
+                {showBalance
+                  ? formatCurrency(balance?.allocatedSavings || 0)
+                  : "••••••"}
+              </Text>
+              {balance && balance.allocatedSavings > 0 ? (
+                <Text className="text-xs text-white/80 mt-1">
+                  Guardado em suas metas de poupança
+                </Text>
+              ) : (
+                <Pressable
+                  onPress={() => navigation.navigate("Savings" as never)}
+                  className="mt-2"
+                >
+                  <Text className="text-xs text-white/90 underline">
+                    Criar primeira meta de poupança
+                  </Text>
+                </Pressable>
+              )}
             </View>
           </Card>
 
