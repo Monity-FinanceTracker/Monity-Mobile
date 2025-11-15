@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "../context/AuthContext";
 import LoginScreen from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
 import EmailConfirmation from "../pages/auth/EmailConfirmation";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Transactions from "../pages/transactions/Transactions";
 import AddExpense from "../pages/expenses/AddExpense";
@@ -23,7 +25,6 @@ import Calendar from "../pages/overview/Calendar";
 import RecurringTransactions from "../pages/recurring/RecurringTransactions";
 import Help from "../pages/help/Help";
 import { Platform, View, Text, Dimensions, Pressable, StyleSheet, TouchableOpacity, Image } from "react-native";
-import FastImage from 'react-native-fast-image';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
@@ -36,6 +37,8 @@ export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   EmailConfirmation: { email: string };
+  ForgotPassword: undefined;
+  ResetPassword: { token: string };
   Main: undefined;
   Profile: undefined;
   SubscriptionPlans: undefined;
@@ -380,6 +383,9 @@ function Gate() {
                 onNavigateToSignup={() =>
                   navigation.navigate("Signup" as never)
                 }
+                onNavigateToForgotPassword={() =>
+                  navigation.navigate("ForgotPassword" as never)
+                }
               />
             )}
           />
@@ -399,6 +405,23 @@ function Gate() {
             children={({ navigation, route }) => (
               <EmailConfirmation
                 email={route.params?.email || ""}
+                onNavigateToLogin={() => navigation.navigate("Login" as never)}
+              />
+            )}
+          />
+          <RootStack.Screen
+            name="ForgotPassword"
+            children={({ navigation }) => (
+              <ForgotPassword
+                onNavigateToLogin={() => navigation.navigate("Login" as never)}
+              />
+            )}
+          />
+          <RootStack.Screen
+            name="ResetPassword"
+            children={({ navigation, route }) => (
+              <ResetPassword
+                token={route.params?.token || ""}
                 onNavigateToLogin={() => navigation.navigate("Login" as never)}
               />
             )}
