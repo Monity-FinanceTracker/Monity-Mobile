@@ -15,9 +15,7 @@
         "gradleCommand": ":app:bundleRelease"
       },
       "env": {
-        "NODE_ENV": "production",
-        "ANDROID_GOOGLE_SERVICES_JSON": "@ANDROID_GOOGLE_SERVICES_JSON",
-        "IOS_GOOGLE_SERVICES_PLIST": "@IOS_GOOGLE_SERVICES_PLIST"
+        "NODE_ENV": "production"
       }
     },
     "production": {
@@ -30,9 +28,7 @@
         "gradleCommand": ":app:bundleRelease"
       },
       "env": {
-        "NODE_ENV": "production",
-        "ANDROID_GOOGLE_SERVICES_JSON": "@ANDROID_GOOGLE_SERVICES_JSON",
-        "IOS_GOOGLE_SERVICES_PLIST": "@IOS_GOOGLE_SERVICES_PLIST"
+        "NODE_ENV": "production"
       }
     }
   },
