@@ -12,7 +12,7 @@ import {
   Keyboard,
   Image,
 } from "react-native";
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import * as Clipboard from 'expo-clipboard';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowUp, Bot, Loader, Plus, Mic, Image as ImageIcon, Headphones, Copy, ChevronDown } from "lucide-react-native";
@@ -926,14 +926,14 @@ export default function Chat() {
         {/* Logo e disclaimer abaixo da última mensagem */}
         {isLastMessage && !isUser && (
           <View className="flex-row items-start justify-between mb-4 w-full">
-            <FastImage
+            <ExpoImage
               source={Images.LOGO_MONITY_512}
               style={{
                 width: 32,
                 height: 40,
                 marginLeft: 0,
               }}
-              resizeMode={FastImage.resizeMode.contain}
+              contentFit="contain"
             />
             <View className="flex-1 ml-4 mr-6">
               <Text
@@ -971,13 +971,13 @@ export default function Chat() {
         >
           {messages.length === 0 ? (
             <View className="flex-1 justify-center items-center" style={{ minHeight: 400 }}>
-              <FastImage
+              <ExpoImage
                 source={Images.LOGO_MONITY_512}
                 style={{
                   width: 80,
                   height: 100
                 }}
-                resizeMode={FastImage.resizeMode.contain}
+                contentFit="contain"
               />
               <Text
                 style={{

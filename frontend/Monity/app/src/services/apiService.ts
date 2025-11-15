@@ -77,6 +77,8 @@ export interface Balance {
   expenses: number;
   change: number;
   changePercentage: number;
+  availableBalance: number;
+  allocatedSavings: number;
 }
 
 export interface ApiResponse<T> {
