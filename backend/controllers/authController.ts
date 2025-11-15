@@ -22,7 +22,7 @@ class AuthController {
     const { email, password, name } = req.body;
     try {
       // Supabase automatically sends confirmation email when signUp is called
-      // The emailRedirectTo is optional but helps with deep linking in mobile apps
+      // The emailRedirectTo is required for mobile app deep linking
       const { data, error } = await this.supabase.auth.signUp({
         email,
         password,
@@ -31,9 +31,9 @@ class AuthController {
             role: "user",
             name: name,
           },
-          // Optional: Set email redirect URL for better mobile app experience
-          // This will be used when user clicks the confirmation link in the email
-          emailRedirectTo: process.env.CLIENT_URL || undefined,
+          // Mobile deep link URL for email confirmation
+          // This will redirect users back to the mobile app after confirming their email
+          emailRedirectTo: 'monity://auth/confirm',
         },
       });
 
@@ -148,66 +148,53 @@ class AuthController {
     }
 
     try {
-      // First, check if email exists in the database
-      const normalizedEmail = email.toLowerCase().trim();
-      let emailExists = false;
-      let page = 0;
-      const pageSize = 1000;
-
-      while (true) {
-        const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-          page,
-          perPage: pageSize,
-        });
-
-        if (listError) {
-          // If we can't check email, proceed with login attempt
-          break;
-        }
-
-        emailExists = usersData.users.some(
-          (user: any) => user.email?.toLowerCase() === normalizedEmail
-        );
-
-        if (emailExists || usersData.users.length < pageSize) {
-          break;
-        }
-
-        page++;
-      }
-
-      // If email doesn't exist, return error without attempting login
-      if (!emailExists) {
-        return res.status(400).json({ 
-          success: false, 
-          error: "Invalid credentials" 
-        });
-      }
-
-      // Email exists, now try to authenticate
+      // Attempt to authenticate - Supabase will handle all validation
       const { data, error } = await this.supabase.auth.signInWithPassword({
-        email,
+        email: email.toLowerCase().trim(),
         password,
       });
 
       if (error) {
-        return res.status(400).json({ 
-          success: false, 
-          error: "Invalid credentials" 
+        logger.warn("Login failed", {
+          email: email.toLowerCase().trim(),
+          errorCode: error.code,
+          errorMessage: error.message
+        });
+
+        // Provide specific error messages based on Supabase error codes
+        let errorMessage = "Invalid credentials";
+
+        if (error.message?.includes("Email not confirmed")) {
+          errorMessage = "Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada.";
+        } else if (error.message?.includes("Invalid login credentials")) {
+          errorMessage = "Email ou senha incorretos";
+        }
+
+        return res.status(400).json({
+          success: false,
+          error: errorMessage,
+          errorCode: error.code
         });
       }
 
-      res.json({ 
-        success: true, 
-        data: { 
-          user: data.user, 
-          session: data.session 
-        } 
+      logger.info("Login successful", { userId: data.user?.id });
+
+      res.json({
+        success: true,
+        data: {
+          user: data.user,
+          session: data.session
+        }
       });
     } catch (error) {
-      res.status(500).json({ 
-        success: false, 
-        error: "Internal Server Error" 
+      logger.error("Unexpected error during login", {
+        error: error as Error["message"],
+        stack: (error as Error).stack
+      });
+
+      res.status(500).json({
+        success: false,
+        error: "Internal Server Error"
       });
     }
   }
@@ -248,12 +235,20 @@ class AuthController {
             return res.status(500).json({ error: "Failed to create profile" });
           }
 
+          // Create default categories for new OAuth users (non-blocking)
+          User.createDefaultCategories(userId).catch((err: any) =>
+            logger.error("Failed to create default categories for OAuth user", {
+              userId,
+              error: err.message,
+            })
+          );
+
           const userData = {
             ...newProfile,
             subscriptionTier: newProfile.subscription_tier || "free",
           };
 
-          logger.info("Profile created successfully", { userId });
+          logger.info("Profile created successfully for OAuth user", { userId });
           return res.json({ success: true, data: userData });
         }
 
@@ -718,22 +713,9 @@ class AuthController {
         return res.status(400).json({ error: "Password is incorrect" });
       }
 
-      // Delete user data from profiles table first
-      const { error: profileError } = await this.supabase
-        .from("profiles")
-        .delete()
-        .eq("id", userId);
-
-      if (profileError) {
-        logger.error("Failed to delete user profile", {
-          userId,
-          error: profileError.message,
-        });
-        return res.status(500).json({ error: "Failed to delete account data" });
-      }
-
-      // Delete user from auth (this will cascade delete related data)
-      const { error: authError } = await this.supabase.auth.admin.deleteUser(
+      // Delete user from auth first (most critical operation)
+      // If this fails, we don't want to delete the profile yet
+      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(
         userId
       );
 
@@ -743,6 +725,22 @@ class AuthController {
           error: authError.message,
         });
         return res.status(500).json({ error: "Failed to delete account" });
+      }
+
+      // Delete user data from profiles table
+      // This is secondary - if it fails, the auth account is already gone
+      // but we log it for debugging purposes
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+
+      if (profileError) {
+        logger.error("Failed to delete user profile (auth account already deleted)", {
+          userId,
+          error: profileError.message,
+        });
+        // Don't return error here - auth account is already deleted which is the main goal
       }
 
       logger.info("Account deleted successfully", { userId });

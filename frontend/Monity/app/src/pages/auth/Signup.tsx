@@ -10,7 +10,7 @@ import {
   StatusBar,
   Image,
 } from "react-native";
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Eye,
@@ -144,13 +144,13 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
             {/* Logo Section */}
             <View className="mb-6 items-center">
               <View className="flex-row items-center justify-center mb-2">
-                <FastImage
+                <ExpoImage
                   source={Images.BANNER_MONITY}
                   style={{
                     width: 200,
                     height: 60,
                   }}
-                  resizeMode={FastImage.resizeMode.contain}
+                  contentFit="contain"
                 />
               </View>
               <Text className="text-text-gray text-lg">Create your account</Text>
