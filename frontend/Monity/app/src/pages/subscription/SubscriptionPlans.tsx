@@ -23,6 +23,7 @@ import {
   CreditCard,
 } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
+import { COLORS } from "../../constants/colors";
 
 export default function SubscriptionPlans() {
   const navigation = useNavigation();
@@ -107,7 +108,7 @@ export default function SubscriptionPlans() {
         edges={["top", "bottom", "left", "right"]}
       >
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large"  />
+          <ActivityIndicator size="large" color={COLORS.accent} />
           <Text style={{ color: COLORS.textPrimary, marginTop: 16 }}>Carregando planos...</Text>
         </View>
       </SafeAreaView>
@@ -247,7 +248,7 @@ export default function SubscriptionPlans() {
                     }`}
                   >
                     {isSubscribing ? (
-                      <ActivityIndicator size="small"  />
+                      <ActivityIndicator size="small" color="white" />
                     ) : (
                       <>
                         {plan.id === "premium" && !isCurrentPlan(plan.id) ? (
