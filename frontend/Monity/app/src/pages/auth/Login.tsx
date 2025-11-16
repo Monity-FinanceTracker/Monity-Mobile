@@ -11,7 +11,7 @@ import {
   ScrollView,
   Image,
 } from "react-native";
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
 import * as Font from "expo-font";
@@ -21,10 +21,12 @@ import { Images } from "../../assets/images";
 
 interface LoginProps {
   onNavigateToSignup: () => void;
+  onNavigateToForgotPassword?: () => void;
 }
 
 export default function Login({
   onNavigateToSignup,
+  onNavigateToForgotPassword,
 }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -119,13 +121,13 @@ export default function Login({
               {/* Logo Section */}
               <View className="mb-8 items-center">
                 <View className="flex-row items-center justify-center mb-4">
-                  <FastImage
+                  <ExpoImage
                     source={Images.BANNER_MONITY}
                     style={{
                       width: 200,
                       height: 60,
                     }}
-                    resizeMode={FastImage.resizeMode.contain}
+                    contentFit="contain"
                   />
                 </View>
                 {/* Texto com fonte Stratford */}
@@ -336,6 +338,21 @@ export default function Login({
                   </Text>
                 )}
               </TouchableOpacity>
+
+              {/* Forgot Password Link */}
+              {onNavigateToForgotPassword && (
+                <TouchableOpacity
+                  onPress={onNavigateToForgotPassword}
+                  className="mb-4"
+                >
+                  <Text
+                    className="text-center text-sm"
+                    style={{ color: COLORS.accent }}
+                  >
+                    Esqueceu sua senha?
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* Terms and Privacy Text */}
               <Text
