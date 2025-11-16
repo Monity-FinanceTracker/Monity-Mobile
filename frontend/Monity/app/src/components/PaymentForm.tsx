@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
-import Card from '../components/molecules/Card';
+import Card from './molecules/Card';
 import { useAuth } from '../context/AuthContext';
 import inAppPurchaseService, { PurchaseResult } from '../services/inAppPurchaseService';
 import {

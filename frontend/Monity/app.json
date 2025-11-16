@@ -59,7 +59,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "http://192.168.15.6:3001/api/v1",
+      "apiUrl": "https://monity-mobile-production-9509.up.railway.app/api/v1",
       "supabaseUrl": "https://eeubnmpetzhjcludrjwz.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTI4MzQsImV4cCI6MjA2ODA4ODgzNH0.QZc4eJ4tLW10WIwhsu_p7TvldzodQrwJRnJ8LlzXkdM",
       "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps",
