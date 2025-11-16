@@ -643,7 +643,7 @@ export default function Analytics() {
     return (
       <SafeAreaView
         style={{ flex: 1, backgroundColor: colors.background }}
-        edges={["top", "left", "right"]}
+        edges={["top", "bottom", "left", "right"]}
       >
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.accent} />
@@ -656,7 +656,7 @@ export default function Analytics() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["top", "left", "right"]}
+      edges={["top", "bottom", "left", "right"]}
     >
       <ScrollView
         className="flex-1"

@@ -80,6 +80,7 @@ export default function App() {
             barStyle="light-content"
             backgroundColor={COLORS.background}
             translucent={false}
+            animated={true}
           />
           <ErrorBoundary>
             <AppNavigation />
