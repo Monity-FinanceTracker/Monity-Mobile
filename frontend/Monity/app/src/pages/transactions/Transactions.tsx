@@ -502,7 +502,7 @@ export default function Transactions() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["top", "left", "right"]}
+      edges={["top", "bottom", "left", "right"]}
     >
       <ScrollView 
         style={{ flex: 1 }} 

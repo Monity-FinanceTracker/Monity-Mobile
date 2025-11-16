@@ -261,7 +261,7 @@ export default function AddIncomeForm() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["top", "left", "right"]}
+      edges={["top", "bottom", "left", "right"]}
     >
       <ScrollView
         className="flex-1"
