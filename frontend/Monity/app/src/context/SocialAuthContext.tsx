@@ -1,20 +1,14 @@
 import React, { createContext, useContext, useCallback, useState, useMemo } from 'react';
 import Constants from 'expo-constants';
-import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
+import { supabase } from '../config/supabase';
+import { apiService } from '../services/apiService';
 
 // Complete the auth session properly
 WebBrowser.maybeCompleteAuthSession();
 
 // Configuration
-const SUPABASE_URL =
-  Constants.expoConfig?.extra?.supabaseUrl ||
-  'https://eeubnmpetzhjcludrjwz.supabase.co';
-const SUPABASE_ANON_KEY =
-  Constants.expoConfig?.extra?.supabaseAnonKey ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTI4MzQsImV4cCI6MjA2ODA4ODgzNH0.QZc4eJ4tLW10WIwhsu_p7TvldzodQrwJRnJ8LlzXkdM';
-
 const GOOGLE_OAUTH = Constants.expoConfig?.extra?.googleOAuth || {};
 const GOOGLE_WEB_CLIENT_ID = GOOGLE_OAUTH.webClientId;
 const REDIRECT_SCHEME = 'monity://auth/callback';
@@ -32,18 +26,6 @@ const SocialAuthContext = createContext<SocialAuthContextValue | undefined>(unde
 export function SocialAuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Create Supabase client
-  const getSupabaseClient = useCallback(() => {
-    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        storage: AsyncStorage,
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false,
-      },
-    });
-  }, []);
 
   // Extract code/token from callback URL
   const extractAuthParams = useCallback((url: string) => {
@@ -137,7 +119,6 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
 
   // Exchange code for session
   const exchangeCodeForSession = useCallback(async (code: string) => {
-    const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
@@ -162,11 +143,29 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
       session: data.session,
       user: data.user || data.session.user,
     };
-  }, [getSupabaseClient]);
+  }, []);
 
-  // Save session token
+  // Save session token and ensure backend profile exists
   const saveSession = useCallback(async (session: any) => {
+    console.log('💾 Saving session and ensuring backend profile exists');
+
+    // Save token to storage and apiService
     await AsyncStorage.setItem(AUTH_TOKEN_KEY, session.access_token);
+    apiService.token = session.access_token;
+
+    try {
+      // Try to get profile - this will create it if it doesn't exist (backend logic)
+      const profileResponse = await apiService.getProfile();
+
+      if (profileResponse.success) {
+        console.log('✅ Backend profile verified/created');
+      } else {
+        console.warn('⚠️ Failed to verify backend profile:', profileResponse.error);
+      }
+    } catch (error) {
+      console.error('❌ Error ensuring backend profile:', error);
+      // Don't throw - we still want to save the session even if profile check fails
+    }
   }, []);
 
   // Google Sign In
@@ -176,15 +175,13 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
 
     try {
       console.log('🔐 Iniciando login com Google...');
-      
+
       // Log Client ID status (without blocking if it's a placeholder)
       if (!GOOGLE_WEB_CLIENT_ID || GOOGLE_WEB_CLIENT_ID.includes('YOUR_')) {
         console.log('⚠️ Client ID não configurado no app.json, usando configuração do Supabase');
       } else {
         console.log('🆔 Web Client ID configurado:', GOOGLE_WEB_CLIENT_ID.substring(0, 30) + '...');
       }
-
-      const supabase = getSupabaseClient();
 
       // Step 1: Get OAuth URL from Supabase
       // Note: Supabase should use the credentials configured in its dashboard
@@ -317,7 +314,7 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
     } finally {
       setIsAuthenticating(false);
     }
-  }, [getSupabaseClient, extractAuthParams, exchangeCodeForSession, saveSession]);
+  }, [extractAuthParams, exchangeCodeForSession, saveSession]);
 
 
   const clearError = useCallback(() => {
