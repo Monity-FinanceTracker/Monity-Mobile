@@ -2,7 +2,7 @@
   "expo": {
     "name": "Monity",
     "slug": "Monity",
-    "version": "2.0.6",
+    "version": "2.0.8",
     "orientation": "portrait",
     "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
     "scheme": "monity",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.widechain.monity",
-      "buildNumber": "9",
+      "buildNumber": "14",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "https",
@@ -32,7 +32,7 @@
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.Monity",
-      "versionCode": 16,
+      "versionCode": 18,
       "navigationBar": {
         "backgroundColor": "#262624",
         "barStyle": "light-content"
@@ -60,12 +60,8 @@
             "backgroundColor": "#0A0A0A"
           }
         }
-      ],
-      "expo-router"
+      ]
     ],
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
       "apiUrl": "https://monity-mobile-production-9509.up.railway.app/api/v1",
       "supabaseUrl": "https://eeubnmpetzhjcludrjwz.supabase.co",
