@@ -44,6 +44,11 @@ export default function SubscriptionPlans() {
       const response = await apiService.getSubscriptionPlans();
       if (response.success) {
         setPlans(response.data);
+      } else {
+        Alert.alert(
+          "Erro ao Carregar Planos",
+          response.error || "Não foi possível carregar os planos de assinatura. Verifique sua conexão e tente novamente."
+        );
       }
     } catch (error) {
       Alert.alert("Erro", "Falha ao carregar planos de assinatura");

@@ -172,9 +172,11 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         style={{
           flexDirection: 'row',
           height: tabBarHeight,
-          paddingBottom: Platform.OS === "android" ? Math.max(12, insets.bottom + 4) : Math.max(8, insets.bottom),
-          paddingTop: 12,
+          paddingBottom: Platform.OS === "android" ? Math.max(12, insets.bottom + 4) : insets.bottom,
+          paddingTop: Platform.OS === "ios" ? 8 : 12,
           paddingHorizontal: 8,
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         {state.routes.map((route, index) => {
