@@ -215,11 +215,28 @@ class ApiService {
         message: data.message,
       };
     } catch (error) {
+      // Detect network errors specifically
+      let errorMessage = "Erro ao processar requisição";
+      let errorCode = "UNKNOWN_ERROR";
+
+      if (error instanceof Error) {
+        // Network/connectivity errors
+        if (error.message.includes("Network request failed") ||
+            error.message.includes("Failed to fetch") ||
+            error.message.includes("timeout") ||
+            error.message.includes("ECONNREFUSED")) {
+          errorMessage = "Sem conexão com a internet. Verifique sua rede e tente novamente.";
+          errorCode = "NETWORK_ERROR";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       return {
         success: false,
         data: null as T,
-        error:
-          error instanceof Error ? error.message : "Network request failed",
+        error: errorMessage,
+        errorCode,
       };
     }
   }

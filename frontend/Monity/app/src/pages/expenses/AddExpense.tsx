@@ -142,6 +142,8 @@ export default function AddExpense() {
       }
     } catch (error) {
       console.error("Error loading favorites:", error);
+      // Favorites are optional, so we don't show an error alert
+      // Just log and continue with empty favorites
     } finally {
       setIsLoadingFavorites(false);
     }
