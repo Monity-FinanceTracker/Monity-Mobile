@@ -200,20 +200,46 @@ class AuthController {
   }
 
   async getProfile(req: AuthenticatedRequest, res: Response) {
+    const profileStartTime = Date.now();
+    const requestId = Math.random().toString(36).substring(7);
     // The user object is attached to the request by the auth middleware
     const userId = req.user.id;
 
+    logger.info(`👤 [${requestId}] getProfile START`, {
+      userId,
+      userEmail: req.user.email,
+      timestamp: new Date().toISOString(),
+    });
+
     try {
       // Get user profile from profiles table using admin client to bypass RLS
+      logger.info(`🔍 [${requestId}] Querying profiles table...`);
+      const queryStartTime = Date.now();
+
       const { data: profile, error } = await supabaseAdmin
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
 
+      const queryDuration = Date.now() - queryStartTime;
+      logger.info(`⏱️  [${requestId}] Profile query completed in ${queryDuration}ms`, {
+        hasProfile: !!profile,
+        hasError: !!error,
+        errorCode: error?.code,
+        errorMessage: error?.message,
+      });
+
       if (error) {
         // If profile doesn't exist, create one with basic info
         if (error.code === "PGRST116") {
+          logger.info(`📝 [${requestId}] Profile not found (PGRST116), creating new profile...`, {
+            userId,
+            userEmail: req.user.email,
+            userName: req.user.user_metadata?.name,
+          });
+
+          const createStartTime = Date.now();
           const { data: newProfile, error: createError } = await supabaseAdmin
             .from("profiles")
             .insert({
@@ -227,19 +253,31 @@ class AuthController {
             .select()
             .single();
 
+          const createDuration = Date.now() - createStartTime;
+          logger.info(`⏱️  [${requestId}] Profile creation completed in ${createDuration}ms`, {
+            hasNewProfile: !!newProfile,
+            hasCreateError: !!createError,
+          });
+
           if (createError) {
-            logger.error("Failed to create user profile", {
+            logger.error(`❌ [${requestId}] Failed to create user profile`, {
               userId,
               error: createError.message,
+              errorCode: createError.code,
+              errorDetails: createError.details,
+              errorHint: createError.hint,
+              duration: createDuration,
             });
             return res.status(500).json({ error: "Failed to create profile" });
           }
 
           // Create default categories for new OAuth users (non-blocking)
+          logger.info(`📂 [${requestId}] Starting default categories creation (non-blocking)...`);
           User.createDefaultCategories(userId).catch((err: any) =>
-            logger.error("Failed to create default categories for OAuth user", {
+            logger.error(`❌ [${requestId}] Failed to create default categories for OAuth user`, {
               userId,
               error: err.message,
+              errorStack: err.stack,
             })
           );
 
@@ -248,13 +286,21 @@ class AuthController {
             subscriptionTier: newProfile.subscription_tier || "free",
           };
 
-          logger.info("Profile created successfully for OAuth user", { userId });
+          const totalDuration = Date.now() - profileStartTime;
+          logger.info(`✅ [${requestId}] Profile created successfully (${totalDuration}ms)`, {
+            userId,
+            profileData: userData,
+          });
           return res.json({ success: true, data: userData });
         }
 
-        logger.error("Failed to fetch user profile", {
+        logger.error(`❌ [${requestId}] Failed to fetch user profile`, {
           userId,
           error: error.message,
+          errorCode: error.code,
+          errorDetails: error.details,
+          errorHint: error.hint,
+          queryDuration,
         });
         return res.status(500).json({ error: "Failed to fetch profile" });
       }
@@ -264,12 +310,20 @@ class AuthController {
         subscriptionTier: profile.subscription_tier || "free",
       };
 
-      logger.info("Profile request successful", { userId });
+      const totalDuration = Date.now() - profileStartTime;
+      logger.info(`✅ [${requestId}] Profile request successful (${totalDuration}ms)`, {
+        userId,
+        queryDuration,
+        totalDuration,
+      });
       res.json({ success: true, data: userData });
     } catch (error) {
-      logger.error("An unexpected error occurred while fetching profile", {
+      const totalDuration = Date.now() - profileStartTime;
+      logger.error(`❌ [${requestId}] Unexpected error in getProfile (${totalDuration}ms)`, {
         userId,
         error: error as Error["message"],
+        errorStack: (error as Error).stack,
+        errorName: (error as Error).name,
       });
       res.status(500).json({ error: "Internal Server Error" });
     }

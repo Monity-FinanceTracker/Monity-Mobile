@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../constants/colors";
 import { apiService, Transaction } from "../../services/apiService";
+import { errorService } from "../../services/errorService";
 import { ChevronLeft, ChevronRight, X, ArrowLeft, Repeat } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
@@ -95,6 +96,9 @@ export default function Calendar() {
       }
     } catch (error) {
       console.error("Error loading transactions:", error);
+      errorService.showLoadingError('transações', {
+        onRetry: loadTransactions,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -274,7 +278,7 @@ export default function Calendar() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["top", "left", "right"]}
+      edges={["top", "bottom", "left", "right"]}
     >
       <ScrollView
         className="flex-1"

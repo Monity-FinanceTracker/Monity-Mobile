@@ -257,7 +257,7 @@ export default function RecurringTransactions() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["top", "left", "right"]}
+      edges={["top", "bottom", "left", "right"]}
     >
       <View className="flex-1 px-6 pt-6">
         {/* Header */}

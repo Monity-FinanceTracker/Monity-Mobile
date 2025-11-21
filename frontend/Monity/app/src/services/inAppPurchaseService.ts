@@ -15,10 +15,7 @@ try {
 
 // Product IDs - devem corresponder aos IDs configurados nas stores
 const PRODUCT_IDS = {
-  PREMIUM_MONTHLY: Platform.select({
-    ios: 'com_monity_premium_monthly', // Substitua pelo ID real do App Store Connect
-    android: 'com_monity_premium_monthly', // Substitua pelo ID real do Google Play Console
-  }) as string,
+  PREMIUM_MONTHLY: 'com_monity_premium_monthly', // ID configurado nas stores
 };
 
 export interface PurchaseResult {
@@ -66,8 +63,13 @@ class InAppPurchaseService {
       this.isInitialized = true;
       console.log('✅ In-App Purchase service initialized');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error initializing In-App Purchase service:', error);
+      Alert.alert(
+        'Erro no Serviço de Pagamento',
+        'Não foi possível inicializar o serviço de pagamentos. Por favor, tente novamente mais tarde.',
+        [{ text: 'OK' }]
+      );
       return false;
     }
   }
@@ -98,7 +100,7 @@ class InAppPurchaseService {
   }
 
   /**
-   * Busca produtos disponíveis nas stores
+   * Busca assinaturas disponíveis nas stores
    */
   async getAvailableProducts(): Promise<any[]> {
     try {
@@ -111,19 +113,25 @@ class InAppPurchaseService {
       }
 
       const productIds = Object.values(PRODUCT_IDS).filter(Boolean) as string[];
-      
+
       if (productIds.length === 0) {
         console.warn('⚠️ No product IDs configured');
         return [];
       }
 
-      const products = await RNIap.getProducts(productIds);
+      // Para assinaturas, usar getSubscriptions ao invés de getProducts
+      const products = await RNIap.getSubscriptions(productIds);
       this.availableProducts = products;
-      
-      console.log('📦 Available products:', products);
+
+      console.log('📦 Available subscriptions:', products);
       return products;
-    } catch (error) {
-      console.error('❌ Error fetching products:', error);
+    } catch (error: any) {
+      console.error('❌ Error fetching subscriptions:', error);
+      Alert.alert(
+        'Erro ao Carregar Planos',
+        'Não foi possível carregar os planos de assinatura. Verifique sua conexão e tente novamente.',
+        [{ text: 'OK' }]
+      );
       return [];
     }
   }
@@ -175,11 +183,13 @@ class InAppPurchaseService {
         };
       }
 
-      console.log('🛒 Iniciando compra do produto:', productId);
-      
-      // Iniciar o fluxo de compra
-      await RNIap.requestPurchase(productId, false);
-      
+      console.log('🛒 Iniciando compra da assinatura:', productId);
+
+      // Iniciar o fluxo de compra de assinatura
+      await RNIap.requestSubscription({
+        sku: productId,
+      });
+
       // O resultado será processado pelo listener purchaseUpdatedListener
       return {
         success: true,
@@ -204,10 +214,19 @@ class InAppPurchaseService {
       const validationResult = await this.validatePurchase(purchase);
 
       if (validationResult.success) {
-      // Finalizar a transação na store
-      if (purchase.transactionReceipt && RNIap) {
-        await RNIap.finishTransaction(purchase, false);
-      }
+        // Finalizar a transação na store
+        if (purchase.transactionReceipt && RNIap) {
+          try {
+            await RNIap.finishTransaction({
+              purchase,
+              isConsumable: false, // Assinaturas não são consumíveis
+            });
+          } catch (finishError) {
+            console.error('❌ Error finishing transaction:', finishError);
+            // Transaction was validated successfully, just log the finish error
+            // Don't show alert to user since the purchase was successful
+          }
+        }
 
         Alert.alert(
           'Sucesso!',
