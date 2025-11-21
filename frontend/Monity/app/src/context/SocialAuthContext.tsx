@@ -147,24 +147,69 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
 
   // Save session token and ensure backend profile exists
   const saveSession = useCallback(async (session: any) => {
-    console.log('💾 Saving session and ensuring backend profile exists');
-
-    // Save token to storage and apiService
-    await AsyncStorage.setItem(AUTH_TOKEN_KEY, session.access_token);
-    apiService.token = session.access_token;
+    const sessionStartTime = Date.now();
+    console.log('💾 [saveSession] START - Saving session and ensuring backend profile exists', {
+      timestamp: new Date().toISOString(),
+      hasAccessToken: !!session.access_token,
+      tokenLength: session.access_token?.length,
+    });
 
     try {
-      // Try to get profile - this will create it if it doesn't exist (backend logic)
-      const profileResponse = await apiService.getProfile();
+      // Save token to storage and apiService
+      await AsyncStorage.setItem(AUTH_TOKEN_KEY, session.access_token);
+      apiService.token = session.access_token;
+      console.log('✅ [saveSession] Token saved to storage and apiService');
 
-      if (profileResponse.success) {
-        console.log('✅ Backend profile verified/created');
-      } else {
-        console.warn('⚠️ Failed to verify backend profile:', profileResponse.error);
+      console.log('🔍 [saveSession] Starting profile verification...');
+      const profileStartTime = Date.now();
+
+      try {
+        // Try to get profile - this will create it if it doesn't exist (backend logic)
+        const profileResponse = await apiService.getProfile();
+        const profileDuration = Date.now() - profileStartTime;
+
+        console.log(`⏱️  [saveSession] Profile verification completed in ${profileDuration}ms`, {
+          success: profileResponse.success,
+          hasData: !!profileResponse.data,
+          error: profileResponse.error,
+          errorCode: profileResponse.errorCode,
+          errorDetails: profileResponse.errorDetails,
+        });
+
+        if (profileResponse.success) {
+          console.log('✅ [saveSession] Backend profile verified/created', {
+            userData: profileResponse.data,
+          });
+        } else {
+          console.warn('⚠️ [saveSession] Failed to verify backend profile:', {
+            error: profileResponse.error,
+            errorCode: profileResponse.errorCode,
+            errorDetails: profileResponse.errorDetails,
+            fullResponse: profileResponse,
+          });
+        }
+      } catch (profileError) {
+        const profileDuration = Date.now() - profileStartTime;
+        console.error(`❌ [saveSession] Error ensuring backend profile after ${profileDuration}ms:`, {
+          error: profileError,
+          errorMessage: profileError instanceof Error ? profileError.message : String(profileError),
+          errorName: profileError instanceof Error ? profileError.name : 'Unknown',
+          errorStack: profileError instanceof Error ? profileError.stack : undefined,
+        });
+        // Don't throw - we still want to save the session even if profile check fails
       }
+
+      const totalDuration = Date.now() - sessionStartTime;
+      console.log(`✅ [saveSession] COMPLETE - Total duration: ${totalDuration}ms`);
     } catch (error) {
-      console.error('❌ Error ensuring backend profile:', error);
-      // Don't throw - we still want to save the session even if profile check fails
+      const totalDuration = Date.now() - sessionStartTime;
+      console.error(`❌ [saveSession] FAILED after ${totalDuration}ms:`, {
+        error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error; // Re-throw if saving token fails
     }
   }, []);
 

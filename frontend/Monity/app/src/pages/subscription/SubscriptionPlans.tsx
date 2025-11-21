@@ -23,6 +23,7 @@ import {
   CreditCard,
 } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
+import { COLORS } from "../../constants/colors";
 
 export default function SubscriptionPlans() {
   const navigation = useNavigation();
@@ -43,6 +44,11 @@ export default function SubscriptionPlans() {
       const response = await apiService.getSubscriptionPlans();
       if (response.success) {
         setPlans(response.data);
+      } else {
+        Alert.alert(
+          "Erro ao Carregar Planos",
+          response.error || "Não foi possível carregar os planos de assinatura. Verifique sua conexão e tente novamente."
+        );
       }
     } catch (error) {
       Alert.alert("Erro", "Falha ao carregar planos de assinatura");
@@ -107,7 +113,7 @@ export default function SubscriptionPlans() {
         edges={["top", "bottom", "left", "right"]}
       >
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large"  />
+          <ActivityIndicator size="large" color={COLORS.accent} />
           <Text style={{ color: COLORS.textPrimary, marginTop: 16 }}>Carregando planos...</Text>
         </View>
       </SafeAreaView>
@@ -247,7 +253,7 @@ export default function SubscriptionPlans() {
                     }`}
                   >
                     {isSubscribing ? (
-                      <ActivityIndicator size="small"  />
+                      <ActivityIndicator size="small" color="white" />
                     ) : (
                       <>
                         {plan.id === "premium" && !isCurrentPlan(plan.id) ? (

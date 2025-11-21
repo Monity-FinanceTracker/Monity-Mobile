@@ -13,21 +13,55 @@ const authenticate = async (
   res: Response,
   next: NextFunction
 ) => {
+  const authStartTime = Date.now();
+  const requestId = Math.random().toString(36).substring(7);
+
+  logger.info(`🔐 [${requestId}] Auth middleware START`, {
+    path: req.path,
+    method: req.method,
+    hasAuthHeader: !!req.headers.authorization,
+    timestamp: new Date().toISOString(),
+  });
+
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
+    logger.warn(`❌ [${requestId}] Auth failed: No token provided`, {
+      path: req.path,
+      authHeader: req.headers.authorization,
+    });
     return res
       .status(401)
       .json({ success: false, message: "Authentication token is required." });
   }
 
+  logger.info(`🔍 [${requestId}] Token found, validating with Supabase...`, {
+    tokenLength: token.length,
+    tokenPrefix: token.substring(0, 20) + '...',
+  });
+
   try {
+    const getUserStartTime = Date.now();
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser(token);
+    const getUserDuration = Date.now() - getUserStartTime;
+
+    logger.info(`⏱️  [${requestId}] Supabase getUser completed in ${getUserDuration}ms`, {
+      hasUser: !!user,
+      hasError: !!error,
+      errorMessage: error?.message,
+      userId: user?.id,
+    });
 
     if (error || !user) {
-      logger.warn("Authentication failed: Invalid token", { token });
+      logger.warn(`❌ [${requestId}] Authentication failed: Invalid token`, {
+        error: error?.message,
+        errorCode: error?.code,
+        errorStatus: error?.status,
+        hasUser: !!user,
+        duration: getUserDuration,
+      });
       return res
         .status(401)
         .json({ success: false, message: "Invalid or expired token." });
@@ -41,9 +75,21 @@ const authenticate = async (
     // For now, we attach the main client.
     req.supabase = supabase;
 
+    const totalDuration = Date.now() - authStartTime;
+    logger.info(`✅ [${requestId}] Auth middleware SUCCESS (${totalDuration}ms)`, {
+      userId: user.id,
+      userEmail: user.email,
+    });
+
     next();
   } catch (err) {
-    logger.error("Error in authentication middleware", { error: err });
+    const totalDuration = Date.now() - authStartTime;
+    logger.error(`❌ [${requestId}] Error in authentication middleware (${totalDuration}ms)`, {
+      error: err,
+      errorMessage: err instanceof Error ? err.message : String(err),
+      errorStack: err instanceof Error ? err.stack : undefined,
+      path: req.path,
+    });
     res
       .status(500)
       .json({

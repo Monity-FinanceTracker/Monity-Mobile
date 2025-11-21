@@ -142,6 +142,8 @@ export default function AddExpense() {
       }
     } catch (error) {
       console.error("Error loading favorites:", error);
+      // Favorites are optional, so we don't show an error alert
+      // Just log and continue with empty favorites
     } finally {
       setIsLoadingFavorites(false);
     }
@@ -421,7 +423,7 @@ export default function AddExpense() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["top", "left", "right"]}
+      edges={["top", "bottom", "left", "right"]}
     >
       <ScrollView 
         className="flex-1" 

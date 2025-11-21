@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from 'expo-linking';
 import { apiService, User } from "../services/apiService";
@@ -336,6 +337,11 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         // Token expired, logout user
         setUser(null);
         await apiService.clearToken();
+        Alert.alert(
+          'Sessão Expirada',
+          'Sua sessão expirou. Por favor, faça login novamente.',
+          [{ text: 'OK' }]
+        );
       }
     } catch (error) {
       // Silent fail
