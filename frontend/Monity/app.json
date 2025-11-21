@@ -2,7 +2,7 @@
   "expo": {
     "name": "Monity",
     "slug": "Monity",
-    "version": "2.0.8",
+    "version": "2.0.10",
     "orientation": "portrait",
     "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
     "scheme": "monity",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.widechain.monity",
-      "buildNumber": "14",
+      "buildNumber": "17",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "https",
@@ -32,7 +32,7 @@
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.Monity",
-      "versionCode": 18,
+      "versionCode": 20,
       "navigationBar": {
         "backgroundColor": "#262624",
         "barStyle": "light-content"
@@ -65,7 +65,7 @@
     "extra": {
       "apiUrl": "https://monity-mobile-production-9509.up.railway.app/api/v1",
       "supabaseUrl": "https://eeubnmpetzhjcludrjwz.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTI4MzQsImV4cCI6MjA2ODA4ODgzNH0.QZc4eJ4tLW10WIwhsu_p7TvldzodQrwJRnJ8LlzXkdM",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0OTk1NTMsImV4cCI6MjA3ODg1OTU1M30.dh3tAwapLq2nt10OOlBXW-XCX0pOKehQMDckk-Ox0K4",
       "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps",
       "stripePublishableKey": "pk_live_51SH0m9BDlx4noKmetogVrJWuB7swkwBpzLi3d8GOsYUPeMB1w5IuTjVrpbrmSlJxPUj065ZdWc9CENn7AXeIWmWC00WD1iCqqz",
       "googleOAuth": {

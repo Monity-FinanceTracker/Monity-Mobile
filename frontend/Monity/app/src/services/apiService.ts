@@ -121,9 +121,20 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const requestStartTime = Date.now();
+    const requestId = Math.random().toString(36).substring(7);
+
     try {
       const url = `${this.baseURL}${endpoint}`;
       const headers = await this.getAuthHeaders();
+
+      console.log(`🌐 [${requestId}] API Request START:`, {
+        endpoint,
+        url,
+        method: options.method || 'GET',
+        timestamp: new Date().toISOString(),
+        hasToken: !!headers.Authorization,
+      });
 
       const response = await fetch(url, {
         ...options,
@@ -131,6 +142,15 @@ class ApiService {
           ...headers,
           ...options.headers,
         },
+      });
+
+      const requestDuration = Date.now() - requestStartTime;
+      console.log(`⏱️  [${requestId}] API Request completed in ${requestDuration}ms:`, {
+        endpoint,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        contentType: response.headers.get('content-type'),
       });
 
       // Check if response is JSON
@@ -215,9 +235,21 @@ class ApiService {
         message: data.message,
       };
     } catch (error) {
+      const requestDuration = Date.now() - requestStartTime;
+
       // Detect network errors specifically
       let errorMessage = "Erro ao processar requisição";
       let errorCode = "UNKNOWN_ERROR";
+
+      console.error(`❌ [${requestId}] API Request FAILED after ${requestDuration}ms:`, {
+        endpoint,
+        url: `${this.baseURL}${endpoint}`,
+        method: options.method || 'GET',
+        error: error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
 
       if (error instanceof Error) {
         // Network/connectivity errors
@@ -231,6 +263,11 @@ class ApiService {
           errorMessage = error.message;
         }
       }
+
+      console.error(`❌ [${requestId}] Final error response:`, {
+        errorMessage,
+        errorCode,
+      });
 
       return {
         success: false,
