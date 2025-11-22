@@ -492,7 +492,7 @@ export default function Analytics() {
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: slice.color }}
                 />
-                <Text className="text-white text-sm flex-1" numberOfLines={1}>
+                <Text className="text-text-primary text-sm flex-1" numberOfLines={1}>
                   {slice.category}
                 </Text>
               </View>
@@ -536,7 +536,7 @@ export default function Analytics() {
       />
       <View className="items-center gap-3">
         <Lock size={32} color={colors.accent} />
-        <Text className="text-white text-base font-semibold">
+        <Text className="text-text-primary text-base font-semibold">
           Assine o Premium
         </Text>
       </View>
@@ -678,7 +678,7 @@ export default function Analytics() {
                 <ArrowLeft size={20} color={colors.textPrimary} />
               </Pressable>
               <View>
-                <Text className="text-white text-2xl font-bold">Analytics</Text>
+                <Text className="text-text-primary text-2xl font-bold">Analytics</Text>
                 <Text className="text-text-primary text-sm">
                   Análise completa das suas finanças
                 </Text>
@@ -693,7 +693,7 @@ export default function Analytics() {
                 <DollarSign size={16} color={colors.accent} />
                 <Text className="text-text-primary text-xs">Saldo Total</Text>
               </View>
-              <Text className="text-white text-2xl font-bold">
+              <Text className="text-text-primary text-2xl font-bold">
                 {formatCurrency(balance?.total)}
               </Text>
               {balance && balance.changePercentage !== undefined && (
@@ -730,7 +730,7 @@ export default function Analytics() {
                     <TrendingUp size={16} color="#10B981" />
                     <Text className="text-text-primary text-xs">Receitas</Text>
                   </View>
-                  <Text className="text-white text-xl font-bold">
+                  <Text className="text-text-primary text-xl font-bold">
                     {formatCurrency(balance?.income)}
                   </Text>
                   <Text className="text-text-primary text-xs mt-1">
@@ -745,10 +745,10 @@ export default function Analytics() {
                 {/* Despesas */}
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2 mb-2">
-                    <TrendingDown size={16} color="#EF4444" />
+                    <TrendingDown size={16} color={colors.expense} />
                     <Text className="text-text-primary text-xs">Despesas</Text>
                   </View>
-                  <Text className="text-white text-xl font-bold">
+                  <Text className="text-text-primary text-xl font-bold">
                     {formatCurrency(balance?.expenses)}
                   </Text>
                   <Text className="text-text-primary text-xs mt-1">
@@ -766,7 +766,7 @@ export default function Analytics() {
               {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <LineChart size={20} color={colors.accent} />
-                <Text className="text-white text-lg font-semibold">
+                <Text className="text-text-primary text-lg font-semibold">
                   Histórico de Saldo
                 </Text>
               </View>
@@ -782,7 +782,7 @@ export default function Analytics() {
               {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <BarChart3 size={20} color={colors.accent} />
-                <Text className="text-white text-lg font-semibold">
+                <Text className="text-text-primary text-lg font-semibold">
                   Receitas vs Despesas (Últimos 6 meses)
                 </Text>
               </View>
@@ -796,7 +796,7 @@ export default function Analytics() {
               {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <PieChart size={20} color={colors.accent} />
-                <Text className="text-white text-lg font-semibold">
+                <Text className="text-text-primary text-lg font-semibold">
                   Distribuição por Categoria
                 </Text>
               </View>
@@ -810,7 +810,7 @@ export default function Analytics() {
               {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <Target size={20} color={colors.accent} />
-                <Text className="text-white text-lg font-semibold">
+                <Text className="text-text-primary text-lg font-semibold">
                   Top Categorias
                 </Text>
               </View>
@@ -821,7 +821,7 @@ export default function Analytics() {
                     className="flex-row items-center justify-between py-2 border-b border-white/10"
                   >
                     <View className="flex-1">
-                      <Text className="text-white font-medium">
+                      <Text className="text-text-primary font-medium">
                         {stat.category}
                       </Text>
                       <Text className="text-text-primary text-xs">
@@ -829,7 +829,7 @@ export default function Analytics() {
                       </Text>
                     </View>
                     <View className="items-end">
-                      <Text className="text-white font-semibold">
+                      <Text className="text-text-primary font-semibold">
                         {formatCurrency(stat.total)}
                       </Text>
                       <Text className="text-text-primary text-xs">
@@ -849,7 +849,7 @@ export default function Analytics() {
                 {!isPremium && <PremiumLockOverlay />}
                 <View className="flex-row items-center gap-2 mb-4">
                   <Activity size={20} color={colors.accent} />
-                  <Text className="text-white text-lg font-semibold">
+                  <Text className="text-text-primary text-lg font-semibold">
                     Estatísticas de IA
                   </Text>
                 </View>
@@ -857,7 +857,7 @@ export default function Analytics() {
                   {aiStats?.totalSuggestions && (
                     <View className="flex-row justify-between py-2">
                       <Text className="text-text-primary">Sugestões Totais</Text>
-                      <Text className="text-white font-medium">
+                      <Text className="text-text-primary font-medium">
                         {aiStats.totalSuggestions}
                       </Text>
                     </View>
@@ -873,7 +873,7 @@ export default function Analytics() {
                   {aiStats?.accuracy && (
                     <View className="flex-row justify-between py-2">
                       <Text className="text-text-primary">Precisão</Text>
-                      <Text className="text-white font-medium">
+                      <Text className="text-text-primary font-medium">
                         {(aiStats.accuracy * 100).toFixed(1)}%
                       </Text>
                     </View>
@@ -890,7 +890,7 @@ export default function Analytics() {
                 {!isPremium && <PremiumLockOverlay />}
                 <View className="flex-row items-center gap-2 mb-4">
                   <Activity size={20} color={colors.accent} />
-                  <Text className="text-white text-lg font-semibold">
+                  <Text className="text-text-primary text-lg font-semibold">
                     Saúde Financeira
                   </Text>
                 </View>
@@ -899,7 +899,7 @@ export default function Analytics() {
                     <>
                       <View className="flex-row justify-between py-2">
                         <Text className="text-text-primary">Taxa de Poupança</Text>
-                        <Text className="text-white font-medium">
+                        <Text className="text-text-primary font-medium">
                           {(() => {
                             // Use totalSavings from financialHealth first, then fallback to allocated savings
                             const totalSavings = 
@@ -915,7 +915,7 @@ export default function Analytics() {
                       </View>
                       <View className="flex-row justify-between py-2">
                         <Text className="text-text-primary">Taxa de Despesas</Text>
-                        <Text className="text-white font-medium">
+                        <Text className="text-text-primary font-medium">
                           {financialHealth?.metrics?.expenseRatio?.toFixed(1) || "0"}%
                         </Text>
                       </View>
@@ -933,7 +933,7 @@ export default function Analytics() {
                       </View>
                       <View className="flex-row justify-between py-2">
                         <Text className="text-text-primary">Total de Poupança</Text>
-                        <Text className="text-white font-medium">
+                        <Text className="text-text-primary font-medium">
                           {(() => {
                             // Use the exact same calculation as savings rate
                             const totalSavings = 
@@ -947,7 +947,7 @@ export default function Analytics() {
                       </View>
                       <View className="flex-row justify-between py-2">
                         <Text className="text-text-primary">Total de Transações</Text>
-                        <Text className="text-white font-medium">
+                        <Text className="text-text-primary font-medium">
                           {financialHealth?.metrics?.transactionCount || 0}
                         </Text>
                       </View>
@@ -971,7 +971,7 @@ export default function Analytics() {
                                 style={{ marginTop: 2 }}
                               />
                               <View className="flex-1">
-                                <Text className="text-white text-xs font-semibold mb-1">
+                                <Text className="text-text-primary text-xs font-semibold mb-1">
                                   {rec.title || "Recomendação"}
                                 </Text>
                                 <Text className="text-text-primary text-xs mb-1">
@@ -999,14 +999,14 @@ export default function Analytics() {
               {!isPremium && <PremiumLockOverlay />}
               <View className="flex-row items-center gap-2 mb-4">
                 <Calendar size={20} color={colors.accent} />
-                <Text className="text-white text-lg font-semibold">
+                <Text className="text-text-primary text-lg font-semibold">
                   Estatísticas de Transações
                 </Text>
               </View>
               <View className="gap-3">
                 <View className="flex-row justify-between py-2">
                   <Text className="text-text-primary">Total de Transações</Text>
-                  <Text className="text-white font-medium">
+                  <Text className="text-text-primary font-medium">
                     {transactions.length}
                   </Text>
                 </View>
@@ -1024,7 +1024,7 @@ export default function Analytics() {
                 </View>
                 <View className="flex-row justify-between py-2">
                   <Text className="text-text-primary">Média por Transação</Text>
-                  <Text className="text-white font-medium">
+                  <Text className="text-text-primary font-medium">
                     {formatCurrency(
                       transactions.length > 0
                         ? transactions.reduce(
@@ -1071,7 +1071,7 @@ export default function Analytics() {
               <View className="p-4">
                 <View className="flex-row items-center gap-2 mb-4">
                   <Activity size={20} color={colors.accent} />
-                  <Text className="text-white text-lg font-semibold">
+                  <Text className="text-text-primary text-lg font-semibold">
                     Estatísticas de IA
                   </Text>
                 </View>
@@ -1079,7 +1079,7 @@ export default function Analytics() {
                   {aiStats.totalSuggestions && (
                     <View className="flex-row justify-between py-2">
                       <Text className="text-text-primary">Sugestões Totais</Text>
-                      <Text className="text-white font-medium">
+                      <Text className="text-text-primary font-medium">
                         {aiStats.totalSuggestions}
                       </Text>
                     </View>
@@ -1095,7 +1095,7 @@ export default function Analytics() {
                   {aiStats.accuracy && (
                     <View className="flex-row justify-between py-2">
                       <Text className="text-text-primary">Precisão</Text>
-                      <Text className="text-white font-medium">
+                      <Text className="text-text-primary font-medium">
                         {(aiStats.accuracy * 100).toFixed(1)}%
                       </Text>
                     </View>
@@ -1112,13 +1112,13 @@ export default function Analytics() {
                 {!isPremium && <PremiumLockOverlay />}
                 <View className="flex-row items-center gap-2 mb-4">
                   <Activity size={20} color={colors.accent} />
-                  <Text className="text-white text-lg font-semibold">
+                  <Text className="text-text-primary text-lg font-semibold">
                     Health Score
                   </Text>
                 </View>
                 <View className="items-center py-4">
                   <View className="items-center mb-4">
-                    <Text className="text-white text-4xl font-bold mb-2">
+                    <Text className="text-text-primary text-4xl font-bold mb-2">
                       {financialHealth?.score || 0}/100
                     </Text>
                     <Text className="text-text-primary text-sm">
@@ -1129,7 +1129,7 @@ export default function Analytics() {
                     <View className="w-full gap-2">
                       <View className="flex-row justify-between py-2 border-b border-white/10">
                         <Text className="text-text-primary">Taxa de Poupança</Text>
-                        <Text className="text-white font-medium">
+                        <Text className="text-text-primary font-medium">
                           {(() => {
                             const totalSavings = 
                               financialHealth?.metrics?.totalSavings || 
@@ -1144,7 +1144,7 @@ export default function Analytics() {
                       </View>
                       <View className="flex-row justify-between py-2 border-b border-white/10">
                         <Text className="text-text-primary">Taxa de Despesas</Text>
-                        <Text className="text-white font-medium">
+                        <Text className="text-text-primary font-medium">
                           {financialHealth?.metrics?.expenseRatio?.toFixed(1) || "0"}%
                         </Text>
                       </View>

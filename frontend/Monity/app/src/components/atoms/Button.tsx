@@ -29,7 +29,7 @@ const Button = ({
   const [isPressed, setIsPressed] = useState(false);
 
   // Get border color based on variant and state
-  // All buttons use #FAF9F5 border as per design requirements
+  // All buttons use #F5F0E6 border as per design requirements
   const getBorderColor = () => {
     if (disabled) return COLORS.buttonBorder;
     return COLORS.buttonBorder;

@@ -89,7 +89,7 @@ export default function Overview() {
         <View className="px-6 pt-6 pb-6">
           {/* Header */}
           <View className="mb-6">
-            <Text className="text-white text-2xl font-bold mb-2">
+            <Text className="text-text-primary text-2xl font-bold mb-2">
               Informações
             </Text>
             <Text className="text-text-primary text-sm">
@@ -125,7 +125,7 @@ export default function Overview() {
                       </View>
                       {/* Texto no canto inferior esquerdo */}
                       <View>
-                        <Text className="text-white text-base font-semibold">
+                        <Text className="text-text-primary text-base font-semibold">
                           {box.title}
                         </Text>
                         {box.comingSoon && (

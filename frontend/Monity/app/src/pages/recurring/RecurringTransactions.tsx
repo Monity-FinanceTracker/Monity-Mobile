@@ -210,7 +210,7 @@ export default function RecurringTransactions() {
             <View className="flex-row items-center gap-2 mb-2">
               <Icon
                 size={20}
-                color={isExpense ? colors.textPrimary : colors.success}
+                color={isExpense ? colors.expense : colors.success}
               />
               <Text
                 style={{
@@ -233,7 +233,7 @@ export default function RecurringTransactions() {
             <View className="flex-row items-center gap-4 mt-2">
               <Text
                 style={{
-                  color: isExpense ? colors.textPrimary : colors.success,
+                  color: isExpense ? colors.expense : colors.success,
                   fontSize: 18,
                   fontWeight: "bold",
                 }}
@@ -443,7 +443,7 @@ export default function RecurringTransactions() {
                   onChangeText={setEditName}
                   placeholder="Nome da transação"
                   placeholderTextColor={colors.textSecondary}
-                  className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                  className="bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3"
                   style={{ color: colors.textPrimary }}
                 />
               </View>
@@ -480,7 +480,7 @@ export default function RecurringTransactions() {
                     onChangeText={handleAmountChange}
                     placeholder="0,00"
                     placeholderTextColor={colors.textSecondary}
-                    className="flex-1 text-lg font-bold text-white"
+                    className="flex-1 text-lg font-bold text-text-primary"
                     keyboardType="numeric"
                     style={{
                       paddingVertical: 0,
