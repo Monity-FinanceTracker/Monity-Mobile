@@ -46,6 +46,28 @@ type SupabaseClient = any; // Exemplo, substitua pela tipagem correta
 
 const createServer = (supabaseClient?: SupabaseClient): Express => {
   console.log('🚀 Creating Express server...');
+  
+  // Verify Supabase client on startup
+  const client = supabaseClient || supabase;
+  if (!client) {
+    console.error('❌ FATAL: Supabase client is undefined!');
+    process.exit(1);
+  }
+  
+  // Test Supabase connection (non-blocking check)
+  console.log('🔄 Testing Supabase connection...');
+  client.from('profiles').select('count', { count: 'exact', head: true }).limit(1)
+    .then(({ error }: any) => {
+      if (error) {
+        console.error('❌ WARNING: Supabase connection test failed:', error.message);
+      } else {
+        console.log('✅ Supabase connection verified');
+      }
+    })
+    .catch((err: any) => {
+      console.error('❌ WARNING: Supabase connection test crashed:', err);
+    });
+
   const app: Express = express();
 
   // ============================================================================
