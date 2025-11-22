@@ -136,29 +136,53 @@ class AuthController {
   }
 
   async login(req: Request, res: Response) {
+    const requestId = Math.random().toString(36).substring(7);
+    const startTime = Date.now();
     const { email, password } = req.body;
 
+    logger.info(`[${requestId}] Login request received`, {
+      email: email ? email.toLowerCase().trim() : undefined,
+      hasPassword: !!password,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+      timestamp: new Date().toISOString()
+    });
+
     if (!email || !password) {
+      logger.warn(`[${requestId}] Missing credentials`, {
+        hasEmail: !!email,
+        hasPassword: !!password
+      });
       return res
         .status(400)
-        .json({ 
-          success: false, 
-          error: "Email and password are required." 
+        .json({
+          success: false,
+          error: "Email and password are required."
         });
     }
 
     try {
+      const normalizedEmail = email.toLowerCase().trim();
+      logger.info(`[${requestId}] Attempting Supabase authentication`, {
+        email: normalizedEmail
+      });
+
       // Attempt to authenticate - Supabase will handle all validation
       const { data, error } = await this.supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         password,
       });
 
+      const duration = Date.now() - startTime;
+
       if (error) {
-        logger.warn("Login failed", {
-          email: email.toLowerCase().trim(),
+        logger.warn(`[${requestId}] Login failed after ${duration}ms`, {
+          email: normalizedEmail,
           errorCode: error.code,
-          errorMessage: error.message
+          errorMessage: error.message,
+          errorStatus: error.status,
+          errorName: error.name,
+          duration
         });
 
         // Provide specific error messages based on Supabase error codes
@@ -177,7 +201,20 @@ class AuthController {
         });
       }
 
-      logger.info("Login successful", { userId: data.user?.id });
+      logger.info(`[${requestId}] Login successful after ${duration}ms`, {
+        userId: data.user?.id,
+        email: data.user?.email,
+        hasSession: !!data.session,
+        sessionExpiresAt: data.session?.expires_at,
+        duration
+      });
+
+      logger.info(`[${requestId}] Sending login response`, {
+        userId: data.user?.id,
+        hasUser: !!data.user,
+        hasSession: !!data.session,
+        hasAccessToken: !!data.session?.access_token
+      });
 
       res.json({
         success: true,
@@ -187,9 +224,13 @@ class AuthController {
         }
       });
     } catch (error) {
-      logger.error("Unexpected error during login", {
-        error: error as Error["message"],
-        stack: (error as Error).stack
+      const duration = Date.now() - startTime;
+      logger.error(`[${requestId}] Unexpected error during login after ${duration}ms`, {
+        error: (error as Error).message,
+        errorName: (error as Error).name,
+        stack: (error as Error).stack,
+        duration,
+        email: email ? email.toLowerCase().trim() : undefined
       });
 
       res.status(500).json({
