@@ -24,6 +24,21 @@ const logRequest = (endpoint: string) => {
 export default (controllers: any, middleware: any) => {
   const { authController } = controllers;
 
+  // Debug middleware to log ALL requests to auth routes
+  router.use((req: Request, res: Response, next: NextFunction) => {
+    logger.info('🔍 Auth router received request', {
+      method: req.method,
+      path: req.path,
+      originalUrl: req.originalUrl,
+      body: req.body,
+      headers: {
+        'content-type': req.get('content-type'),
+        'user-agent': req.get('user-agent')
+      }
+    });
+    next();
+  });
+
   // Public endpoints (not authenticated) - use stricter rate limiting
   router.post("/register",
     logRequest("register"),
