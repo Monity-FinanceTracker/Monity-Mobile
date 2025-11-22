@@ -352,7 +352,7 @@ export default function Savings() {
                 <ArrowLeft size={20} color={colors.textPrimary} />
               </Pressable>
               <View>
-                <Text className="text-white text-2xl font-bold">Poupança</Text>
+                <Text className="text-text-primary text-2xl font-bold">Poupança</Text>
                 <Text className="text-text-primary text-sm">
                   Gerencie suas economias
                 </Text>
@@ -377,9 +377,9 @@ export default function Savings() {
           ) : savingsGoals.length === 0 ? (
             <View className="items-center py-12">
               <View className="w-16 h-16 bg-accent/20 rounded-full items-center justify-center mb-4">
-                <Wallet size={32} color="white" />
+                <Wallet size={32} color="#F5F0E6" />
               </View>
-              <Text className="text-white text-base font-semibold mb-2">
+              <Text className="text-text-primary text-base font-semibold mb-2">
                 Nenhuma poupança ainda
               </Text>
               <Text className="text-text-primary text-center mb-4 text-sm">
@@ -406,7 +406,7 @@ export default function Savings() {
                     <View className="p-4">
                       <View className="flex-row items-start justify-between mb-3">
                         <View className="flex-1">
-                          <Text className="text-white text-lg font-semibold mb-1">
+                          <Text className="text-text-primary text-lg font-semibold mb-1">
                             {goal.goal_name}
                           </Text>
                           <Text className="text-text-primary text-xs">
@@ -477,7 +477,7 @@ export default function Savings() {
                             className={`text-sm font-medium ${
                               goal.current_amount === 0
                                 ? "text-text-primary"
-                                : "text-white"
+                                : "text-text-primary"
                             }`}
                           >
                             Retirar
@@ -512,7 +512,7 @@ export default function Savings() {
                 contentContainerStyle={{ padding: 24 }}
               >
                 <View className="flex-row items-center justify-between mb-6">
-                  <Text className="text-white text-xl font-bold">
+                  <Text className="text-text-primary text-xl font-bold">
                     Nova Poupança
                   </Text>
                   <Pressable
@@ -523,7 +523,7 @@ export default function Savings() {
                     }}
                     className="w-8 h-8 bg-card-bg rounded-full items-center justify-center"
                   >
-                    <X size={16} color="white" />
+                    <X size={16} color="#F5F0E6" />
                   </Pressable>
                 </View>
 
@@ -537,7 +537,7 @@ export default function Savings() {
                   }
                   placeholder="Ex: Reserva de Emergência"
                   placeholderTextColor="#6B7280"
-                  className="bg-card-bg text-white px-4 py-3 rounded-xl"
+                  className="bg-card-bg text-text-primary px-4 py-3 rounded-xl"
                 />
               </View>
 
@@ -551,7 +551,7 @@ export default function Savings() {
                   placeholder="0,00"
                   placeholderTextColor="#6B7280"
                   keyboardType="numeric"
-                  className="bg-card-bg text-white px-4 py-3 rounded-xl"
+                  className="bg-card-bg text-text-primary px-4 py-3 rounded-xl"
                 />
               </View>
 
@@ -659,7 +659,7 @@ export default function Savings() {
                 contentContainerStyle={{ padding: 24 }}
               >
                 <View className="flex-row items-center justify-between mb-6">
-                  <Text className="text-white text-xl font-bold">
+                  <Text className="text-text-primary text-xl font-bold">
                     Adicionar Dinheiro
                   </Text>
                   <Pressable
@@ -670,7 +670,7 @@ export default function Savings() {
                     }}
                     className="w-8 h-8 bg-card-bg rounded-full items-center justify-center"
                   >
-                    <X size={16} color="white" />
+                    <X size={16} color="#F5F0E6" />
                   </Pressable>
                 </View>
 
@@ -690,7 +690,7 @@ export default function Savings() {
                     placeholder="0,00"
                     placeholderTextColor="#6B7280"
                     keyboardType="numeric"
-                    className="bg-card-bg text-white px-4 py-3 rounded-xl"
+                    className="bg-card-bg text-text-primary px-4 py-3 rounded-xl"
                   />
                 </View>
 
@@ -711,7 +711,7 @@ export default function Savings() {
                     )}
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white font-medium">
+                    <Text className="text-text-primary font-medium">
                       Usar do saldo
                     </Text>
                     <Text className="text-text-primary text-xs">
@@ -767,7 +767,7 @@ export default function Savings() {
                 contentContainerStyle={{ padding: 24 }}
               >
                 <View className="flex-row items-center justify-between mb-6">
-                  <Text className="text-white text-xl font-bold">
+                  <Text className="text-text-primary text-xl font-bold">
                     Retirar Dinheiro
                   </Text>
                   <Pressable
@@ -778,7 +778,7 @@ export default function Savings() {
                     }}
                     className="w-8 h-8 bg-card-bg rounded-full items-center justify-center"
                   >
-                    <X size={16} color="white" />
+                    <X size={16} color="#F5F0E6" />
                   </Pressable>
                 </View>
 
@@ -801,7 +801,7 @@ export default function Savings() {
                     placeholder="0,00"
                     placeholderTextColor="#6B7280"
                     keyboardType="numeric"
-                    className="bg-card-bg text-white px-4 py-3 rounded-xl"
+                    className="bg-card-bg text-text-primary px-4 py-3 rounded-xl"
                   />
                 </View>
 
@@ -822,7 +822,7 @@ export default function Savings() {
                     )}
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white font-medium">
+                    <Text className="text-text-primary font-medium">
                       Adicionar ao saldo
                     </Text>
                   </View>
@@ -835,7 +835,7 @@ export default function Savings() {
                   }}
                   className="bg-red-500 py-4 rounded-xl items-center"
                 >
-                  <Text className="text-white font-semibold text-base">
+                  <Text className="text-text-primary font-semibold text-base">
                     Retirar
                   </Text>
                 </Pressable>

@@ -19,7 +19,7 @@
     /* Borders & Dividers */
     --border: #262626;
     --border-hover: rgba(38, 38, 38, 0.8);
-    --button-border: #FAF9F5;
+    --button-border: #F5F0E6;
 
     /* Accent Colors */
     --accent: #56a69f;
@@ -28,10 +28,10 @@
     --accent-medium: rgba(86, 166, 159, 0.2);
 
     /* Text Colors */
-    --text-primary: #FAF9F5;
-    --text-secondary: #FAF9F5;
+    --text-primary: #F5F0E6;
+    --text-secondary: #F5F0E6;
     --text-muted: #30302E;
-    --text-gray: #FAF9F5;
+    --text-gray: #F5F0E6;
 
     /* Status Colors */
     --success: #56a69f;
@@ -46,8 +46,8 @@
     /* Transaction Colors */
     --income: #56a69f;
     --income-bg: rgba(86, 166, 159, 0.2);
-    --expense: #FAF9F5;
-    --expense-bg: rgba(250, 249, 245, 0.1);
+    --expense: #D97757;
+    --expense-bg: rgba(217, 119, 87, 0.1);
     --savings: #60A5FA;
     --savings-bg: rgba(59, 130, 246, 0.2);
 

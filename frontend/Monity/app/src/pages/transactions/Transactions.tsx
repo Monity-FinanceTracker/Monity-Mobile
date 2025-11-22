@@ -422,7 +422,7 @@ export default function Transactions() {
 
     // Use arrows instead of category icons
     const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
-    const arrowColor = transactionType === "income" ? COLORS.accent : COLORS.textPrimary; // Green for income, white for expense
+    const arrowColor = transactionType === "income" ? COLORS.accent : COLORS.expense; // Green for income, expense color for expense
     
     return (
       <Pressable 
@@ -438,7 +438,7 @@ export default function Transactions() {
                 borderRadius: 8,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: transactionType === "income" ? colors.incomeBg : 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: transactionType === "income" ? colors.incomeBg : colors.expenseBg,
               }}
             >
               <ArrowIcon
@@ -448,7 +448,7 @@ export default function Transactions() {
             </View>
             <View className="flex-1">
               <View className="flex-row items-center gap-2">
-                <Text className="font-medium text-white text-xs">{title}</Text>
+                <Text className="font-medium text-text-primary text-xs">{title}</Text>
                 {isFavorite && (
                   <Star size={12} color={colors.accent} fill={colors.accent} />
                 )}
@@ -463,7 +463,7 @@ export default function Transactions() {
               style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: transactionType === "income" ? colors.income : colors.textPrimary,
+                color: transactionType === "income" ? colors.income : colors.expense,
               }}
             >
               {transactionType === "income" ? "+" : "-"}
@@ -522,7 +522,7 @@ export default function Transactions() {
                 value={searchTerm}
                 onChangeText={setSearchTerm}
                 className="bg-card-bg border border-border-default rounded-xl pl-4 pr-4 py-3 text-text-primary"
-                style={{ color: COLORS.textPrimary }}
+                style={{ color: COLORS.textPrimary, backgroundColor: '#30302E' }}
               />
             </View>
             <Pressable 

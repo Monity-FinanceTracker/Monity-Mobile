@@ -315,7 +315,7 @@ export default function Dashboard() {
 
     // Use arrows instead of category icons
     const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
-    const arrowColor = transactionType === "income" ? colors.income : colors.textPrimary; // Teal for income, white for expense
+    const arrowColor = transactionType === "income" ? colors.income : colors.expense; // Teal for income, expense color for expense
     
     return (
       <View key={transaction.id} style={{ marginBottom: 12 }}>
@@ -329,7 +329,7 @@ export default function Dashboard() {
                   borderRadius: 8,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: transactionType === "income" ? colors.incomeBg : 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: transactionType === "income" ? colors.incomeBg : colors.expenseBg,
                 }}
               >
                 <ArrowIcon
@@ -338,7 +338,7 @@ export default function Dashboard() {
                 />
               </View>
               <View>
-                <Text className="font-medium text-white text-xs">{title}</Text>
+                <Text className="font-medium text-text-primary text-xs">{title}</Text>
                 <Text className="text-[10px] text-text-primary">
                   {categoryName as string}
                 </Text>
@@ -349,7 +349,7 @@ export default function Dashboard() {
                 style={{
                   fontSize: 12,
                   fontWeight: '600',
-                  color: transactionType === "income" ? colors.income : colors.textPrimary,
+                  color: transactionType === "income" ? colors.income : colors.expense,
                 }}
               >
                 {transactionType === "income" ? "+" : "-"}
@@ -381,7 +381,7 @@ export default function Dashboard() {
           <View className="flex-row items-center justify-between mb-6">
             <View>
               <Text 
-                className="text-white text-2xl font-bold"
+                className="text-text-primary text-2xl font-bold"
               >
                 Olá, {user?.name || "Usuário"}!
               </Text>
@@ -405,17 +405,17 @@ export default function Dashboard() {
           <Card className="bg-gradient-to-r from-accent to-accent/80 border-0 mb-3">
             <View className="p-6">
               <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-white text-lg">Saldo Total</Text>
+                <Text className="text-text-primary text-lg">Saldo Total</Text>
                 <Pressable onPress={() => setShowBalance(!showBalance)}>
                   {showBalance ? (
-                    <Eye size={20} color="white" />
+                    <Eye size={20} color="#F5F0E6" />
                   ) : (
-                    <EyeOff size={20} color="white" />
+                    <EyeOff size={20} color="#F5F0E6" />
                   )}
                 </Pressable>
               </View>
               <View className="flex-row items-center gap-2">
-                <Text className="text-3xl font-bold text-white">
+                <Text className="text-3xl font-bold text-text-primary">
                   {showBalance
                     ? balance
                       ? formatCurrency(balance?.availableBalance || balance?.total)
@@ -451,20 +451,20 @@ export default function Dashboard() {
           <Card className="bg-gradient-to-r from-accent to-accent/80 border-0 mb-3">
             <View className="p-4">
               <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-white text-base font-medium">
+                <Text className="text-text-primary text-base font-medium">
                   Total em Economias
                 </Text>
                 <Pressable onPress={() => navigation.navigate("Savings" as never)}>
-                  <Wallet size={20} color="white" />
+                  <Wallet size={20} color="#F5F0E6" />
                 </Pressable>
               </View>
-              <Text className="text-2xl font-bold text-white">
+              <Text className="text-2xl font-bold text-text-primary">
                 {showBalance
                   ? formatCurrency(balance?.allocatedSavings || 0)
                   : "••••••"}
               </Text>
               {balance && balance.allocatedSavings > 0 ? (
-                <Text className="text-xs text-white/80 mt-1">
+                <Text className="text-xs text-text-primary/80 mt-1">
                   Guardado em suas metas de poupança
                 </Text>
               ) : (
@@ -472,7 +472,7 @@ export default function Dashboard() {
                   onPress={() => navigation.navigate("Savings" as never)}
                   className="mt-2"
                 >
-                  <Text className="text-xs text-white/90 underline">
+                  <Text className="text-xs text-text-primary/90 underline">
                     Criar primeira meta de poupança
                   </Text>
                 </Pressable>
@@ -507,7 +507,7 @@ export default function Dashboard() {
                   <View className="items-center justify-center">
                     <Text
                       className={`text-xs font-medium ${
-                        isSelected ? 'text-white' : 'text-text-primary'
+                        isSelected ? 'text-text-primary' : 'text-text-primary'
                       }`}
                       numberOfLines={1}
                     >
@@ -556,7 +556,7 @@ export default function Dashboard() {
               <View className="flex-1">
                 <View className="flex-row items-center gap-3">
                   <View className="w-10 h-10 bg-white/10 rounded-lg items-center justify-center">
-                    <TrendingDown size={20} color="white" />
+                    <TrendingDown size={20} color={colors.expense} />
                   </View>
                   <View className="flex-1">
                     <Text className="text-xs text-text-primary">Despesas</Text>
@@ -585,7 +585,7 @@ export default function Dashboard() {
           {/* Recent Transactions */}
           <View className="mt-3">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-sm font-semibold text-white">
+              <Text className="text-sm font-semibold text-text-primary">
                 Transações Recentes
               </Text>
               <Pressable
@@ -608,9 +608,9 @@ export default function Dashboard() {
               ) : (
                 <View className="items-center py-8">
                   <View className="w-16 h-16 bg-accent/20 rounded-full items-center justify-center mb-4">
-                    <Banknote size={32} color="white" />
+                    <Banknote size={32} color="#F5F0E6" />
                   </View>
-                  <Text className="text-white text-base font-semibold mb-2">
+                  <Text className="text-text-primary text-base font-semibold mb-2">
                     Nenhuma transação ainda
                   </Text>
                   <Text className="text-text-primary text-center mb-4 text-sm">
@@ -624,7 +624,7 @@ export default function Dashboard() {
                       borderColor: COLORS.accent,
                     }}
                   >
-                    <Text className="text-white font-semibold">
+                    <Text className="text-text-primary font-semibold">
                       Adicionar Transação
                     </Text>
                   </Pressable>
