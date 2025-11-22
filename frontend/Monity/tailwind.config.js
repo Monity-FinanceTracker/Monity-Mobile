@@ -15,7 +15,7 @@ module.exports = {
 
         // Borders
         'border-default': '#262626',
-        'button-border': '#FAF9F5',
+        'button-border': '#F5F0E6',
 
         // Accent
         accent: {
@@ -27,10 +27,10 @@ module.exports = {
 
         // Text
         text: {
-          primary: '#FAF9F5',
-          secondary: '#FAF9F5',
+          primary: '#F5F0E6',
+          secondary: '#F5F0E6',
           muted: '#30302E',
-          gray: '#FAF9F5',
+          gray: '#F5F0E6',
         },
 
         // Status
@@ -57,8 +57,8 @@ module.exports = {
           bg: 'rgba(86, 166, 159, 0.2)',
         },
         expense: {
-          DEFAULT: '#FAF9F5',
-          bg: 'rgba(250, 249, 245, 0.1)',
+          DEFAULT: '#D97757',
+          bg: 'rgba(217, 119, 87, 0.1)',
         },
         savings: {
           DEFAULT: '#60A5FA',
@@ -80,7 +80,7 @@ module.exports = {
       },
       borderColor: {
         DEFAULT: '#262626',
-        'button': '#FAF9F5',
+        'button': '#F5F0E6',
       },
     },
   },

@@ -781,12 +781,12 @@ export default function Chat() {
                 <View className="flex-row items-center mb-2">
                   <ImageIcon 
                     size={18} 
-                    color="#FAF9F5" 
+                    color="#F5F0E6" 
                     style={{ marginRight: 8 }}
                   />
                   <Text
                     style={{
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                       fontSize: 18,
                       fontWeight: '500',
                     }}
@@ -801,12 +801,12 @@ export default function Chat() {
                 <View className="flex-row items-center mb-2">
                   <Headphones 
                     size={18} 
-                    color="#FAF9F5" 
+                    color="#F5F0E6" 
                     style={{ marginRight: 8 }}
                   />
                   <Text
                     style={{
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                       fontSize: 18,
                       fontWeight: '500',
                     }}
@@ -819,7 +819,7 @@ export default function Chat() {
               {/* Message content */}
               <Text
                 style={{
-                  color: "#FAF9F5",
+                  color: "#F5F0E6",
                   fontSize: 18,
                   lineHeight: 26,
                 }}
@@ -830,7 +830,7 @@ export default function Chat() {
               {/* Timestamp */}
               <Text
                 style={{
-                  color: "#FAF9F5",
+                  color: "#F5F0E6",
                   opacity: 0.7,
                   fontSize: 12,
                   marginTop: 4,
@@ -849,7 +849,7 @@ export default function Chat() {
               >
                 <Copy 
                   size={14} 
-                  color="#FAF9F5" 
+                  color="#F5F0E6" 
                 />
               </TouchableOpacity>
 
@@ -912,7 +912,7 @@ export default function Chat() {
               <Text
                 style={{
                   fontFamily: "Stratford",
-                  color: "#FAF9F5",
+                  color: "#F5F0E6",
                   fontSize: 12,
                   marginTop: 4,
                 }}
@@ -938,7 +938,7 @@ export default function Chat() {
             <View className="flex-1 ml-4 mr-6">
               <Text
                 style={{
-                  color: "#FAF9F5",
+                  color: "#F5F0E6",
                   fontSize: 10,
                   opacity: 0.7,
                   lineHeight: 12,
@@ -1036,6 +1036,7 @@ export default function Chat() {
           <View className="bg-card-bg rounded-2xl border border-border-default flex-row items-center px-3" style={{ 
             paddingVertical: 8, 
             minHeight: 48,
+            backgroundColor: '#30302E',
           }}>
             {/* Botão + (Imagem) */}
             <TouchableOpacity
@@ -1043,7 +1044,7 @@ export default function Chat() {
               disabled={isLoading || isRecording}
               className={`mr-2 ${isLoading || isRecording ? "opacity-50" : ""}`}
             >
-              <Plus size={20} color="#FAF9F5" />
+              <Plus size={20} color="#F5F0E6" />
             </TouchableOpacity>
 
             {/* Botão Áudio */}
@@ -1052,7 +1053,7 @@ export default function Chat() {
               disabled={isLoading}
               className={`mr-2 ${isLoading ? "opacity-50" : ""}`}
             >
-              <Mic size={20} color={isRecording ? COLORS.error : "#FAF9F5"} />
+              <Mic size={20} color={isRecording ? COLORS.error : "#F5F0E6"} />
             </TouchableOpacity>
 
             {/* Input de Texto ou Audio Waves */}

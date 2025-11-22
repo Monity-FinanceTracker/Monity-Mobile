@@ -300,7 +300,7 @@ export default function Calendar() {
                 <ArrowLeft size={20} color={colors.textPrimary} />
               </Pressable>
               <View>
-                <Text className="text-white text-2xl font-bold">
+                <Text className="text-text-primary text-2xl font-bold">
                   Calendário
                 </Text>
                 <Text className="text-text-primary text-sm">
@@ -320,7 +320,7 @@ export default function Calendar() {
               <ChevronLeft size={24} color={colors.textPrimary} />
             </Pressable>
 
-            <Text className="text-white text-xl font-semibold">
+            <Text className="text-text-primary text-xl font-semibold">
               {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
             </Text>
 
@@ -438,7 +438,7 @@ export default function Calendar() {
               padding: 16,
             }}
           >
-            <Text className="text-white text-lg font-semibold mb-4">
+            <Text className="text-text-primary text-lg font-semibold mb-4">
               Resumo do Mês
             </Text>
             <View className="flex-row justify-between">
@@ -504,7 +504,7 @@ export default function Calendar() {
             {/* Modal Header */}
             <View className="flex-row items-center justify-between px-6 mb-4">
               <View className="flex-1">
-                <Text className="text-white text-xl font-bold">
+                <Text className="text-text-primary text-xl font-bold">
                   {selectedDate ? formatDate(selectedDate) : ""}
                 </Text>
                 <Text className="text-text-primary text-sm mt-1">
@@ -550,7 +550,7 @@ export default function Calendar() {
                     <View className="flex-row items-center justify-between">
                       <View className="flex-1">
                         <View className="flex-row items-center gap-2 mb-1">
-                          <Text className="text-white text-base font-semibold">
+                          <Text className="text-text-primary text-base font-semibold">
                             {item.title || item.description}
                           </Text>
                           {item.isRecurring && (

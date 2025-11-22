@@ -332,7 +332,7 @@ export default function Categories() {
           <View className="flex-row items-center gap-3">
             <View className="flex-1 min-w-0">
               <View className="flex-row items-center gap-2 mb-1 flex-wrap">
-                <Text className="font-medium text-white text-sm">
+                <Text className="font-medium text-text-primary text-sm">
                   {category.name}
                 </Text>
                 <View
@@ -378,13 +378,13 @@ export default function Categories() {
                     onPress={() => handleEditCategory(category)}
                     className="bg-card-bg rounded-lg p-2 items-center justify-center"
                   >
-                    <Edit size={14} color="white" />
+                    <Edit size={14} color="#F5F0E6" />
                   </Pressable>
                   <Pressable
                     onPress={() => handleDeleteCategory(category)}
                     className="bg-card-bg rounded-lg p-2 items-center justify-center"
                   >
-                    <Trash2 size={14} color="white" />
+                    <Trash2 size={14} color="#F5F0E6" />
                   </Pressable>
                 </View>
               </View>
@@ -399,7 +399,7 @@ export default function Categories() {
     return (
       <Card className="mb-6">
         <View>
-          <Text className="text-white text-base font-semibold mb-4">
+          <Text className="text-text-primary text-base font-semibold mb-4">
             Análise por Categoria
           </Text>
           <View className="gap-4">
@@ -408,7 +408,7 @@ export default function Categories() {
                 <View key={category.id} className="flex-row items-center gap-3">
                   <View className="flex-1">
                     <View className="flex-row items-center justify-between mb-1">
-                      <Text className="text-sm font-medium text-white">
+                      <Text className="text-sm font-medium text-text-primary">
                         {category.name}
                       </Text>
                       <Text className="text-sm text-text-primary">
@@ -424,7 +424,7 @@ export default function Categories() {
                     className={`text-sm font-medium ${
                       category.type === "income"
                         ? "text-green-400"
-                        : "text-white"
+                        : "text-text-primary"
                     }`}
                   >
                     {formatCurrency(category.totalSpent || 0)}
@@ -462,7 +462,7 @@ export default function Categories() {
               >
                 <ArrowLeft size={20} color={colors.textPrimary} />
               </Pressable>
-              <Text className="text-white text-lg font-bold">Categorias</Text>
+              <Text className="text-text-primary text-lg font-bold">Categorias</Text>
             </View>
             <Pressable
               onPress={() => setShowCreateForm(true)}
@@ -480,7 +480,7 @@ export default function Categories() {
                 <View className="p-4">
                   <View className="flex-row items-center gap-2">
                     <View style={{ width: 40, height: 40, backgroundColor: colors.incomeBg, borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <TrendingUp size={20} color="white" />
+                      <TrendingUp size={20} color="#F5F0E6" />
                     </View>
                     <View className="flex-1 min-w-0">
                       <Text className="text-xs text-text-primary">Receitas</Text>
@@ -501,11 +501,11 @@ export default function Categories() {
                 <View className="p-4">
                   <View className="flex-row items-center gap-2">
                     <View className="w-10 h-10 bg-white/10 rounded-lg items-center justify-center flex-shrink-0">
-                      <TrendingDown size={20} color="white" />
+                      <TrendingDown size={20} color={colors.expense} />
                     </View>
                     <View className="flex-1 min-w-0">
                       <Text className="text-xs text-text-primary">Despesas</Text>
-                      <Text className="text-xs font-semibold text-white" numberOfLines={1} adjustsFontSizeToFit>
+                      <Text className="text-xs font-semibold text-text-primary" numberOfLines={1} adjustsFontSizeToFit>
                         {formatCurrency(totalExpenses)}
                       </Text>
                       <Text className="text-xs text-text-primary">
@@ -525,7 +525,7 @@ export default function Categories() {
                 <View className="p-4">
                   <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-blue-500/10 rounded-lg items-center justify-center">
-                      <PieChart size={20} color="white" />
+                      <PieChart size={20} color="#F5F0E6" />
                     </View>
                     <View>
                       <Text className="text-xs text-text-primary">Poupança</Text>
@@ -636,7 +636,7 @@ export default function Categories() {
               >
                 <BarChart3
                   size={16}
-                  color="white"
+                  color="#F5F0E6"
                 />
               </Pressable>
               <Pressable
@@ -647,7 +647,7 @@ export default function Categories() {
               >
                 <PieChart
                   size={16}
-                  color="white"
+                  color="#F5F0E6"
                 />
               </Pressable>
             </View>
@@ -667,9 +667,9 @@ export default function Categories() {
               ) : (
                 <View className="items-center py-12">
                   <View className="w-16 h-16 bg-card-bg rounded-full items-center justify-center mb-4">
-                    <Palette size={24} color="white" />
+                    <Palette size={24} color="#F5F0E6" />
                   </View>
-                  <Text className="text-base font-medium text-white mb-2">
+                  <Text className="text-base font-medium text-text-primary mb-2">
                     Nenhuma categoria encontrada
                   </Text>
                   <Text className="text-text-primary text-center mb-4 text-sm">
@@ -679,7 +679,7 @@ export default function Categories() {
                     onPress={() => setShowCreateForm(true)}
                     className="bg-accent px-6 py-3 rounded-lg flex-row items-center gap-2"
                   >
-                    <Plus size={16} color="white" />
+                    <Plus size={16} color="#F5F0E6" />
                     <Text className="text-[#191E29] font-medium">
                       Criar Primeira Categoria
                     </Text>
@@ -710,7 +710,7 @@ export default function Categories() {
               <View className="p-6">
                 {/* Modal Header */}
                 <View className="flex-row items-center justify-between mb-6">
-                  <Text className="text-white text-xl font-bold">
+                  <Text className="text-text-primary text-xl font-bold">
                     {editingCategory ? "Editar Categoria" : "Nova Categoria"}
                   </Text>
                   <Pressable
@@ -726,7 +726,7 @@ export default function Categories() {
                     }}
                     className="w-8 h-8 bg-card-bg rounded-full items-center justify-center"
                   >
-                    <X size={16} color="white" />
+                    <X size={16} color="#F5F0E6" />
                   </Pressable>
                 </View>
 
@@ -761,7 +761,7 @@ export default function Categories() {
                       >
                         <TrendingDown
                           size={16}
-                          color="white"
+                          color={colors.expense}
                         />
                         <Text
                           className={`font-medium ${
@@ -785,7 +785,7 @@ export default function Categories() {
                       >
                         <TrendingUp
                           size={16}
-                          color="white"
+                          color="#F5F0E6"
                         />
                         <Text
                           className={`font-medium ${

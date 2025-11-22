@@ -204,7 +204,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             });
           };
 
-          const color = isFocused ? COLORS.accent : "#FAF9F5";
+          const color = isFocused ? COLORS.accent : "#F5F0E6";
           const icon = options.tabBarIcon?.({ focused: isFocused, color, size: 24 });
 
           return (

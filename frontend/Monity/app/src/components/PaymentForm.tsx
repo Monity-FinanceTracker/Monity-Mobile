@@ -166,7 +166,7 @@ export default function PaymentForm({
       >
         <View className="flex-1 items-center justify-center px-6">
           <ActivityIndicator size="large" color="#01C38D" />
-          <Text className="text-white mt-4 text-center">
+          <Text className="text-text-primary mt-4 text-center">
             Inicializando pagamento...
           </Text>
         </View>
@@ -184,9 +184,9 @@ export default function PaymentForm({
           <View className="px-6 pt-6 pb-6">
             <View className="flex-row items-center gap-4 mb-6">
               <Pressable onPress={onCancel} className="p-2">
-                <ArrowLeft size={20} color="white" />
+                <ArrowLeft size={20} color="#F5F0E6" />
               </Pressable>
-              <Text className="text-white text-xl font-bold">Assinatura Premium</Text>
+              <Text className="text-text-primary text-xl font-bold">Assinatura Premium</Text>
             </View>
 
             <Card className="mb-6">
@@ -234,9 +234,9 @@ export default function PaymentForm({
           <View className="px-6 pt-6 pb-6">
             <View className="flex-row items-center gap-4 mb-6">
               <Pressable onPress={onCancel} className="p-2">
-                <ArrowLeft size={20} color="white" />
+                <ArrowLeft size={20} color="#F5F0E6" />
               </Pressable>
-              <Text className="text-white text-xl font-bold">Pagamento</Text>
+              <Text className="text-text-primary text-xl font-bold">Pagamento</Text>
             </View>
 
             <Card className="mb-6">
@@ -268,16 +268,16 @@ export default function PaymentForm({
           {/* Header */}
           <View className="flex-row items-center gap-4 mb-6">
             <Pressable onPress={onCancel} className="p-2">
-              <ArrowLeft size={20} color="white" />
+              <ArrowLeft size={20} color="#F5F0E6" />
             </Pressable>
-            <Text className="text-white text-xl font-bold">Assinatura Premium</Text>
+            <Text className="text-text-primary text-xl font-bold">Assinatura Premium</Text>
           </View>
 
           {/* Plan Summary */}
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-white text-lg font-semibold">{planName}</Text>
+                <Text className="text-text-primary text-lg font-semibold">{planName}</Text>
                 <Text className="text-[#01C38D] text-xl font-bold">
                   {displayPrice}
                 </Text>
@@ -297,8 +297,8 @@ export default function PaymentForm({
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-4">
-                <CreditCard size={20} color="white" />
-                <Text className="text-white text-lg font-semibold">
+                <CreditCard size={20} color="#F5F0E6" />
+                <Text className="text-text-primary text-lg font-semibold">
                   Pagamento Seguro
                 </Text>
               </View>
@@ -335,8 +335,8 @@ export default function PaymentForm({
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-2 mb-3">
-                <Shield size={20} color="white" />
-                <Text className="text-white font-semibold">Segurança</Text>
+                <Shield size={20} color="#F5F0E6" />
+                <Text className="text-text-primary font-semibold">Segurança</Text>
               </View>
               <Text className="text-text-primary text-sm">
                 Seu pagamento é processado de forma segura pela {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}. 
@@ -363,7 +363,7 @@ export default function PaymentForm({
             }`}
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color="white" />
+              <ActivityIndicator size="small" color="#F5F0E6" />
             ) : (
               <Lock size={20} color={isLoading || !product ? "#999" : "#191E29"} />
             )}

@@ -192,7 +192,7 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                     style={{
                       paddingLeft: 15,
                       fontSize: 16,
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                     }}
                   />
                   {name && name.length >= 2 && (
@@ -230,7 +230,7 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                     style={{
                       paddingLeft: 15,
                       fontSize: 16,
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                       // Soft white glow effect for borders
                     }}
                   />
@@ -269,7 +269,7 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                       paddingLeft: 15,
                       paddingRight: 15,
                       fontSize: 16,
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                     }}
                   />
                   <TouchableOpacity
@@ -350,7 +350,7 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                       paddingLeft: 15,
                       paddingRight: 15,
                       fontSize: 16,
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                     }}
                   />
                   <TouchableOpacity
@@ -410,13 +410,13 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
               >
                 {loading ? (
                   <View className="flex-row items-center justify-center">
-                    <ActivityIndicator size="small" color="white" />
-                    <Text className="text-white font-semibold text-base ml-2">
+                    <ActivityIndicator size="small" color="#F5F0E6" />
+                    <Text className="text-text-primary font-semibold text-base ml-2">
                       Creating account...
                     </Text>
                   </View>
                 ) : (
-                  <Text className="text-white font-semibold text-base text-center">
+                  <Text className="text-text-primary font-semibold text-base text-center">
                     Create account
                   </Text>
                 )}

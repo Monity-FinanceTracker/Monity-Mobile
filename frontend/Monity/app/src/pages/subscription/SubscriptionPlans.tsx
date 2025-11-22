@@ -143,17 +143,17 @@ export default function SubscriptionPlans() {
           {/* Header */}
           <View className="flex-row items-center gap-4 mb-6">
             <Pressable onPress={() => navigation.goBack()} className="p-2">
-              <ArrowLeft size={20} color="white" />
+              <ArrowLeft size={20} color="#F5F0E6" />
             </Pressable>
-            <Text className="text-white text-lg font-bold">Planos de Assinatura</Text>
+            <Text className="text-text-primary text-lg font-bold">Planos de Assinatura</Text>
           </View>
 
           {/* Current Status */}
           <Card className="mb-6">
             <View className="p-4">
               <View className="flex-row items-center gap-3 mb-2">
-                <Crown size={24} color="white" />
-                <Text className="text-white text-base font-semibold">
+                <Crown size={24} color="#F5F0E6" />
+                <Text className="text-text-primary text-base font-semibold">
                   Plano Atual: {user?.subscriptionTier === "premium" ? "Premium" : "Gratuito"}
                 </Text>
               </View>
@@ -181,12 +181,12 @@ export default function SubscriptionPlans() {
                   <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center gap-3">
                       {plan.id === "premium" ? (
-                        <Crown size={24} color="white" />
+                        <Crown size={24} color="#F5F0E6" />
                       ) : (
-                        <Star size={24} color="white" />
+                        <Star size={24} color="#F5F0E6" />
                       )}
                       <View>
-                        <Text className="text-white text-lg font-bold">
+                        <Text className="text-text-primary text-lg font-bold">
                           {plan.name}
                         </Text>
                         <Text className="text-text-primary text-sm">
@@ -195,7 +195,7 @@ export default function SubscriptionPlans() {
                       </View>
                     </View>
                     <View className="items-end">
-                      <Text className="text-white text-xl font-bold">
+                      <Text className="text-text-primary text-xl font-bold">
                         {formatPrice(plan.price)}
                       </Text>
                       {plan.popular && (
@@ -210,11 +210,11 @@ export default function SubscriptionPlans() {
 
                   {/* Features */}
                   <View className="mb-6">
-                    <Text className="text-white font-semibold mb-3">Recursos incluídos:</Text>
+                    <Text className="text-text-primary font-semibold mb-3">Recursos incluídos:</Text>
                     <View className="gap-2">
                       {plan.features.map((feature, index) => (
                         <View key={index} className="flex-row items-center gap-3">
-                          <Check size={16} color="white" />
+                          <Check size={16} color="#F5F0E6" />
                           <Text className="text-text-primary text-sm flex-1">
                             {feature}
                           </Text>
@@ -230,7 +230,7 @@ export default function SubscriptionPlans() {
                       <View className="gap-2">
                         {plan.limitations.map((limitation, index) => (
                           <View key={index} className="flex-row items-center gap-3">
-                            <X size={16} color="white" />
+                            <X size={16} color="#F5F0E6" />
                             <Text className="text-text-primary text-sm flex-1">
                               {limitation}
                             </Text>
@@ -253,19 +253,19 @@ export default function SubscriptionPlans() {
                     }`}
                   >
                     {isSubscribing ? (
-                      <ActivityIndicator size="small" color="white" />
+                      <ActivityIndicator size="small" color="#F5F0E6" />
                     ) : (
                       <>
                         {plan.id === "premium" && !isCurrentPlan(plan.id) ? (
-                          <CreditCard size={20} color="white" />
+                          <CreditCard size={20} color="#F5F0E6" />
                         ) : plan.id === "premium" ? (
-                          <Zap size={20} color="white" />
+                          <Zap size={20} color="#F5F0E6" />
                         ) : null}
                         <Text
                           className={`font-bold ${
                             plan.id === "premium" && !isCurrentPlan(plan.id)
                               ? "text-[#191E29]"
-                              : "text-white"
+                              : "text-text-primary"
                           }`}
                         >
                           {isCurrentPlan(plan.id)
@@ -285,30 +285,30 @@ export default function SubscriptionPlans() {
           {/* Benefits Section */}
           <Card className="mt-6">
             <View className="p-4">
-              <Text className="text-white text-base font-semibold mb-4">
+              <Text className="text-text-primary text-base font-semibold mb-4">
                 Por que escolher o Premium?
               </Text>
               <View className="gap-3">
                 <View className="flex-row items-center gap-3">
-                  <Zap size={20} color="white" />
+                  <Zap size={20} color="#F5F0E6" />
                   <Text className="text-text-primary flex-1">
                     IA avançada para categorização automática de transações
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-3">
-                  <Zap size={20} color="white" />
+                  <Zap size={20} color="#F5F0E6" />
                   <Text className="text-text-primary flex-1">
                     Projeções financeiras inteligentes para planejamento
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-3">
-                  <Zap size={20} color="white" />
+                  <Zap size={20} color="#F5F0E6" />
                   <Text className="text-text-primary flex-1">
                     Relatórios detalhados e análises avançadas
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-3">
-                  <Zap size={20} color="white" />
+                  <Zap size={20} color="#F5F0E6" />
                   <Text className="text-text-primary flex-1">
                     Backup automático na nuvem para segurança total
                   </Text>
