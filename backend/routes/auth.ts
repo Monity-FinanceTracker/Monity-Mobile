@@ -39,22 +39,22 @@ export default (controllers: any, middleware: any) => {
     next();
   });
 
-  // Public endpoints (not authenticated) - use stricter rate limiting
+  // Public endpoints (not authenticated) - temporarily disabled rate limiting for debugging
   router.post("/register",
     logRequest("register"),
-    middleware.rateLimiter.authLimiter,
+    // middleware.rateLimiter.authLimiter, // Rate limiting removed to fix 502 errors
     (req: Request, res: Response, next: NextFunction) =>
       authController.register(req, res, next)
   );
   router.post("/check-email",
     logRequest("check-email"),
-    middleware.rateLimiter.authLimiter,
+    // middleware.rateLimiter.authLimiter, // Rate limiting removed to fix 502 errors
     (req: Request, res: Response, next: NextFunction) =>
       authController.checkEmailExists(req, res, next)
   );
   router.post("/login",
     logRequest("login"),
-    middleware.rateLimiter.authLimiter,
+    // middleware.rateLimiter.authLimiter, // Rate limiting removed to fix 502 errors
     (req: Request, res: Response, next: NextFunction) =>
       authController.login(req, res, next)
   );
