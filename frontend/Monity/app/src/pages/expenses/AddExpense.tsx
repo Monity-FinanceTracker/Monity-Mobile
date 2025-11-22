@@ -469,7 +469,7 @@ export default function AddExpense() {
                   <View className="flex-1">
                     <Text
                       style={{
-                        color: "#FAF9F5",
+                        color: "#F5F0E6",
                         fontSize: 18,
                         fontWeight: '600',
                         marginBottom: 4,
@@ -479,7 +479,7 @@ export default function AddExpense() {
                     </Text>
                     <Text
                       style={{
-                        color: "#FAF9F5",
+                        color: "#F5F0E6",
                         fontSize: 14,
                       }}
                     >
@@ -526,7 +526,7 @@ export default function AddExpense() {
                   <View className="flex-1">
                     <Text
                       style={{
-                        color: "#FAF9F5",
+                        color: "#F5F0E6",
                         fontSize: 18,
                         fontWeight: '600',
                         marginBottom: 4,
@@ -536,7 +536,7 @@ export default function AddExpense() {
                     </Text>
                     <Text
                       style={{
-                        color: "#FAF9F5",
+                        color: "#F5F0E6",
                         fontSize: 14,
                       }}
                     >
@@ -590,7 +590,7 @@ export default function AddExpense() {
                   </View>
                   <Text
                     style={{
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                       fontSize: 14,
                       fontWeight: '600',
                       textAlign: 'center',
@@ -600,7 +600,7 @@ export default function AddExpense() {
                   </Text>
                   <Text
                     style={{
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                       fontSize: 12,
                       textAlign: 'center',
                     }}
@@ -646,7 +646,7 @@ export default function AddExpense() {
                   </View>
                   <Text
                     style={{
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                       fontSize: 14,
                       fontWeight: '600',
                       textAlign: 'center',
@@ -656,7 +656,7 @@ export default function AddExpense() {
                   </Text>
                   <Text
                     style={{
-                      color: "#FAF9F5",
+                      color: "#F5F0E6",
                       fontSize: 12,
                       textAlign: 'center',
                     }}
@@ -770,7 +770,7 @@ export default function AddExpense() {
                   
                   // Use arrows instead of category icons
                   const ArrowIcon = transactionType === "income" ? ArrowDown : ArrowUp;
-                  const arrowColor = transactionType === "income" ? colors.income : "#FFFFFF"; // Teal for income, white for expense
+                  const arrowColor = transactionType === "income" ? colors.income : colors.expense; // Teal for income, expense color for expense
 
                   return (
                     <Pressable
@@ -795,7 +795,7 @@ export default function AddExpense() {
                                 borderRadius: 8,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                backgroundColor: transactionType === "income" ? colors.incomeBg : 'rgba(255, 255, 255, 0.1)',
+                                backgroundColor: transactionType === "income" ? colors.incomeBg : colors.expenseBg,
                               }}
                             >
                               <ArrowIcon size={18} color={arrowColor} />
@@ -804,7 +804,7 @@ export default function AddExpense() {
                               <View className="flex-row items-center gap-2">
                                 <Text
                                   style={{
-                                    color: "#FAF9F5",
+                                    color: "#F5F0E6",
                                     fontSize: 14,
                                     fontWeight: '500',
                                   }}
@@ -815,7 +815,7 @@ export default function AddExpense() {
                               </View>
                               <Text
                                 style={{
-                                  color: "#FAF9F5",
+                                  color: "#F5F0E6",
                                   fontSize: 12,
                                   marginTop: 2,
                                 }}

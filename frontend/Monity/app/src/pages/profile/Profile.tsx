@@ -395,7 +395,7 @@ export default function Profile() {
                     value={profileData.name}
                     onChangeText={(text) => handleUpdateProfile("name", text)}
                     editable={isEditing}
-                    className={`bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 ${
+                    className={`bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3 ${
                       !isEditing ? "opacity-50" : ""
                     }`}
                     placeholder="Digite seu nome completo"
@@ -408,7 +408,7 @@ export default function Profile() {
                     value={profileData.email}
                     onChangeText={(text) => handleUpdateProfile("email", text)}
                     editable={isEditing}
-                    className={`bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 ${
+                    className={`bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3 ${
                       !isEditing ? "opacity-50" : ""
                     }`}
                     placeholder="Digite seu email"
@@ -574,7 +574,7 @@ export default function Profile() {
                         setPasswordData({ ...passwordData, currentPassword: text })
                       }
                       secureTextEntry
-                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      className="bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3"
                       placeholder="Digite sua senha atual"
                       placeholderTextColor="#6B7280"
                       autoCapitalize="none"
@@ -591,7 +591,7 @@ export default function Profile() {
                         setPasswordData({ ...passwordData, newPassword: text })
                       }
                       secureTextEntry
-                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      className="bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3"
                       placeholder="Digite sua nova senha (mín. 6 caracteres)"
                       placeholderTextColor="#6B7280"
                       autoCapitalize="none"
@@ -608,7 +608,7 @@ export default function Profile() {
                         setPasswordData({ ...passwordData, confirmPassword: text })
                       }
                       secureTextEntry
-                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      className="bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3"
                       placeholder="Confirme sua nova senha"
                       placeholderTextColor="#6B7280"
                       autoCapitalize="none"
@@ -691,7 +691,7 @@ export default function Profile() {
                       value={deleteAccountPassword}
                       onChangeText={setDeleteAccountPassword}
                       secureTextEntry
-                      className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
+                      className="bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3"
                       placeholder="Digite sua senha"
                       placeholderTextColor="#6B7280"
                       autoCapitalize="none"

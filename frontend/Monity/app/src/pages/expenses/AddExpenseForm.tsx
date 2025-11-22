@@ -298,8 +298,8 @@ export default function AddExpenseForm() {
               onChangeText={setName}
               placeholder="Ex: Supermercado Extra"
               placeholderTextColor={colors.textSecondary}
-              className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3"
-              style={{ color: colors.textPrimary }}
+              className="bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3"
+              style={{ color: colors.textPrimary, backgroundColor: '#30302E' }}
             />
           </View>
 
@@ -317,7 +317,7 @@ export default function AddExpenseForm() {
             </Text>
             <View
               className="flex-row bg-card-bg border border-border-default rounded-xl px-4"
-              style={{ height: 48, alignItems: "center" }}
+              style={{ height: 48, alignItems: "center", backgroundColor: '#30302E' }}
             >
               <Text
                 style={{
@@ -335,7 +335,7 @@ export default function AddExpenseForm() {
                 onChangeText={handleAmountChange}
                 placeholder="0,00"
                 placeholderTextColor={colors.textSecondary}
-                className="flex-1 text-lg font-bold text-white"
+                className="flex-1 text-lg font-bold text-text-primary"
                 keyboardType="numeric"
                 style={{
                   paddingVertical: 0,
@@ -365,7 +365,8 @@ export default function AddExpenseForm() {
               onChangeText={setDescription}
               placeholder="Descrição adicional (opcional)"
               placeholderTextColor={colors.textSecondary}
-              className="bg-card-bg border border-border-default rounded-xl text-white px-4 py-3 h-20 text-left"
+              className="bg-card-bg border border-border-default rounded-xl text-text-primary px-4 py-3 h-20 text-left"
+              style={{ backgroundColor: '#30302E' }}
               multiline
               textAlignVertical="top"
             />

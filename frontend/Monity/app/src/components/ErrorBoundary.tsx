@@ -31,10 +31,10 @@ class ErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <View className="flex-1 justify-center items-center bg-red-500 p-4">
-          <Text className="text-white text-lg font-bold mb-2">
+          <Text className="text-text-primary text-lg font-bold mb-2">
             Something went wrong!
           </Text>
-          <Text className="text-white text-sm text-center">
+          <Text className="text-text-primary text-sm text-center">
             {this.state.error?.message || "Unknown error"}
           </Text>
         </View>
