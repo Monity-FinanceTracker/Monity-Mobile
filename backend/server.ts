@@ -75,10 +75,11 @@ const createServer = (supabaseClient?: SupabaseClient): Express => {
 };
 
 const app: Express = createServer();
-const PORT: number | string = process.env.PORT || 3001;
+const PORT: number = parseInt(process.env.PORT || '3001', 10);
+const HOST: string = process.env.HOST || '0.0.0.0';
 
-app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  logger.info(`Server running on ${HOST}:${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || "development"}`);
   logger.info(
     `CORS enabled for origins: ${
