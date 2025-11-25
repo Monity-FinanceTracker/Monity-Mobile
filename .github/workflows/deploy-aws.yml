@@ -1,0 +1,180 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: monity-mobile-backend
+  BACKEND_DIR: backend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push Docker image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build Docker image
+          cd $BACKEND_DIR
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          # Push both tags to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Save SSH key to file
+          echo "$EC2_SSH_KEY" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+          # Create deployment script
+          cat > deploy_remote.sh << 'EOF'
+          #!/bin/bash
+          set -e
+
+          # Login to ECR
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+          # Pull latest image
+          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          # Stop and remove old container (if exists)
+          docker stop monity-mobile-backend || true
+          docker rm monity-mobile-backend || true
+
+          # Run new container
+          docker run -d \
+            --name monity-mobile-backend \
+            --restart unless-stopped \
+            -p 3001:3001 \
+            -e NODE_ENV="${NODE_ENV}" \
+            -e PORT="${PORT}" \
+            -e HOST="${HOST}" \
+            -e SUPABASE_URL="${SUPABASE_URL}" \
+            -e SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY}" \
+            -e SUPABASE_KEY="${SUPABASE_KEY}" \
+            -e ENCRYPTION_KEY="${ENCRYPTION_KEY}" \
+            -e HASH_SALT="${HASH_SALT}" \
+            -e CLIENT_URL="${CLIENT_URL}" \
+            -e FRONTEND_URL="${FRONTEND_URL}" \
+            -e GEMINI_API_KEY="${GEMINI_API_KEY}" \
+            -e STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY}" \
+            -e STRIPE_WEBHOOK_SECRET="${STRIPE_WEBHOOK_SECRET}" \
+            -e STRIPE_PRICE_PREMIUM_MONTHLY="${STRIPE_PRICE_PREMIUM_MONTHLY}" \
+            -e GOOGLE_PLAY_PACKAGE_NAME="${GOOGLE_PLAY_PACKAGE_NAME}" \
+            -e GOOGLE_PLAY_SERVICE_ACCOUNT_JSON="${GOOGLE_PLAY_SERVICE_ACCOUNT_JSON}" \
+            -e APP_STORE_BUNDLE_ID="${APP_STORE_BUNDLE_ID}" \
+            -e APP_STORE_SHARED_SECRET="${APP_STORE_SHARED_SECRET}" \
+            $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          # Clean up old images
+          docker image prune -f
+
+          # Wait for container to be healthy
+          echo "Waiting for container to start..."
+          sleep 10
+
+          # Check if container is running
+          if docker ps | grep -q monity-mobile-backend; then
+            echo "✅ Container is running"
+            docker logs monity-mobile-backend --tail 50
+          else
+            echo "❌ Container failed to start"
+            docker logs monity-mobile-backend --tail 100
+            exit 1
+          fi
+          EOF
+
+          # Copy script to EC2
+          scp -i ec2_key.pem -o StrictHostKeyChecking=no deploy_remote.sh $EC2_USER@$EC2_HOST:/tmp/
+
+          # Execute deployment script on EC2
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST \
+            "export AWS_REGION=$AWS_REGION && \
+             export ECR_REGISTRY=$ECR_REGISTRY && \
+             export ECR_REPOSITORY=$ECR_REPOSITORY && \
+             export NODE_ENV='${{ secrets.NODE_ENV }}' && \
+             export PORT='${{ secrets.PORT }}' && \
+             export HOST='${{ secrets.HOST }}' && \
+             export SUPABASE_URL='${{ secrets.SUPABASE_URL }}' && \
+             export SUPABASE_ANON_KEY='${{ secrets.SUPABASE_ANON_KEY }}' && \
+             export SUPABASE_KEY='${{ secrets.SUPABASE_KEY }}' && \
+             export ENCRYPTION_KEY='${{ secrets.ENCRYPTION_KEY }}' && \
+             export HASH_SALT='${{ secrets.HASH_SALT }}' && \
+             export CLIENT_URL='${{ secrets.CLIENT_URL }}' && \
+             export FRONTEND_URL='${{ secrets.FRONTEND_URL }}' && \
+             export GEMINI_API_KEY='${{ secrets.GEMINI_API_KEY }}' && \
+             export STRIPE_SECRET_KEY='${{ secrets.STRIPE_SECRET_KEY }}' && \
+             export STRIPE_WEBHOOK_SECRET='${{ secrets.STRIPE_WEBHOOK_SECRET }}' && \
+             export STRIPE_PRICE_PREMIUM_MONTHLY='${{ secrets.STRIPE_PRICE_PREMIUM_MONTHLY }}' && \
+             export GOOGLE_PLAY_PACKAGE_NAME='${{ secrets.GOOGLE_PLAY_PACKAGE_NAME }}' && \
+             export GOOGLE_PLAY_SERVICE_ACCOUNT_JSON='${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}' && \
+             export APP_STORE_BUNDLE_ID='${{ secrets.APP_STORE_BUNDLE_ID }}' && \
+             export APP_STORE_SHARED_SECRET='${{ secrets.APP_STORE_SHARED_SECRET }}' && \
+             bash /tmp/deploy_remote.sh"
+
+          # Cleanup
+          rm -f ec2_key.pem deploy_remote.sh
+
+      - name: Health Check
+        env:
+          API_URL: ${{ secrets.API_URL }}
+        run: |
+          echo "Waiting for API to be healthy..."
+          sleep 15
+
+          # Try health check up to 5 times
+          for i in {1..5}; do
+            if curl -f "$API_URL/api/v1/" > /dev/null 2>&1; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "Health check attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+
+          echo "❌ Health check failed after 5 attempts"
+          exit 1
+
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

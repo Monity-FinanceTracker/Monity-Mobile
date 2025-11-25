@@ -109,7 +109,7 @@ export default class RecurringTransaction {
     }
 
     // Decrypt sensitive fields for each transaction
-    return data.map((item) => {
+    return data.map((item: any) => {
       const decrypted = decryptObject(RecurringTransaction.TABLE_NAME, item);
       return {
         ...decrypted,

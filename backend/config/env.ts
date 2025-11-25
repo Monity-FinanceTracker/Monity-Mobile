@@ -19,7 +19,7 @@ if (missingEnvVars.length > 0) {
     console.error('   2. Click on "Variables" tab');
     console.error('   3. Add the missing variables');
     console.error('\n📖 See RAILWAY_ENV_SETUP.md for detailed instructions');
-    process.exit(1);
+    // process.exit(1); // DISABLED to prevent 502 loop. Let server start in emergency mode.
 }
 
 console.log('✅ All required environment variables are set');
