@@ -97,7 +97,7 @@ function AnimatedTabIcon({
   });
 
   return (
-    <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', padding: 4 }}>
+    <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
       <Animated.View
         style={[
           {
@@ -111,7 +111,7 @@ function AnimatedTabIcon({
           animatedBackgroundStyle,
         ]}
       />
-      <View style={{ zIndex: 1 }}>
+      <View style={{ zIndex: 1, alignItems: 'center', justifyContent: 'center' }}>
         {children}
       </View>
     </View>
@@ -171,11 +171,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       <View
         style={{
           flexDirection: 'row',
-          height: tabBarHeight,
-          paddingBottom: Platform.OS === "android" ? Math.max(12, insets.bottom + 4) : insets.bottom,
-          paddingTop: Platform.OS === "ios" ? 8 : 12,
+          flex: 1,
           paddingHorizontal: 8,
-          justifyContent: 'center',
+          justifyContent: 'space-around',
           alignItems: 'center',
         }}
       >
@@ -220,6 +218,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 paddingHorizontal: 4,
+                height: '100%',
               }}
             >
               {icon}

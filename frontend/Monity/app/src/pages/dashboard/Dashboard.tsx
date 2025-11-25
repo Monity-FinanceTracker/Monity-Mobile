@@ -555,7 +555,16 @@ export default function Dashboard() {
               {/* Despesas */}
               <View className="flex-1">
                 <View className="flex-row items-center gap-3">
-                  <View className="w-10 h-10 bg-white/10 rounded-lg items-center justify-center">
+                  <View 
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 8,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: colors.expenseBg,
+                    }}
+                  >
                     <TrendingDown size={20} color={colors.expense} />
                   </View>
                   <View className="flex-1">
@@ -563,7 +572,7 @@ export default function Dashboard() {
                     <Text    style={{ 
                         fontSize: 16, 
                         fontWeight: '700', 
-                        color: colors.textPrimary,
+                        color: colors.expense,
                         marginBottom: 2,
                       }}>
                       {showBalance
