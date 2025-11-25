@@ -70,7 +70,7 @@ async function populateCategoryIds() {
         console.log(`   📝 Found ${transactionsData.length} transactions without categoryId`);
 
         // Get all categories for this user (decrypted)
-        const categories = await Category.findByUser(userId);
+        const categories = await Category.findByUser(userId as string);
         console.log(`   📂 Found ${categories.length} categories for this user`);
 
         // Create a map of category name to category ID for quick lookup

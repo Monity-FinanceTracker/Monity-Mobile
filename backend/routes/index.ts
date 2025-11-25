@@ -20,7 +20,8 @@ export default (controllers: any, middleware: any) => {
   const v1Router = express.Router();
 
   // Apply general rate limiting to all v1 routes
-  v1Router.use(middleware.rateLimiter.apiLimiter);
+  // Temporarily disabled to debug Railway deployment issue
+  // v1Router.use(middleware.rateLimiter.apiLimiter);
 
   // Root API route for health check
   v1Router.get("/", (req: any, res: any) => {

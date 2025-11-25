@@ -37,7 +37,7 @@ export default class CategoryController {
 
           const transactionCount = transactions?.length || 0;
           const totalSpent =
-            transactions?.reduce((sum, transaction) => {
+            transactions?.reduce((sum: number, transaction: any) => {
               // Parse amount to number (it might be stored as string)
               const amount = typeof transaction.amount === 'string' 
                 ? parseFloat(transaction.amount) 

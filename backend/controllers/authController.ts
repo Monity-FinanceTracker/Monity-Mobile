@@ -138,40 +138,58 @@ class AuthController {
   async login(req: Request, res: Response) {
     const requestId = Math.random().toString(36).substring(7);
     const startTime = Date.now();
-    const { email, password } = req.body;
+    console.log(`[${requestId}] ⚡ LOGIN START`);
+    
+    try {
+      const { email, password } = req.body;
 
-    logger.info(`[${requestId}] Login request received`, {
-      email: email ? email.toLowerCase().trim() : undefined,
-      hasPassword: !!password,
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-      timestamp: new Date().toISOString()
-    });
-
-    if (!email || !password) {
-      logger.warn(`[${requestId}] Missing credentials`, {
-        hasEmail: !!email,
-        hasPassword: !!password
+      logger.info(`[${requestId}] Login request received`, {
+        email: email ? email.toLowerCase().trim() : undefined,
+        hasPassword: !!password,
+        ip: req.ip,
+        userAgent: req.get('user-agent'),
+        timestamp: new Date().toISOString()
       });
-      return res
-        .status(400)
-        .json({
+
+      if (!email || !password) {
+        logger.warn(`[${requestId}] Missing credentials`, {
+          hasEmail: !!email,
+          hasPassword: !!password
+        });
+        return res.status(400).json({
           success: false,
           error: "Email and password are required."
         });
-    }
+      }
 
-    try {
       const normalizedEmail = email.toLowerCase().trim();
-      logger.info(`[${requestId}] Attempting Supabase authentication`, {
-        email: normalizedEmail
-      });
+      
+      // Check if supabase client exists
+      if (!this.supabase) {
+        console.error(`[${requestId}] ❌ CRITICAL: Supabase client is missing in AuthController`);
+        return res.status(500).json({
+          success: false,
+          error: "System configuration error"
+        });
+      }
 
-      // Attempt to authenticate - Supabase will handle all validation
-      const { data, error } = await this.supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password,
-      });
+      console.log(`[${requestId}] 🔄 Calling Supabase signInWithPassword...`);
+      
+      // Attempt to authenticate
+      let data, error;
+      try {
+        const result = await this.supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
+        data = result.data;
+        error = result.error;
+      } catch (supabaseCrash) {
+        console.error(`[${requestId}] 💥 SUPABASE CLIENT CRASHED during signInWithPassword:`, supabaseCrash);
+        throw new Error(`Supabase client crash: ${supabaseCrash}`);
+      }
+
+      console.log(`[${requestId}] 🔄 Supabase response received. Error: ${error ? 'YES' : 'NO'}`);
 
       const duration = Date.now() - startTime;
 
@@ -185,9 +203,7 @@ class AuthController {
           duration
         });
 
-        // Provide specific error messages based on Supabase error codes
         let errorMessage = "Invalid credentials";
-
         if (error.message?.includes("Email not confirmed")) {
           errorMessage = "Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada.";
         } else if (error.message?.includes("Invalid login credentials")) {
@@ -201,6 +217,14 @@ class AuthController {
         });
       }
 
+      if (!data || !data.user || !data.session) {
+        console.error(`[${requestId}] ❌ Supabase returned no error but missing data`, data);
+        return res.status(500).json({
+          success: false,
+          error: "Authentication failed: Invalid response from provider"
+        });
+      }
+
       logger.info(`[${requestId}] Login successful after ${duration}ms`, {
         userId: data.user?.id,
         email: data.user?.email,
@@ -209,34 +233,29 @@ class AuthController {
         duration
       });
 
-      logger.info(`[${requestId}] Sending login response`, {
-        userId: data.user?.id,
-        hasUser: !!data.user,
-        hasSession: !!data.session,
-        hasAccessToken: !!data.session?.access_token
-      });
-
-      res.json({
+      return res.json({
         success: true,
         data: {
           user: data.user,
           session: data.session
         }
       });
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      logger.error(`[${requestId}] Unexpected error during login after ${duration}ms`, {
-        error: (error as Error).message,
-        errorName: (error as Error).name,
-        stack: (error as Error).stack,
-        duration,
-        email: email ? email.toLowerCase().trim() : undefined
-      });
 
-      res.status(500).json({
-        success: false,
-        error: "Internal Server Error"
-      });
+    } catch (error: any) {
+      console.error(`[${requestId}] 💥 FATAL ERROR IN LOGIN CONTROLLER:`, error);
+      
+      // Ensure we haven't sent a response yet
+      if (!res.headersSent) {
+        try {
+          return res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+            debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+          });
+        } catch (sendError) {
+          console.error(`[${requestId}] 💥 Failed to send error response:`, sendError);
+        }
+      }
     }
   }
 

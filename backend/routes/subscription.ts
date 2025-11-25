@@ -18,7 +18,7 @@ export default (controllers: any, middleware: any) => {
   
   // POST /create - Create new subscription (com rate limiting específico para pagamentos)
   router.post("/create", 
-    middleware.rateLimiter.paymentLimiter,
+    // middleware.rateLimiter.paymentLimiter, // Rate limiting removed
     (req: Request, res: Response, next: NextFunction) =>
       subscriptionController.createSubscription(req, res, next)
   );
@@ -30,7 +30,7 @@ export default (controllers: any, middleware: any) => {
   
   // POST /validate-purchase - Validate in-app purchase (Google Play / App Store)
   router.post("/validate-purchase", 
-    middleware.rateLimiter.paymentLimiter,
+    // middleware.rateLimiter.paymentLimiter, // Rate limiting removed
     (req: Request, res: Response, next: NextFunction) =>
       subscriptionController.validatePurchase(req, res, next)
   );

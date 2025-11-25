@@ -2,11 +2,16 @@
 
 # Environment variables
 .env
+.env.*
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
 **/.env
+**/.env.*
 **/.env.local
 # dependencies
 node_modules/

@@ -24,22 +24,37 @@ const logRequest = (endpoint: string) => {
 export default (controllers: any, middleware: any) => {
   const { authController } = controllers;
 
-  // Public endpoints (not authenticated) - use stricter rate limiting
+  // Debug middleware to log ALL requests to auth routes
+  router.use((req: Request, res: Response, next: NextFunction) => {
+    logger.info('🔍 Auth router received request', {
+      method: req.method,
+      path: req.path,
+      originalUrl: req.originalUrl,
+      body: req.body,
+      headers: {
+        'content-type': req.get('content-type'),
+        'user-agent': req.get('user-agent')
+      }
+    });
+    next();
+  });
+
+  // Public endpoints (not authenticated) - temporarily disabled rate limiting for debugging
   router.post("/register",
     logRequest("register"),
-    middleware.rateLimiter.authLimiter,
+    // middleware.rateLimiter.authLimiter, // Rate limiting removed to fix 502 errors
     (req: Request, res: Response, next: NextFunction) =>
       authController.register(req, res, next)
   );
   router.post("/check-email",
     logRequest("check-email"),
-    middleware.rateLimiter.authLimiter,
+    // middleware.rateLimiter.authLimiter, // Rate limiting removed to fix 502 errors
     (req: Request, res: Response, next: NextFunction) =>
       authController.checkEmailExists(req, res, next)
   );
   router.post("/login",
     logRequest("login"),
-    middleware.rateLimiter.authLimiter,
+    // middleware.rateLimiter.authLimiter, // Rate limiting removed to fix 502 errors
     (req: Request, res: Response, next: NextFunction) =>
       authController.login(req, res, next)
   );
