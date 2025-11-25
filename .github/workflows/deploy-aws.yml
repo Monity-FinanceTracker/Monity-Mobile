@@ -37,9 +37,33 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          # Save SSH key to file
-          echo "$EC2_SSH_KEY" > ec2_key.pem
+          # Save SSH key to file with proper formatting
+          # Check if key is base64 encoded (doesn't start with -----)
+          if [[ "$EC2_SSH_KEY" != -----* ]]; then
+            echo "Decoding base64 SSH key..."
+            echo "$EC2_SSH_KEY" | base64 -d > ec2_key.pem
+          else
+            # Use printf to preserve line breaks
+            printf '%s\n' "$EC2_SSH_KEY" > ec2_key.pem
+          fi
           chmod 600 ec2_key.pem
+          
+          # Verify key format
+          if ! grep -q "BEGIN.*PRIVATE KEY" ec2_key.pem; then
+            echo "❌ SSH key format is invalid. Make sure the secret contains the full PEM file."
+            exit 1
+          fi
+          
+          # Test SSH connection
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo '✅ SSH connection successful'" || {
+            echo "❌ SSH connection failed. Please verify:"
+            echo "  1. EC2_SSH_KEY secret contains the complete .pem file"
+            echo "  2. EC2_HOST is correct: $EC2_HOST"
+            echo "  3. EC2_USER is correct: $EC2_USER"
+            echo "  4. EC2 instance is running"
+            echo "  5. Security group allows SSH from GitHub Actions IPs"
+            exit 1
+          }
 
           # Copy tarball to EC2
           echo "📦 Copying backend code to EC2..."
