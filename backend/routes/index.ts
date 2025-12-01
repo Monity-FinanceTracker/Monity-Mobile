@@ -14,6 +14,7 @@ import invitationRoutes from "./invitations";
 import financialProjectionsRoutes from "./financialProjections";
 import userRoutes from "./users";
 import recurringTransactionsRoutes from "./recurringTransactions";
+import notificationRoutes from "./notifications";
 
 export default (controllers: any, middleware: any) => {
   // Version 1 of the API
@@ -93,6 +94,11 @@ export default (controllers: any, middleware: any) => {
     "/recurring-transactions",
     middleware.auth.authenticate,
     recurringTransactionsRoutes(controllers)
+  );
+  v1Router.use(
+    "/notifications",
+    middleware.auth.authenticate,
+    notificationRoutes(controllers)
   );
 
   // Admin routes with role check

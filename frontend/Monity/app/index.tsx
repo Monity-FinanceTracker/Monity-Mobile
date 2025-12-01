@@ -4,16 +4,27 @@ import { StatusBar, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import * as Font from "expo-font";
+import * as Notifications from "expo-notifications";
 import "@/global.css";
 import AppNavigation from "./src/navigation";
 import ErrorBoundary from "./src/components/ErrorBoundary";
 import { StripePaymentProvider } from "./src/services/paymentService";
 import { COLORS } from "./src/constants/colors";
+import NotificationService from "./src/services/notificationService";
 // TODO: Descomentar quando for fazer build (não funciona no Expo Go)
 // import { preloadImages } from "./src/assets/images";
 
 // Manter o splash screen visível enquanto carregamos
 SplashScreen.preventAutoHideAsync();
+
+// Configure notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -46,6 +57,12 @@ export default function App() {
     }
 
     loadResources();
+  }, []);
+
+  // Setup notification listeners
+  useEffect(() => {
+    const cleanup = NotificationService.setupNotificationListeners();
+    return cleanup;
   }, []);
 
   useEffect(() => {

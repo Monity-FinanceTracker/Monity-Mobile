@@ -431,25 +431,30 @@ export default function Profile() {
                 </Text>
               </View>
               <View className="gap-6">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-3">
+                <Pressable
+                  onPress={() => {
+                    // @ts-ignore - navigation type issue
+                    navigation.navigate("NotificationSettings");
+                  }}
+                  className="flex-row items-center justify-between"
+                >
+                  <View className="flex-row items-center gap-3 flex-1">
                     <Bell size={20} color={colors.textPrimary} />
-                    <View>
+                    <View className="flex-1">
                       <Text style={{ fontWeight: '500', color: colors.textPrimary }}>
-                        Notificações
+                        Configurações de Notificação
                       </Text>
-                      <Text style={{ fontSize: 14, color: colors.textPrimary }}>
-                        Receber alertas e lembretes
+                      <Text style={{ fontSize: 14, color: colors.textSecondary }}>
+                        Gerenciar lembretes e alertas
                       </Text>
                     </View>
                   </View>
-                  <Switch
-                    value={notifications}
-                    onValueChange={setNotifications}
-                    trackColor={{ false: colors.secondaryBg, true: colors.accent }}
-                    thumbColor={notifications ? "#191E29" : colors.textMuted}
+                  <ArrowLeft
+                    size={20}
+                    color={colors.textSecondary}
+                    style={{ transform: [{ rotate: '180deg' }] }}
                   />
-                </View>
+                </Pressable>
 
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-3">

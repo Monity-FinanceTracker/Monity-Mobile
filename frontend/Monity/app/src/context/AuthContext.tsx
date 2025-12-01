@@ -12,6 +12,7 @@ import * as Linking from 'expo-linking';
 import { apiService, User } from "../services/apiService";
 import { SocialAuthProvider, useSocialAuth } from "./SocialAuthContext";
 import { supabase } from "../config/supabase";
+import NotificationService from "../services/notificationService";
 
 type AuthUser = User | null;
 
@@ -174,6 +175,13 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
             const profileResponse = await apiService.getProfile();
             if (profileResponse.success && profileResponse.data) {
               setUser(profileResponse.data);
+
+              // Register for push notifications after successful email confirmation
+              try {
+                await NotificationService.registerForPushNotifications(profileResponse.data.id);
+              } catch (error) {
+                console.error('Failed to register push notifications:', error);
+              }
             }
           }
         } catch (error) {
@@ -218,9 +226,16 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       if (response.success && response.data) {
         // After successful login, fetch the user profile
         const profileResponse = await apiService.getProfile();
-        
+
         if (profileResponse.success && profileResponse.data) {
           setUser(profileResponse.data);
+
+          // Register for push notifications after successful login
+          try {
+            await NotificationService.registerForPushNotifications(profileResponse.data.id);
+          } catch (error) {
+            console.error('Failed to register push notifications:', error);
+          }
         } else {
           throw new Error("Failed to fetch user profile: " + profileResponse.error);
         }
@@ -257,6 +272,13 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       const profileResponse = await apiService.getProfile();
       if (profileResponse.success && profileResponse.data) {
         setUser(profileResponse.data);
+
+        // Register for push notifications after successful Google login
+        try {
+          await NotificationService.registerForPushNotifications(profileResponse.data.id);
+        } catch (error) {
+          console.error('Failed to register push notifications:', error);
+        }
       } else {
         throw new Error(profileResponse.error || "Falha ao buscar perfil");
       }
@@ -268,12 +290,22 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
+      // Unregister push notifications before logout
+      if (user?.id) {
+        try {
+          await NotificationService.unregisterPushToken(user.id);
+          await NotificationService.clearAllNotifications();
+        } catch (error) {
+          console.error('Failed to unregister push notifications:', error);
+        }
+      }
+
       await apiService.logout();
       setUser(null);
     } catch (error) {
       // Silent fail
     }
-  }, []);
+  }, [user]);
 
   const updateProfile = useCallback(async (profileData: Partial<User>) => {
     try {

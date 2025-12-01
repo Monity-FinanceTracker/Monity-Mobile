@@ -1,8 +1,9 @@
 import { logger } from "../utils/logger";
+import ExpoPushService from "./expoPushService";
 
 interface NotificationDependencies {
   emailClient?: any;
-  pushClient?: any;
+  expoPushService?: ExpoPushService;
 }
 
 interface NotificationPreferences {
@@ -27,13 +28,13 @@ interface NotificationData {
 export default class NotificationService {
   private supabase: any;
   private emailClient: any;
-  private pushClient: any;
+  private expoPushService: ExpoPushService;
 
   constructor(supabase: any, dependencies: NotificationDependencies = {}) {
     this.supabase = supabase;
     // In a real app, you would inject actual clients
     this.emailClient = dependencies.emailClient || console;
-    this.pushClient = dependencies.pushClient || console;
+    this.expoPushService = dependencies.expoPushService || new ExpoPushService(supabase);
   }
 
   /**
@@ -106,13 +107,25 @@ export default class NotificationService {
    * @param userId - The user's ID to get their device tokens.
    * @param title - The push notification title.
    * @param body - The push notification body.
+   * @param data - Optional data payload for the notification.
    */
-  async sendPush(userId: string, title: string, body: string): Promise<void> {
-    // In a real implementation, you'd fetch user's fcm_tokens
-    // const { data: tokens, error } = await this.supabase.from('fcm_tokens').select('token').eq('user_id', userId);
-    // if (error || !tokens) return;
-    // await this.pushClient.sendMulticast({ tokens: tokens.map(t => t.token), notification: { title, body } });
-    this.pushClient.log(`Push notification sent to user ${userId}: ${title}`);
+  async sendPush(userId: string, title: string, body: string, data?: any): Promise<void> {
+    try {
+      await this.expoPushService.sendToUser(
+        userId,
+        {
+          title,
+          body,
+          data,
+          sound: 'default',
+          priority: 'high'
+        },
+        'general'
+      );
+    } catch (error: any) {
+      logger.error(`Failed to send push notification to user ${userId}:`, error);
+      throw error;
+    }
   }
 
   /**

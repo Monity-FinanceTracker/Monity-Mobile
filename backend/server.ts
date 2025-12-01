@@ -11,6 +11,7 @@ import { initializeControllers } from "./controllers";
 import initializeRoutes from "./routes";
 import initializeMiddleware from "./middleware";
 import { errorHandler } from "./middleware/errorHandler";
+import NotificationSchedulerService from "./services/notificationSchedulerService";
 
 // ============================================================================
 // GLOBAL ERROR HANDLERS - Catch crashes before Express can handle them
@@ -240,7 +241,7 @@ try {
     console.log(`✅ Environment: ${process.env.NODE_ENV || "development"}`);
     console.log(`✅ CORS enabled for origins: ${process.env.CLIENT_URL || "http://localhost:5173, https://firstmonity.vercel.app"}`);
     console.log('='.repeat(80));
-    
+
     logger.info(`Server running on ${HOST}:${PORT}`);
     logger.info(`Environment: ${process.env.NODE_ENV || "development"}`);
     logger.info(
@@ -249,6 +250,17 @@ try {
         "http://localhost:5173, https://firstmonity.vercel.app"
       }`
     );
+
+    // Initialize notification scheduler
+    try {
+      const notificationScheduler = new NotificationSchedulerService(supabase);
+      notificationScheduler.initialize();
+      console.log('✅ Notification Scheduler initialized successfully');
+      logger.info('Notification Scheduler initialized');
+    } catch (error) {
+      console.error('⚠️  Failed to initialize Notification Scheduler:', error);
+      logger.error('Failed to initialize Notification Scheduler', { error });
+    }
   });
 } catch (error) {
   console.error('❌ FATAL: Failed to start server:', error);

@@ -8,6 +8,12 @@
     "scheme": "monity",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "notification": {
+      "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
+      "color": "#0A0A0A",
+      "iosDisplayInForeground": true,
+      "androidMode": "default"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.widechain.monity",
@@ -19,7 +25,10 @@
           "https",
           "http"
         ],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -29,6 +38,11 @@
         "backgroundImage": "./assets/images/LOGO_MONITY_APP.jpeg",
         "monochromeImage": "./assets/images/LOGO_MONITY_APP.jpeg"
       },
+      "permissions": [
+        "NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.Monity",
@@ -49,6 +63,15 @@
     },
     "plugins": [
       "./app.plugin.js",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
+          "color": "#0A0A0A",
+          "androidMode": "default",
+          "iosDisplayInForeground": true
+        }
+      ],
       [
         "expo-splash-screen",
         {
