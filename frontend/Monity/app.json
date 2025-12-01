@@ -2,7 +2,7 @@
   "expo": {
     "name": "Monity",
     "slug": "Monity",
-    "version": "2.0.10",
+    "version": "2.0.11",
     "orientation": "portrait",
     "icon": "./assets/images/LOGO_MONITY_APP.jpeg",
     "scheme": "monity",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.widechain.monity",
-      "buildNumber": "18",
+      "buildNumber": "20",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "https",
@@ -75,7 +75,7 @@
       },
       "router": {},
       "eas": {
-        "projectId": "4ec95c41-c8fb-46e6-a858-8676d7b0d476"
+        "projectId": "e2bfd3ea-a052-4ec5-9d67-bcd4067cab20"
       }
     }
   }
