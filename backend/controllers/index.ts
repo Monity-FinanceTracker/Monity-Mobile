@@ -12,6 +12,10 @@ import FinancialProjectionsController from "./financialProjectionsController";
 import UserController from "./userController";
 import RecurringTransactionController from "./recurringTransactionController";
 import NotificationController from "./notificationController";
+import ReferralController from "./referralController";
+import OnboardingController from "./onboardingController";
+import CashFlowController from "./cashFlowController";
+import InvestmentCalculatorController from "./investmentCalculatorController";
 
 const initializeControllers = (supabase: any) => {
   return {
@@ -31,6 +35,10 @@ const initializeControllers = (supabase: any) => {
     userController: new UserController(supabase),
     recurringTransactionController: new RecurringTransactionController(),
     notificationController: new NotificationController(supabase),
+    referralController: new ReferralController(supabase),
+    onboardingController: new OnboardingController(),
+    cashFlowController: new CashFlowController(supabase),
+    investmentCalculatorController: new InvestmentCalculatorController(),
   };
 };
 

@@ -28,8 +28,11 @@
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "remote-notification"
-        ]
-      }
+        ],
+        "NSCameraUsageDescription": "Monity precisa acessar sua câmera para capturar comprovantes de transações. Por exemplo, você pode fotografar um recibo de compra para que o app categorize automaticamente a despesa.",
+        "NSMicrophoneUsageDescription": "Monity precisa acessar seu microfone para registrar transações por voz. Por exemplo, você pode falar 'Gastei R$ 50 em almoço' e o app criará a transação automaticamente."
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -83,10 +86,11 @@
             "backgroundColor": "#0A0A0A"
           }
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "extra": {
-      "apiUrl": "https://api-mobile.monity-finance.com/api/v1",
+      "apiUrl": "http://192.168.96.164:3001/api/v1",
       "supabaseUrl": "https://eeubnmpetzhjcludrjwz.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0OTk1NTMsImV4cCI6MjA3ODg1OTU1M30.dh3tAwapLq2nt10OOlBXW-XCX0pOKehQMDckk-Ox0K4",
       "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps",

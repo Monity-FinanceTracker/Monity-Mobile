@@ -295,10 +295,13 @@ export default function Dashboard() {
     } else if (compareDate.getTime() === compareYesterday.getTime()) {
       return "Ontem";
     } else {
-      return date.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "short",
-      });
+      // Format as DD/MM/YYYY with proper zero-padding
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      const dayStr = day < 10 ? `0${day}` : `${day}`;
+      const monthStr = month < 10 ? `0${month}` : `${month}`;
+      return `${dayStr}/${monthStr}/${year}`;
     }
   };
 

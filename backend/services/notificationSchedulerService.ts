@@ -276,15 +276,21 @@ class NotificationSchedulerService {
    */
   private async getUsersWithActiveGoals(): Promise<any[]> {
     try {
+      // Get all savings goals and filter in JavaScript since Supabase doesn't support column-to-column comparison
       const { data, error } = await this.supabase
         .from('savings_goals')
-        .select('user_id')
-        .eq('current_amount', '<', this.supabase.sql`target_amount`);
+        .select('user_id, current_amount, target_amount');
 
       if (error) throw error;
 
+      // Filter goals where current_amount < target_amount
+      const activeGoals = data?.filter(
+        (goal: any) => parseFloat(goal.current_amount || 0) < parseFloat(goal.target_amount || 0)
+      ) || [];
+
       // Get unique user IDs
-      const userIds = [...new Set(data?.map(row => row.user_id))] as string[];
+      const userIdSet = new Set(activeGoals.map((goal: any) => goal.user_id));
+      const userIds = Array.from(userIdSet) as string[];
 
       // Filter by those who have goal reminders enabled
       const { data: prefsData, error: prefsError } = await this.supabase
@@ -371,15 +377,20 @@ class NotificationSchedulerService {
         .from('savings_goals')
         .select('goal_name, current_amount, target_amount, target_date')
         .eq('user_id', userId)
-        .lt('current_amount', this.supabase.sql`target_amount`)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (!goals || goals.length === 0) return null;
-
-      const goal = goals[0];
-      const progress = (goal.current_amount / goal.target_amount) * 100;
+      
+      // Filter goals where current_amount < target_amount
+      const activeGoals = goals?.filter(
+        (goal: any) => parseFloat(goal.current_amount || 0) < parseFloat(goal.target_amount || 0)
+      ) || [];
+      
+      if (activeGoals.length === 0) return null;
+      
+      // Return the first active goal
+      const goal = activeGoals[0];
+      const progress = (parseFloat(goal.current_amount || 0) / parseFloat(goal.target_amount || 1)) * 100;
       const goalName = goal.goal_name;
 
       const daysLeft = goal.target_date
@@ -396,10 +407,13 @@ class NotificationSchedulerService {
 
   /**
    * Get next daily reminder message (rotating)
+   * Note: This function is currently unused but kept for potential future use
    */
-  private getNextDailyReminderMessage(): string {
-    const message = this.dailyReminderMessages[this.messageIndex];
-    this.messageIndex = (this.messageIndex + 1) % this.dailyReminderMessages.length;
+  private getNextDailyReminderMessage(language: string = 'pt-BR'): string {
+    const message = getDailyReminderMessage(language, this.messageIndex);
+    // Get the number of messages for the language (default is 5 for pt-BR)
+    const messageCount = 5; // pt-BR has 5 daily reminder messages
+    this.messageIndex = (this.messageIndex + 1) % messageCount;
     return message;
   }
 }

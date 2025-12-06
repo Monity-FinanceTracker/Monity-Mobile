@@ -23,13 +23,30 @@ export default class NotificationController {
     try {
       const userId = (req as any).user?.id;
       if (!userId) {
+        logger.error('registerToken: No user ID found in request', {
+          hasUser: !!(req as any).user,
+          userKeys: (req as any).user ? Object.keys((req as any).user) : []
+        });
         res.status(401).json({ error: 'Unauthorized' });
         return;
       }
 
       const { token, deviceId, platform } = req.body;
 
+      logger.info('registerToken: Received request', {
+        userId,
+        hasToken: !!token,
+        hasDeviceId: !!deviceId,
+        platform,
+        tokenLength: token?.length
+      });
+
       if (!token || !deviceId || !platform) {
+        logger.warn('registerToken: Missing required fields', {
+          hasToken: !!token,
+          hasDeviceId: !!deviceId,
+          hasPlatform: !!platform
+        });
         res.status(400).json({
           error: 'Missing required fields: token, deviceId, platform'
         });
@@ -37,6 +54,7 @@ export default class NotificationController {
       }
 
       if (platform !== 'ios' && platform !== 'android') {
+        logger.warn('registerToken: Invalid platform', { platform });
         res.status(400).json({
           error: 'Platform must be either "ios" or "android"'
         });
@@ -51,18 +69,27 @@ export default class NotificationController {
       );
 
       if (result.success) {
+        logger.info('registerToken: Success', { userId, deviceId, platform });
         res.status(200).json({
           message: 'Push token registered successfully',
           success: true
         });
       } else {
+        logger.error('registerToken: Failed in service', {
+          userId,
+          error: result.error
+        });
         res.status(400).json({
           error: result.error || 'Failed to register push token',
           success: false
         });
       }
     } catch (error: any) {
-      logger.error('Error in registerToken:', error);
+      logger.error('Error in registerToken:', {
+        error: error.message,
+        stack: error.stack,
+        userId: (req as any).user?.id
+      });
       res.status(500).json({ error: 'Internal server error' });
     }
   };

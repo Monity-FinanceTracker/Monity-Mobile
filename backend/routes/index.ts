@@ -15,6 +15,10 @@ import financialProjectionsRoutes from "./financialProjections";
 import userRoutes from "./users";
 import recurringTransactionsRoutes from "./recurringTransactions";
 import notificationRoutes from "./notifications";
+import referralRoutes from "./referrals";
+import onboardingRoutes from "./onboarding";
+import cashFlowRoutes from "./cashFlow";
+import investmentCalculatorRoutes from "./investmentCalculator";
 
 export default (controllers: any, middleware: any) => {
   // Version 1 of the API
@@ -40,6 +44,19 @@ export default (controllers: any, middleware: any) => {
   v1Router.use(
     "/auth",
     authRoutes(controllers, middleware)
+  );
+
+  // Public invitation link routes (before auth middleware)
+  v1Router.get(
+    "/invitations/link/:token",
+    (req: any, res: any) =>
+      controllers.invitationController.getInvitationByToken(req, res)
+  );
+  v1Router.post(
+    "/invitations/link/:token/accept",
+    middleware.auth.authenticate,
+    (req: any, res: any) =>
+      controllers.invitationController.acceptInvitationByLink(req, res)
   );
 
   // Authenticated routes
@@ -99,6 +116,26 @@ export default (controllers: any, middleware: any) => {
     "/notifications",
     middleware.auth.authenticate,
     notificationRoutes(controllers)
+  );
+  v1Router.use(
+    "/referrals",
+    middleware.auth.authenticate,
+    referralRoutes(controllers)
+  );
+  v1Router.use(
+    "/onboarding",
+    middleware.auth.authenticate,
+    onboardingRoutes(controllers)
+  );
+  v1Router.use(
+    "/cash-flow",
+    middleware.auth.authenticate,
+    cashFlowRoutes(controllers)
+  );
+  v1Router.use(
+    "/investment-calculator",
+    middleware.auth.authenticate,
+    investmentCalculatorRoutes(controllers)
   );
 
   // Admin routes with role check

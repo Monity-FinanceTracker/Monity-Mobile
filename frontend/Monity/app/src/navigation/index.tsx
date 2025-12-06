@@ -25,6 +25,13 @@ import Analytics from "../pages/analytics/Analytics";
 import Calendar from "../pages/overview/Calendar";
 import RecurringTransactions from "../pages/recurring/RecurringTransactions";
 import Help from "../pages/help/Help";
+import Referrals from "../pages/referrals/Referrals";
+import Groups from "../pages/groups/Groups";
+import CreateGroup from "../pages/groups/CreateGroup";
+import GroupDetail from "../pages/groups/GroupDetail";
+import CashFlowCalendar from "../pages/cashflow/CashFlowCalendar";
+import InvestmentCalculator from "../pages/investment/InvestmentCalculator";
+import OnboardingWizard from "../components/onboarding/OnboardingWizard";
 import { Platform, View, Text, Dimensions, Pressable, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
@@ -51,6 +58,12 @@ export type RootStackParamList = {
   Calendar: undefined;
   RecurringTransactions: undefined;
   Help: undefined;
+  Referrals: undefined;
+  Groups: undefined;
+  CreateGroup: undefined;
+  GroupDetail: { groupId: string };
+  CashFlowCalendar: undefined;
+  InvestmentCalculator: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -345,6 +358,30 @@ function MainTabs() {
 
 function Gate() {
   const { user, isInitializing } = useAuth();
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
+  const [onboardingChecked, setOnboardingChecked] = React.useState(false);
+
+  // Check onboarding status when user logs in
+  React.useEffect(() => {
+    const checkOnboarding = async () => {
+      if (user && !onboardingChecked) {
+        try {
+          const response = await import("../services/apiService").then(m => 
+            m.apiService.getOnboardingProgress()
+          );
+          if (response.success && response.data) {
+            setShowOnboarding(!response.data.onboarding_completed);
+          }
+        } catch (error) {
+          console.error("Error checking onboarding:", error);
+        } finally {
+          setOnboardingChecked(true);
+        }
+      }
+    };
+
+    checkOnboarding();
+  }, [user, onboardingChecked]);
 
   // Only show loading during initial bootstrap, not during login/signup
   if (isInitializing) {
@@ -357,6 +394,16 @@ function Gate() {
           Loading...
         </Text>
       </View>
+    );
+  }
+
+  // Show onboarding wizard if needed
+  if (user && showOnboarding && onboardingChecked) {
+    return (
+      <OnboardingWizard
+        onComplete={() => setShowOnboarding(false)}
+        onSkip={() => setShowOnboarding(false)}
+      />
     );
   }
 
@@ -375,6 +422,12 @@ function Gate() {
           <RootStack.Screen name="Calendar" component={Calendar} />
           <RootStack.Screen name="RecurringTransactions" component={RecurringTransactions} />
           <RootStack.Screen name="Help" component={Help} />
+          <RootStack.Screen name="Referrals" component={Referrals} />
+          <RootStack.Screen name="Groups" component={Groups} />
+          <RootStack.Screen name="CreateGroup" component={CreateGroup} />
+          <RootStack.Screen name="GroupDetail" component={GroupDetail} />
+          <RootStack.Screen name="CashFlowCalendar" component={CashFlowCalendar} />
+          <RootStack.Screen name="InvestmentCalculator" component={InvestmentCalculator} />
         </>
       ) : (
         <>

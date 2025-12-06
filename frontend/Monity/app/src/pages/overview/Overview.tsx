@@ -13,6 +13,12 @@ import {
   BarChart3,
   Calendar,
   Wallet,
+  Users,
+  TrendingUp,
+  Calculator,
+  Gift,
+  Repeat,
+  HelpCircle,
 } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
@@ -73,6 +79,60 @@ export default function Overview() {
         (navigation as any).navigate("Analytics");
       },
     },
+    {
+      id: "groups",
+      title: "Grupos",
+      icon: Users,
+      onPress: () => {
+        triggerHaptic();
+        (navigation as any).navigate("Groups");
+      },
+    },
+    {
+      id: "cashflow",
+      title: "Fluxo de Caixa",
+      icon: TrendingUp,
+      onPress: () => {
+        triggerHaptic();
+        (navigation as any).navigate("CashFlowCalendar");
+      },
+    },
+    {
+      id: "investment",
+      title: "Calculadora de Investimentos",
+      icon: Calculator,
+      onPress: () => {
+        triggerHaptic();
+        (navigation as any).navigate("InvestmentCalculator");
+      },
+    },
+    {
+      id: "referrals",
+      title: "Indicações",
+      icon: Gift,
+      onPress: () => {
+        triggerHaptic();
+        (navigation as any).navigate("Referrals");
+      },
+    },
+    {
+      id: "recurring",
+      title: "Transações Recorrentes",
+      icon: Repeat,
+      onPress: () => {
+        triggerHaptic();
+        (navigation as any).navigate("RecurringTransactions");
+      },
+    },
+    {
+      id: "help",
+      title: "Ajuda",
+      icon: HelpCircle,
+      onPress: () => {
+        triggerHaptic();
+        (navigation as any).navigate("Help");
+      },
+    },
   ];
 
   return (
@@ -90,7 +150,7 @@ export default function Overview() {
           {/* Header */}
           <View className="mb-6">
             <Text className="text-text-primary text-2xl font-bold mb-2">
-              Informações
+              Mais Recursos
             </Text>
             <Text className="text-text-primary text-sm">
               Gerencie suas finanças e explore funcionalidades

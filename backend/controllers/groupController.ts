@@ -7,6 +7,7 @@ interface AuthenticatedRequest extends Request {
     id: string;
     [key: string]: any;
   };
+  token?: string;
 }
 
 export default class GroupController {
@@ -232,33 +233,142 @@ export default class GroupController {
 
   async sendGroupInvitation(req: AuthenticatedRequest, res: Response) {
     const groupId = req.params.id;
-    const { email } = req.body;
     const userId = req.user.id;
 
     try {
+      logger.info("Generating group invitation link", {
+        userId,
+        groupId,
+        timestamp: new Date().toISOString(),
+      });
+
       // Check if the requester is a member of the group
       const isMember = await this.groupModel.isUserMember(groupId, userId);
       if (!isMember) {
+        logger.warn(
+          "User attempted to generate invitation but is not a group member",
+          {
+            userId,
+            groupId,
+          }
+        );
         return res.status(403).json({
           error: "You must be a member of the group to send invitations.",
         });
       }
 
-      // TODO: Implement invitation logic - for now return success
-      // In a real implementation, you would:
-      // 1. Create an invitation record
-      // 2. Send an email to the user
-      // 3. Handle the invitation acceptance flow
-
-      res.json({ message: "Invitation sent successfully", email });
-    } catch (error) {
-      logger.error("Failed to send group invitation", {
+      logger.debug("User is a group member, proceeding with invitation generation", {
         userId,
         groupId,
-        email,
-        error: (error as Error).message,
       });
-      res.status(500).json({ error: "Failed to send group invitation" });
+
+      // Import invitation helpers
+      const {
+        buildInvitationLink,
+        calculateExpirationDate,
+        maskToken,
+        isSchemaError,
+        createMigrationErrorResponse,
+      } = require("../utils/invitationHelpers");
+
+      // Generate unique invitation token (UUID v4)
+      const crypto = require("crypto");
+      const invitationToken = crypto.randomUUID();
+      const expiresAt = calculateExpirationDate();
+
+      logger.debug("Generated invitation token and expiration", {
+        userId,
+        groupId,
+        tokenLength: invitationToken.length,
+        expiresAt: expiresAt.toISOString(),
+      });
+
+      // Get authenticated Supabase client for RLS policies
+      const { getAuthenticatedSupabaseClient } = require("../utils/supabaseClient");
+      const authenticatedClient = req.token
+        ? getAuthenticatedSupabaseClient(req.token)
+        : this.supabase;
+
+      // Create invitation record with token and expiration
+      const { data: invitation, error: invitationError } =
+        await authenticatedClient
+          .from("group_invitations")
+          .insert({
+            group_id: groupId,
+            invited_by: userId,
+            invited_user: null, // Link-based invitations don't require a specific user
+            status: "pending",
+            invitation_token: invitationToken,
+            expires_at: expiresAt.toISOString(),
+            created_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+      if (invitationError) {
+        logger.error("Database error while creating invitation record", {
+          userId,
+          groupId,
+          error: invitationError.message,
+          errorCode: invitationError.code,
+          errorDetails: invitationError.details,
+        });
+
+        // Check if it's a schema error (migration not run)
+        if (isSchemaError(invitationError)) {
+          logger.error("Database schema error - migration required", {
+            userId,
+            groupId,
+            error: invitationError.message,
+            errorCode: invitationError.code,
+            errorDetails: invitationError.details,
+            hint: invitationError.hint,
+          });
+          return res.status(500).json(createMigrationErrorResponse());
+        }
+
+        throw invitationError;
+      }
+
+      logger.debug("Invitation record created successfully", {
+        userId,
+        groupId,
+        invitationId: invitation.id,
+      });
+
+      // Build invitation link
+      const invitationLink = buildInvitationLink(invitationToken);
+
+      logger.info("Group invitation link generated successfully", {
+        userId,
+        groupId,
+        invitationId: invitation.id,
+        invitationToken: maskToken(invitationToken),
+        expiresAt: expiresAt.toISOString(),
+      });
+
+      res.json({
+        message: "Invitation link generated successfully",
+        invitationId: invitation.id,
+        invitationToken: invitationToken,
+        invitationLink: invitationLink,
+        expiresAt: expiresAt.toISOString(),
+      });
+    } catch (error) {
+      logger.error("Failed to generate group invitation link", {
+        userId,
+        groupId,
+        error: (error as Error).message,
+        errorCode: (error as any).code,
+        errorDetails: (error as any).details,
+        stack: (error as Error).stack,
+        timestamp: new Date().toISOString(),
+      });
+
+      res.status(500).json({
+        error: "Failed to generate invitation link",
+        details: (error as Error).message || "Unknown error occurred",
+      });
     }
   }
 

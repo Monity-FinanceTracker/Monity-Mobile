@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 
 // Base API configuration
 const API_BASE_URL =
-  Constants.expoConfig?.extra?.apiUrl || "http://localhost:3000/api/v1";
+  Constants.expoConfig?.extra?.apiUrl || "http://localhost:3001/api/v1";
 
 const AUTH_TOKEN_KEY = "auth_token";
 
@@ -702,6 +702,324 @@ class ApiService {
   async deleteRecurringTransaction(id: string): Promise<ApiResponse<void>> {
     return this.request<void>(`/recurring-transactions/${id}`, {
       method: "DELETE",
+    });
+  }
+
+  // Referral methods
+  async getMyReferralCode(): Promise<ApiResponse<{
+    referralCode: string;
+    shortLink: string;
+    fullLink: string;
+    shortUrl: string;
+    qrCodeUrl: string;
+    stats: {
+      totalReferrals: number;
+      successfulReferrals: number;
+      pendingReferrals: number;
+      totalDaysEarned: number;
+      lifetimeCapRemaining: number;
+    };
+  }>> {
+    return this.request("/referrals/my-code");
+  }
+
+  async validateReferralCode(referralCode: string): Promise<ApiResponse<{
+    valid: boolean;
+    referrerName?: string;
+    message?: string;
+  }>> {
+    return this.request("/referrals/validate-code", {
+      method: "POST",
+      body: JSON.stringify({ referralCode }),
+    });
+  }
+
+  async getReferralStats(): Promise<ApiResponse<{
+    summary: {
+      totalReferrals: number;
+      successfulReferrals: number;
+      pendingReferrals: number;
+      expiredReferrals: number;
+      totalDaysEarned: number;
+      currentTier: string;
+      currentTierDays: number;
+      nextTier: any;
+      lifetimeCapRemaining: number;
+    };
+    recentReferrals: any[];
+  }>> {
+    return this.request("/referrals/stats");
+  }
+
+  async listReferrals(params?: {
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.offset) queryParams.append("offset", params.offset.toString());
+    
+    const queryString = queryParams.toString();
+    return this.request(`/referrals/list${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async getReferralLeaderboard(params?: {
+    period?: string;
+    limit?: number;
+  }): Promise<ApiResponse<{
+    leaderboard: any[];
+    userPosition: number | null;
+    totalUsers: number;
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params?.period) queryParams.append("period", params.period);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    
+    const queryString = queryParams.toString();
+    return this.request(`/referrals/leaderboard${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async regenerateReferralCode(): Promise<ApiResponse<{
+    referralCode: string;
+    shortLink: string;
+    message: string;
+  }>> {
+    return this.request("/referrals/regenerate-code", {
+      method: "POST",
+    });
+  }
+
+  // Onboarding methods
+  async getOnboardingProgress(): Promise<ApiResponse<{
+    onboarding_completed: boolean;
+    current_step: number;
+    steps_completed: number[];
+    checklist_progress: any;
+    primary_goal?: string;
+    estimated_income?: number;
+    preferred_categories?: string[];
+  }>> {
+    return this.request("/onboarding/progress");
+  }
+
+  async startOnboarding(): Promise<ApiResponse<{ message: string }>> {
+    return this.request("/onboarding/start", {
+      method: "POST",
+    });
+  }
+
+  async completeOnboardingStep(step: number, data?: any): Promise<ApiResponse<{
+    currentStep: number;
+    stepsCompleted: number[];
+  }>> {
+    return this.request("/onboarding/complete-step", {
+      method: "POST",
+      body: JSON.stringify({ step, data }),
+    });
+  }
+
+  async completeOnboarding(): Promise<ApiResponse<{ message: string }>> {
+    return this.request("/onboarding/complete", {
+      method: "POST",
+    });
+  }
+
+  async skipOnboarding(): Promise<ApiResponse<{ message: string }>> {
+    return this.request("/onboarding/skip", {
+      method: "POST",
+    });
+  }
+
+  async updateChecklistProgress(item: string, completed: boolean): Promise<ApiResponse<{
+    checklistProgress: any;
+  }>> {
+    return this.request("/onboarding/checklist", {
+      method: "POST",
+      body: JSON.stringify({ item, completed }),
+    });
+  }
+
+  // Cash Flow Calendar methods
+  async getScheduledTransactions(): Promise<ApiResponse<any[]>> {
+    return this.request("/cash-flow/scheduled-transactions");
+  }
+
+  async getScheduledTransactionById(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/cash-flow/scheduled-transactions/${id}`);
+  }
+
+  async createScheduledTransaction(data: {
+    description: string;
+    amount: number;
+    category: string;
+    typeId: number;
+    scheduled_date: string;
+    recurrence_pattern?: string;
+    recurrence_interval?: number;
+    recurrence_end_date?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request("/cash-flow/scheduled-transactions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateScheduledTransaction(
+    id: string,
+    updates: any
+  ): Promise<ApiResponse<any>> {
+    return this.request(`/cash-flow/scheduled-transactions/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteScheduledTransaction(id: string): Promise<ApiResponse<void>> {
+    return this.request(`/cash-flow/scheduled-transactions/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getCalendarData(
+    startDate: string,
+    endDate: string
+  ): Promise<ApiResponse<any[]>> {
+    return this.request(
+      `/cash-flow/calendar-data?start_date=${startDate}&end_date=${endDate}`
+    );
+  }
+
+  // Investment Calculator methods
+  async calculateInvestment(data: {
+    initialInvestment: number;
+    contributionAmount: number;
+    contributionFrequency: string;
+    annualInterestRate: number;
+    goalDate: string;
+    viewType?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request("/investment-calculator/calculate", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getInvestmentUsage(): Promise<ApiResponse<any>> {
+    return this.request("/investment-calculator/usage");
+  }
+
+  async getInvestmentSimulations(): Promise<ApiResponse<any[]>> {
+    return this.request("/investment-calculator/simulations");
+  }
+
+  async deleteInvestmentSimulation(id: string): Promise<ApiResponse<void>> {
+    return this.request(`/investment-calculator/simulations/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Groups methods
+  async getGroups(): Promise<ApiResponse<any[]>> {
+    return this.request("/groups");
+  }
+
+  async getGroupById(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/groups/${id}`);
+  }
+
+  async createGroup(data: { name: string }): Promise<ApiResponse<any>> {
+    return this.request("/groups", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateGroup(id: string, data: { name: string }): Promise<ApiResponse<any>> {
+    return this.request(`/groups/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteGroup(id: string): Promise<ApiResponse<void>> {
+    return this.request(`/groups/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async addGroupMember(groupId: string, data: { name: string }): Promise<ApiResponse<any>> {
+    return this.request(`/groups/${groupId}/members`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async removeGroupMember(groupId: string, userId: string): Promise<ApiResponse<void>> {
+    return this.request(`/groups/${groupId}/members/${userId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async sendGroupInvitation(groupId: string, email?: string): Promise<ApiResponse<any>> {
+    return this.request(`/groups/${groupId}/invite`, {
+      method: "POST",
+      body: JSON.stringify(email ? { email } : {}),
+    });
+  }
+
+  async getInvitationByToken(token: string): Promise<ApiResponse<any>> {
+    return this.request(`/invitations/link/${token}`);
+  }
+
+  async acceptInvitationByLink(token: string): Promise<ApiResponse<any>> {
+    return this.request(`/invitations/link/${token}/accept`, {
+      method: "POST",
+    });
+  }
+
+  async getPendingInvitations(): Promise<ApiResponse<any[]>> {
+    return this.request("/invitations/pending");
+  }
+
+  async respondToInvitation(
+    invitationId: string,
+    response: "accepted" | "declined"
+  ): Promise<ApiResponse<any>> {
+    return this.request(`/invitations/${invitationId}/respond`, {
+      method: "POST",
+      body: JSON.stringify({ response }),
+    });
+  }
+
+  async addGroupExpense(groupId: string, expenseData: {
+    description: string;
+    amount: number;
+    shares: Array<{ userId: string; amount: number }>;
+  }): Promise<ApiResponse<any>> {
+    return this.request(`/groups/${groupId}/expenses`, {
+      method: "POST",
+      body: JSON.stringify(expenseData),
+    });
+  }
+
+  async updateGroupExpense(expenseId: string, updates: any): Promise<ApiResponse<any>> {
+    return this.request(`/groups/expenses/${expenseId}`, {
+      method: "PUT",
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteGroupExpense(expenseId: string): Promise<ApiResponse<void>> {
+    return this.request(`/groups/expenses/${expenseId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async settleExpenseShare(shareId: string): Promise<ApiResponse<any>> {
+    return this.request(`/groups/shares/${shareId}/settle`, {
+      method: "POST",
     });
   }
 }

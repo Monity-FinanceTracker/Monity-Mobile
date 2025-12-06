@@ -159,12 +159,23 @@ class NotificationService {
       const data = response.notification.request.content.data;
 
       // Handle navigation based on notification data
+      // Check if navigation is available and ready before using it
       if (navigation && data?.screen) {
         const screen = data.screen;
         try {
-          navigation.navigate(screen);
-        } catch (error) {
-          console.error('Navigation error:', error);
+          // Check if navigation object is initialized
+          if (navigation && typeof navigation.navigate === 'function') {
+            navigation.navigate(screen);
+          } else {
+            console.warn('Navigation not ready, cannot navigate to:', screen);
+          }
+        } catch (error: any) {
+          // Check if error is about navigation not being initialized
+          if (error?.message?.includes("hasn't been initialized")) {
+            console.warn('Navigation not initialized yet, skipping navigation');
+          } else {
+            console.error('Navigation error:', error);
+          }
         }
       }
     });

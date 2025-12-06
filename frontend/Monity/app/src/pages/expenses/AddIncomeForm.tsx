@@ -50,6 +50,15 @@ export default function AddIncomeForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceDay, setRecurrenceDay] = useState<number>(() => new Date().getDate());
+  
+  // AI Categorization state
+  const [categorySuggestions, setCategorySuggestions] = useState<Array<{
+    category: string;
+    confidence: number;
+    source: string;
+  }>>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
 
   const loadCategories = async () => {
     try {
@@ -76,6 +85,51 @@ export default function AddIncomeForm() {
   const filteredCategories = categories.filter(
     (category) => category.typeId === 2
   );
+
+  // Debounced AI category suggestion
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (name && name.trim().length >= 3) {
+        try {
+          setIsLoadingSuggestions(true);
+          const numericAmount = amount ? parseFloat(amount.replace(/\./g, "").replace(",", ".")) : 0;
+          const response = await apiService.suggestCategory(
+            name.trim(),
+            numericAmount,
+            2 // typeId: 2 = income
+          );
+          
+          if (response.success && response.data) {
+            const suggestions = response.data.suggestions || response.data;
+            setCategorySuggestions(suggestions);
+            
+            // Auto-select highest confidence suggestion if >80% and no category selected
+            if (suggestions.length > 0 && !selectedCategory && filteredCategories.length > 0) {
+              const topSuggestion = suggestions[0];
+              if (topSuggestion.confidence > 0.8) {
+                const matchingCategory = filteredCategories.find(
+                  (cat) => cat.name === topSuggestion.category
+                );
+                if (matchingCategory) {
+                  setSelectedCategory(matchingCategory.id);
+                  setSelectedSuggestion(topSuggestion.category);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error getting category suggestions:", error);
+        } finally {
+          setIsLoadingSuggestions(false);
+        }
+      } else {
+        setCategorySuggestions([]);
+        setSelectedSuggestion(null);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [name, amount, categories, filteredCategories, selectedCategory]);
 
   // Populate form fields when favoriteData is available
   useEffect(() => {
@@ -456,6 +510,92 @@ export default function AddIncomeForm() {
             >
               Categoria *
             </Text>
+            
+            {/* AI Suggestions */}
+            {categorySuggestions.length > 0 && !isLoadingSuggestions && (
+              <View className="mb-3">
+                <Text
+                  style={{
+                    color: colors.textSecondary,
+                    fontSize: 12,
+                    marginBottom: 8,
+                  }}
+                >
+                  Sugestões de IA:
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  {categorySuggestions.map((suggestion, index) => {
+                    const matchingCategory = filteredCategories.find(
+                      (cat) => cat.name === suggestion.category
+                    );
+                    if (!matchingCategory) return null;
+                    
+                    const isSelected = selectedCategory === matchingCategory.id;
+                    const confidencePercent = Math.round(suggestion.confidence * 100);
+                    
+                    return (
+                      <Pressable
+                        key={index}
+                        onPress={() => {
+                          setSelectedCategory(matchingCategory.id);
+                          setSelectedSuggestion(suggestion.category);
+                          triggerHaptic();
+                        }}
+                        className={`px-3 py-2 rounded-lg flex-row items-center gap-2 ${
+                          isSelected
+                            ? "bg-accent"
+                            : "bg-accent/20 border border-accent/50"
+                        }`}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            color: isSelected ? "#191E29" : colors.accent,
+                            fontWeight: isSelected ? "600" : "500",
+                          }}
+                        >
+                          {suggestion.category}
+                        </Text>
+                        <View
+                          className={`px-2 py-0.5 rounded ${
+                            isSelected ? "bg-[#191E29]/20" : "bg-accent/30"
+                          }`}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              color: isSelected ? "#191E29" : colors.accent,
+                              fontWeight: "600",
+                            }}
+                          >
+                            {confidencePercent}%
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+            
+            {isLoadingSuggestions && (
+              <View className="mb-3">
+                <Text
+                  style={{
+                    color: colors.textSecondary,
+                    fontSize: 12,
+                    fontStyle: "italic",
+                  }}
+                >
+                  Analisando descrição...
+                </Text>
+              </View>
+            )}
+            
             {isLoading ? (
               <View className="items-center py-8">
                 <Text style={{ color: colors.textPrimary }}>
@@ -473,7 +613,11 @@ export default function AddIncomeForm() {
                   return (
                     <Pressable
                       key={category.id}
-                      onPress={() => setSelectedCategory(category.id)}
+                      onPress={() => {
+                        setSelectedCategory(category.id);
+                        setSelectedSuggestion(null);
+                        triggerHaptic();
+                      }}
                       className={`px-4 py-3 rounded-xl items-center justify-center ${
                         isSelected
                           ? "bg-accent"
