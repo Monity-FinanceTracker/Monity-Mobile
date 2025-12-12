@@ -18,6 +18,7 @@ import AddIncomeForm from "../pages/expenses/AddIncomeForm";
 import Categories from "../pages/categories/Categories";
 import Overview from "../pages/overview/Overview";
 import Profile from "../pages/profile/Profile";
+import NotificationSettings from "../pages/profile/NotificationSettings";
 import Chat from "../pages/chat/Chat";
 import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
 import Savings from "../pages/savings/Savings";
@@ -25,6 +26,13 @@ import Analytics from "../pages/analytics/Analytics";
 import Calendar from "../pages/overview/Calendar";
 import RecurringTransactions from "../pages/recurring/RecurringTransactions";
 import Help from "../pages/help/Help";
+import Referrals from "../pages/referrals/Referrals";
+import Groups from "../pages/groups/Groups";
+import CreateGroup from "../pages/groups/CreateGroup";
+import GroupDetail from "../pages/groups/GroupDetail";
+import CashFlowCalendar from "../pages/cashflow/CashFlowCalendar";
+import InvestmentCalculator from "../pages/investment/InvestmentCalculator";
+import OnboardingWizard from "../components/onboarding/OnboardingWizard";
 import { Platform, View, Text, Dimensions, Pressable, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
@@ -51,6 +59,13 @@ export type RootStackParamList = {
   Calendar: undefined;
   RecurringTransactions: undefined;
   Help: undefined;
+  Referrals: undefined;
+  Groups: undefined;
+  CreateGroup: undefined;
+  GroupDetail: { groupId: string };
+  CashFlowCalendar: undefined;
+  InvestmentCalculator: undefined;
+  NotificationSettings: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -97,7 +112,7 @@ function AnimatedTabIcon({
   });
 
   return (
-    <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', padding: 4 }}>
+    <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
       <Animated.View
         style={[
           {
@@ -111,7 +126,7 @@ function AnimatedTabIcon({
           animatedBackgroundStyle,
         ]}
       />
-      <View style={{ zIndex: 1 }}>
+      <View style={{ zIndex: 1, alignItems: 'center', justifyContent: 'center' }}>
         {children}
       </View>
     </View>
@@ -171,11 +186,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       <View
         style={{
           flexDirection: 'row',
-          height: tabBarHeight,
-          paddingBottom: Platform.OS === "android" ? Math.max(12, insets.bottom + 4) : insets.bottom,
-          paddingTop: Platform.OS === "ios" ? 8 : 12,
+          flex: 1,
           paddingHorizontal: 8,
-          justifyContent: 'center',
+          justifyContent: 'space-around',
           alignItems: 'center',
         }}
       >
@@ -220,6 +233,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 paddingHorizontal: 4,
+                height: '100%',
               }}
             >
               {icon}
@@ -346,6 +360,47 @@ function MainTabs() {
 
 function Gate() {
   const { user, isInitializing } = useAuth();
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
+  const [onboardingChecked, setOnboardingChecked] = React.useState(false);
+  const lastCheckedUserIdRef = React.useRef<string | null>(null);
+
+  // Check onboarding status from database when user logs in
+  // This relies on the database field onboarding_completed to guarantee it only shows once
+  React.useEffect(() => {
+    const checkOnboarding = async () => {
+      // Only check if we have a user and haven't checked for this user yet
+      if (user?.id && lastCheckedUserIdRef.current !== user.id) {
+        try {
+          const response = await import("../services/apiService").then(m => 
+            m.apiService.getOnboardingProgress()
+          );
+          if (response.success && response.data) {
+            // Rely entirely on database field - this is the source of truth
+            const isCompleted = response.data.onboarding_completed === true;
+            setShowOnboarding(!isCompleted);
+            lastCheckedUserIdRef.current = user.id;
+          } else {
+            // If API call fails, default to not showing onboarding
+            // User can manually access onboarding if needed
+            setShowOnboarding(false);
+          }
+        } catch (error) {
+          console.error("Error checking onboarding:", error);
+          // On error, don't show onboarding - rely on database as source of truth
+          setShowOnboarding(false);
+        } finally {
+          setOnboardingChecked(true);
+        }
+      } else if (!user) {
+        // Reset when user logs out
+        lastCheckedUserIdRef.current = null;
+        setShowOnboarding(false);
+        setOnboardingChecked(false);
+      }
+    };
+
+    checkOnboarding();
+  }, [user?.id]); // Only depend on user.id, not the whole user object
 
   // Only show loading during initial bootstrap, not during login/signup
   if (isInitializing) {
@@ -358,6 +413,49 @@ function Gate() {
           Loading...
         </Text>
       </View>
+    );
+  }
+
+  // Show onboarding wizard if needed
+  // This is controlled by the database field onboarding_completed
+  if (user && showOnboarding && onboardingChecked) {
+    return (
+      <OnboardingWizard
+        onComplete={async () => {
+          // The backend will set onboarding_completed = true in the database
+          // Next time the user logs in, the check will see it's completed
+          setShowOnboarding(false);
+          // Refresh onboarding status from database to confirm it's saved
+          try {
+            const response = await import("../services/apiService").then(m => 
+              m.apiService.getOnboardingProgress()
+            );
+            if (response.success && response.data?.onboarding_completed) {
+              // Database confirms it's completed - update ref to prevent re-checking
+              lastCheckedUserIdRef.current = user.id;
+            }
+          } catch (error) {
+            console.error("Error refreshing onboarding status:", error);
+          }
+        }}
+        onSkip={async () => {
+          // The backend will set onboarding_completed = true in the database
+          // Next time the user logs in, the check will see it's completed
+          setShowOnboarding(false);
+          // Refresh onboarding status from database to confirm it's saved
+          try {
+            const response = await import("../services/apiService").then(m => 
+              m.apiService.getOnboardingProgress()
+            );
+            if (response.success && response.data?.onboarding_completed) {
+              // Database confirms it's completed - update ref to prevent re-checking
+              lastCheckedUserIdRef.current = user.id;
+            }
+          } catch (error) {
+            console.error("Error refreshing onboarding status:", error);
+          }
+        }}
+      />
     );
   }
 
@@ -376,6 +474,13 @@ function Gate() {
           <RootStack.Screen name="Calendar" component={Calendar} />
           <RootStack.Screen name="RecurringTransactions" component={RecurringTransactions} />
           <RootStack.Screen name="Help" component={Help} />
+          <RootStack.Screen name="Referrals" component={Referrals} />
+          <RootStack.Screen name="Groups" component={Groups} />
+          <RootStack.Screen name="CreateGroup" component={CreateGroup} />
+          <RootStack.Screen name="GroupDetail" component={GroupDetail} />
+          <RootStack.Screen name="CashFlowCalendar" component={CashFlowCalendar} />
+          <RootStack.Screen name="InvestmentCalculator" component={InvestmentCalculator} />
+          <RootStack.Screen name="NotificationSettings" component={NotificationSettings} />
         </>
       ) : (
         <>

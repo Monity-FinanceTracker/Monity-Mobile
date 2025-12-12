@@ -500,12 +500,29 @@ export default function Categories() {
               <Card>
                 <View className="p-4">
                   <View className="flex-row items-center gap-2">
-                    <View className="w-10 h-10 bg-white/10 rounded-lg items-center justify-center flex-shrink-0">
+                    <View 
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 8,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: colors.expenseBg,
+                      }}
+                    >
                       <TrendingDown size={20} color={colors.expense} />
                     </View>
                     <View className="flex-1 min-w-0">
                       <Text className="text-xs text-text-primary">Despesas</Text>
-                      <Text className="text-xs font-semibold text-text-primary" numberOfLines={1} adjustsFontSizeToFit>
+                      <Text 
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '600',
+                          color: colors.expense,
+                        }}
+                        numberOfLines={1} 
+                        adjustsFontSizeToFit
+                      >
                         {formatCurrency(totalExpenses)}
                       </Text>
                       <Text className="text-xs text-text-primary">

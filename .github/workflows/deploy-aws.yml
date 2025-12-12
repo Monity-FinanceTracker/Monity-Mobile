@@ -12,8 +12,50 @@ env:
   APP_PORT: 3001
 
 jobs:
+  pre-flight-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check EC2 Accessibility
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          # Save SSH key
+          if [[ "$EC2_SSH_KEY" != -----* ]]; then
+            echo "$EC2_SSH_KEY" | base64 -d > ec2_key.pem
+          else
+            printf '%s\n' "$EC2_SSH_KEY" > ec2_key.pem
+          fi
+          chmod 600 ec2_key.pem
+
+          # Test SSH port
+          echo "Testing SSH port 22..."
+          if nc -zv $EC2_HOST 22 -w 5 2>&1; then
+            echo "✅ SSH port 22 is accessible"
+          else
+            echo "❌ SSH port 22 is not accessible"
+            echo "Please check EC2 security group settings"
+            exit 1
+          fi
+
+          # Test SSH authentication
+          echo ""
+          echo "Testing SSH authentication..."
+          if ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+            $EC2_USER@$EC2_HOST "echo '✅ SSH authentication successful'"; then
+            echo "✅ Pre-flight check passed!"
+          else
+            echo "❌ SSH authentication failed"
+            echo "Please verify public key is in ~/.ssh/authorized_keys on EC2"
+            exit 1
+          fi
+
+          rm -f ec2_key.pem
+
   build-and-deploy:
     runs-on: ubuntu-latest
+    needs: pre-flight-check
 
     steps:
       - name: Checkout code
@@ -37,9 +79,59 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          # Save SSH key to file
-          echo "$EC2_SSH_KEY" > ec2_key.pem
+          # Save SSH key to file with proper formatting
+          # Check if key is base64 encoded (doesn't start with -----)
+          if [[ "$EC2_SSH_KEY" != -----* ]]; then
+            echo "Decoding base64 SSH key..."
+            echo "$EC2_SSH_KEY" | base64 -d > ec2_key.pem
+          else
+            # Use printf to preserve line breaks
+            printf '%s\n' "$EC2_SSH_KEY" > ec2_key.pem
+          fi
           chmod 600 ec2_key.pem
+          
+          # Verify key format
+          if ! grep -q "BEGIN.*PRIVATE KEY" ec2_key.pem; then
+            echo "❌ SSH key format is invalid. Make sure the secret contains the full PEM file."
+            exit 1
+          fi
+
+          # Display key fingerprints for verification
+          echo "🔑 Private key fingerprint:"
+          ssh-keygen -lf ec2_key.pem || echo "Could not generate fingerprint"
+
+          echo ""
+          echo "🔑 Public key fingerprint (should match EC2 authorized_keys):"
+          ssh-keygen -y -f ec2_key.pem | ssh-keygen -lf - || echo "Could not extract public key"
+
+          # Test SSH connection with enhanced diagnostics
+          echo ""
+          echo "🔌 Testing SSH connection to $EC2_USER@$EC2_HOST..."
+          if ssh -vvv -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+              $EC2_USER@$EC2_HOST "echo '✅ SSH connection successful'" 2>&1 | tee ssh_debug.log; then
+            echo "✅ SSH connection established"
+          else
+            echo "❌ SSH connection failed. Detailed diagnostics:"
+            echo ""
+            echo "MOST COMMON ISSUE: Public key not in ~/.ssh/authorized_keys on EC2"
+            echo ""
+            echo "To extract public key from your private key locally:"
+            echo "  ssh-keygen -y -f your-private-key.pem"
+            echo ""
+            echo "Then on EC2 instance (use EC2 Instance Connect), verify it matches:"
+            echo "  cat ~/.ssh/authorized_keys"
+            echo ""
+            echo "Other checks:"
+            echo "  1. EC2_HOST: $EC2_HOST"
+            echo "  2. EC2_USER: $EC2_USER"
+            echo "  3. EC2 instance is running (not stopped/terminated)"
+            echo "  4. Security group allows SSH (port 22) from GitHub Actions IPs"
+            echo "  5. EC2_SSH_KEY secret contains the complete private key"
+            echo ""
+            echo "SSH Debug Output (last 50 lines):"
+            tail -50 ssh_debug.log
+            exit 1
+          fi
 
           # Copy tarball to EC2
           echo "📦 Copying backend code to EC2..."

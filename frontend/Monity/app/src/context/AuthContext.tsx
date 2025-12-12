@@ -12,6 +12,7 @@ import * as Linking from 'expo-linking';
 import { apiService, User } from "../services/apiService";
 import { SocialAuthProvider, useSocialAuth } from "./SocialAuthContext";
 import { supabase } from "../config/supabase";
+import NotificationService from "../services/notificationService";
 
 type AuthUser = User | null;
 
@@ -22,6 +23,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<{ email: string }>;
   loginWithGoogle: () => Promise<void>;
+  loginWithApple: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<User>) => Promise<void>;
   changePassword: (
@@ -39,7 +41,7 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
-  const { signInWithGoogle: socialGoogleSignIn } = useSocialAuth();
+  const { signInWithGoogle: socialGoogleSignIn, signInWithApple: socialAppleSignIn } = useSocialAuth();
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -174,6 +176,13 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
             const profileResponse = await apiService.getProfile();
             if (profileResponse.success && profileResponse.data) {
               setUser(profileResponse.data);
+
+              // Register for push notifications after successful email confirmation
+              try {
+                await NotificationService.registerForPushNotifications(profileResponse.data.id);
+              } catch (error) {
+                console.error('Failed to register push notifications:', error);
+              }
             }
           }
         } catch (error) {
@@ -209,6 +218,27 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         }
       }
     }
+
+    // Handle referral link: monity://auth/callback/r/{code}
+    if (parsed.path && parsed.path.startsWith('auth/callback/r/')) {
+      const referralCode = parsed.path.replace('auth/callback/r/', '').trim();
+      
+      if (referralCode) {
+        console.log('✅ Referral link detected:', referralCode);
+        
+        try {
+          // Store referral code in AsyncStorage to be used during signup
+          await AsyncStorage.setItem('pending_referral_code', referralCode);
+          console.log('✅ Referral code stored:', referralCode);
+          
+          // If user is not logged in, navigate to signup screen
+          // The referral code will be applied during registration
+          // Note: Navigation will be handled by the app's routing logic
+        } catch (error) {
+          console.error('❌ Failed to store referral code:', error);
+        }
+      }
+    }
   };
 
   const login = useCallback(async (email: string, password: string) => {
@@ -218,9 +248,16 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       if (response.success && response.data) {
         // After successful login, fetch the user profile
         const profileResponse = await apiService.getProfile();
-        
+
         if (profileResponse.success && profileResponse.data) {
           setUser(profileResponse.data);
+
+          // Register for push notifications after successful login
+          try {
+            await NotificationService.registerForPushNotifications(profileResponse.data.id);
+          } catch (error) {
+            console.error('Failed to register push notifications:', error);
+          }
         } else {
           throw new Error("Failed to fetch user profile: " + profileResponse.error);
         }
@@ -235,7 +272,20 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
   const signup = useCallback(
     async (email: string, password: string, name?: string) => {
       try {
-        const response = await apiService.register(email, password, name);
+        // Check for pending referral code from deep link
+        let referralCode: string | null = null;
+        try {
+          referralCode = await AsyncStorage.getItem('pending_referral_code');
+          if (referralCode) {
+            console.log('📎 Using referral code from deep link:', referralCode);
+            // Clear the stored referral code after retrieving it
+            await AsyncStorage.removeItem('pending_referral_code');
+          }
+        } catch (error) {
+          console.error('Error retrieving referral code:', error);
+        }
+
+        const response = await apiService.register(email, password, name, referralCode || undefined);
         if (response.success && response.data) {
           // Return email for confirmation page - don't try to login automatically
           // User needs to confirm email first
@@ -257,6 +307,13 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       const profileResponse = await apiService.getProfile();
       if (profileResponse.success && profileResponse.data) {
         setUser(profileResponse.data);
+
+        // Register for push notifications after successful Google login
+        try {
+          await NotificationService.registerForPushNotifications(profileResponse.data.id);
+        } catch (error) {
+          console.error('Failed to register push notifications:', error);
+        }
       } else {
         throw new Error(profileResponse.error || "Falha ao buscar perfil");
       }
@@ -265,15 +322,46 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
     }
   }, [socialGoogleSignIn]);
 
+  const loginWithApple = useCallback(async () => {
+    try {
+      await socialAppleSignIn();
+      // After successful sign in, refresh user profile
+      const profileResponse = await apiService.getProfile();
+      if (profileResponse.success && profileResponse.data) {
+        setUser(profileResponse.data);
+
+        // Register for push notifications after successful Apple login
+        try {
+          await NotificationService.registerForPushNotifications(profileResponse.data.id);
+        } catch (error) {
+          console.error('Failed to register push notifications:', error);
+        }
+      } else {
+        throw new Error(profileResponse.error || "Falha ao buscar perfil");
+      }
+    } catch (error: any) {
+      throw error;
+    }
+  }, [socialAppleSignIn]);
 
   const logout = useCallback(async () => {
     try {
+      // Unregister push notifications before logout
+      if (user?.id) {
+        try {
+          await NotificationService.unregisterPushToken(user.id);
+          await NotificationService.clearAllNotifications();
+        } catch (error) {
+          console.error('Failed to unregister push notifications:', error);
+        }
+      }
+
       await apiService.logout();
       setUser(null);
     } catch (error) {
       // Silent fail
     }
-  }, []);
+  }, [user]);
 
   const updateProfile = useCallback(async (profileData: Partial<User>) => {
     try {
@@ -377,6 +465,7 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       login,
       signup,
       loginWithGoogle,
+      loginWithApple,
       logout,
       updateProfile,
       changePassword,
@@ -391,6 +480,7 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
       login,
       signup,
       loginWithGoogle,
+      loginWithApple,
       logout,
       updateProfile,
       changePassword,

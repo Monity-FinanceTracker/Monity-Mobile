@@ -50,6 +50,18 @@ export default function AddIncomeForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceDay, setRecurrenceDay] = useState<number>(() => new Date().getDate());
+  const [frequency, setFrequency] = useState<'monthly' | 'weekly'>('monthly');
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+
+  // AI Categorization state
+  const [categorySuggestions, setCategorySuggestions] = useState<Array<{
+    category: string;
+    confidence: number;
+    source: string;
+  }>>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
 
   const loadCategories = async () => {
     try {
@@ -76,6 +88,51 @@ export default function AddIncomeForm() {
   const filteredCategories = categories.filter(
     (category) => category.typeId === 2
   );
+
+  // Debounced AI category suggestion
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (name && name.trim().length >= 3) {
+        try {
+          setIsLoadingSuggestions(true);
+          const numericAmount = amount ? parseFloat(amount.replace(/\./g, "").replace(",", ".")) : 0;
+          const response = await apiService.suggestCategory(
+            name.trim(),
+            numericAmount,
+            2 // typeId: 2 = income
+          );
+          
+          if (response.success && response.data) {
+            const suggestions = response.data.suggestions || response.data;
+            setCategorySuggestions(suggestions);
+            
+            // Auto-select highest confidence suggestion if >80% and no category selected
+            if (suggestions.length > 0 && !selectedCategory && filteredCategories.length > 0) {
+              const topSuggestion = suggestions[0];
+              if (topSuggestion.confidence > 0.8) {
+                const matchingCategory = filteredCategories.find(
+                  (cat) => cat.name === topSuggestion.category
+                );
+                if (matchingCategory) {
+                  setSelectedCategory(matchingCategory.id);
+                  setSelectedSuggestion(topSuggestion.category);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error getting category suggestions:", error);
+        } finally {
+          setIsLoadingSuggestions(false);
+        }
+      } else {
+        setCategorySuggestions([]);
+        setSelectedSuggestion(null);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [name, amount, categories, filteredCategories, selectedCategory]);
 
   // Populate form fields when favoriteData is available
   useEffect(() => {
@@ -183,6 +240,8 @@ export default function AddIncomeForm() {
           typeId: 2, // 2 = income
           recurrenceDay: Number(recurrenceDay), // Ensure it's a number
           isFavorite: isFavorite === true,
+          frequency: frequency,
+          startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
         };
 
         console.log("Saving recurring income:", recurringTransactionData);
@@ -456,6 +515,92 @@ export default function AddIncomeForm() {
             >
               Categoria *
             </Text>
+            
+            {/* AI Suggestions */}
+            {categorySuggestions.length > 0 && !isLoadingSuggestions && (
+              <View className="mb-3">
+                <Text
+                  style={{
+                    color: colors.textSecondary,
+                    fontSize: 12,
+                    marginBottom: 8,
+                  }}
+                >
+                  Sugestões de IA:
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  {categorySuggestions.map((suggestion, index) => {
+                    const matchingCategory = filteredCategories.find(
+                      (cat) => cat.name === suggestion.category
+                    );
+                    if (!matchingCategory) return null;
+                    
+                    const isSelected = selectedCategory === matchingCategory.id;
+                    const confidencePercent = Math.round(suggestion.confidence * 100);
+                    
+                    return (
+                      <Pressable
+                        key={index}
+                        onPress={() => {
+                          setSelectedCategory(matchingCategory.id);
+                          setSelectedSuggestion(suggestion.category);
+                          triggerHaptic();
+                        }}
+                        className={`px-3 py-2 rounded-lg flex-row items-center gap-2 ${
+                          isSelected
+                            ? "bg-accent"
+                            : "bg-accent/20 border border-accent/50"
+                        }`}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            color: isSelected ? "#191E29" : colors.accent,
+                            fontWeight: isSelected ? "600" : "500",
+                          }}
+                        >
+                          {suggestion.category}
+                        </Text>
+                        <View
+                          className={`px-2 py-0.5 rounded ${
+                            isSelected ? "bg-[#191E29]/20" : "bg-accent/30"
+                          }`}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              color: isSelected ? "#191E29" : colors.accent,
+                              fontWeight: "600",
+                            }}
+                          >
+                            {confidencePercent}%
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+            
+            {isLoadingSuggestions && (
+              <View className="mb-3">
+                <Text
+                  style={{
+                    color: colors.textSecondary,
+                    fontSize: 12,
+                    fontStyle: "italic",
+                  }}
+                >
+                  Analisando descrição...
+                </Text>
+              </View>
+            )}
+            
             {isLoading ? (
               <View className="items-center py-8">
                 <Text style={{ color: colors.textPrimary }}>
@@ -473,7 +618,11 @@ export default function AddIncomeForm() {
                   return (
                     <Pressable
                       key={category.id}
-                      onPress={() => setSelectedCategory(category.id)}
+                      onPress={() => {
+                        setSelectedCategory(category.id);
+                        setSelectedSuggestion(null);
+                        triggerHaptic();
+                      }}
                       className={`px-4 py-3 rounded-xl items-center justify-center ${
                         isSelected
                           ? "bg-accent"
@@ -574,7 +723,137 @@ export default function AddIncomeForm() {
             </Pressable>
           </View>
 
-          {/* Dia de Recorrência - Mostrar apenas se isRecurring for true */}
+          {/* Frequência - Mostrar apenas se isRecurring for true */}
+          {isRecurring && (
+            <View className="mb-4">
+              <Text
+                style={{
+                  color: colors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: "600",
+                  marginBottom: 8,
+                }}
+              >
+                Frequência *
+              </Text>
+              <View className="flex-row gap-3">
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    setFrequency('monthly');
+                    if (recurrenceDay > 31) {
+                      setRecurrenceDay(1);
+                    }
+                  }}
+                  className={`flex-1 px-4 py-3 rounded-xl items-center justify-center ${
+                    frequency === 'monthly'
+                      ? "bg-accent"
+                      : "bg-card-bg border border-border-default"
+                  }`}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: frequency === 'monthly' ? "#191E29" : colors.textGray,
+                      fontWeight: frequency === 'monthly' ? "600" : "normal",
+                    }}
+                  >
+                    Mensal
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    setFrequency('weekly');
+                    if (recurrenceDay > 6) {
+                      setRecurrenceDay(0);
+                    }
+                  }}
+                  className={`flex-1 px-4 py-3 rounded-xl items-center justify-center ${
+                    frequency === 'weekly'
+                      ? "bg-accent"
+                      : "bg-card-bg border border-border-default"
+                  }`}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: frequency === 'weekly' ? "#191E29" : colors.textGray,
+                      fontWeight: frequency === 'weekly' ? "600" : "normal",
+                    }}
+                  >
+                    Semanal
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {/* Data de Início - Mostrar apenas se isRecurring for true */}
+          {isRecurring && (
+            <View className="mb-4">
+              <Text
+                style={{
+                  color: colors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: "600",
+                  marginBottom: 8,
+                }}
+              >
+                Data de Início
+              </Text>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setShowStartDatePicker(true);
+                }}
+                className="bg-card-bg border border-border-default rounded-xl px-4 py-3 flex-row items-center justify-between"
+              >
+                <View className="flex-row items-center gap-2">
+                  <Calendar size={20} color={colors.textPrimary} />
+                  <Text style={{ color: colors.textPrimary, fontSize: 14 }}>
+                    {startDate.toLocaleDateString("pt-BR")}
+                  </Text>
+                </View>
+              </Pressable>
+              {showStartDatePicker && (
+                <>
+                  <DateTimePicker
+                    value={startDate}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    minimumDate={new Date()}
+                    onChange={(event, selectedDateValue) => {
+                      if (Platform.OS === "android") {
+                        setShowStartDatePicker(false);
+                        if (event.type === "set" && selectedDateValue) {
+                          setStartDate(selectedDateValue);
+                        }
+                      } else {
+                        // iOS
+                        if (selectedDateValue) {
+                          setStartDate(selectedDateValue);
+                        }
+                      }
+                    }}
+                    locale="pt-BR"
+                  />
+                  {Platform.OS === "ios" && (
+                    <Pressable
+                      onPress={() => setShowStartDatePicker(false)}
+                      className="bg-accent rounded-xl p-3 mt-3"
+                    >
+                      <Text style={{ color: "#191E29", fontWeight: "600", fontSize: 16, textAlign: "center" }}>
+                        Concluído
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
+          )}
+
+          {/* Dia de Recorrência/Semana - Mostrar apenas se isRecurring for true */}
           {isRecurring && (
             <View className="mb-6">
               <Text
@@ -585,37 +864,64 @@ export default function AddIncomeForm() {
                   marginBottom: 8,
                 }}
               >
-                Dia de Recorrência *
+                {frequency === 'monthly' ? 'Dia de Recorrência *' : 'Dia da Semana *'}
               </Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 8, paddingRight: 8 }}
               >
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                  <Pressable
-                    key={day}
-                    onPress={() => {
-                      triggerHaptic();
-                      setRecurrenceDay(day);
-                    }}
-                    className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
-                      recurrenceDay === day
-                        ? "bg-accent"
-                        : "bg-card-bg border border-border-default"
-                    }`}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        color: recurrenceDay === day ? "#191E29" : colors.textGray,
-                        fontWeight: recurrenceDay === day ? "600" : "normal",
+                {frequency === 'monthly' ? (
+                  Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                    <Pressable
+                      key={day}
+                      onPress={() => {
+                        triggerHaptic();
+                        setRecurrenceDay(day);
                       }}
+                      className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
+                        recurrenceDay === day
+                          ? "bg-accent"
+                          : "bg-card-bg border border-border-default"
+                      }`}
                     >
-                      {day}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: recurrenceDay === day ? "#191E29" : colors.textGray,
+                          fontWeight: recurrenceDay === day ? "600" : "normal",
+                        }}
+                      >
+                        {day}
+                      </Text>
+                    </Pressable>
+                  ))
+                ) : (
+                  ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((dayName, index) => (
+                    <Pressable
+                      key={index}
+                      onPress={() => {
+                        triggerHaptic();
+                        setRecurrenceDay(index);
+                      }}
+                      className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
+                        recurrenceDay === index
+                          ? "bg-accent"
+                          : "bg-card-bg border border-border-default"
+                      }`}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: recurrenceDay === index ? "#191E29" : colors.textGray,
+                          fontWeight: recurrenceDay === index ? "600" : "normal",
+                        }}
+                      >
+                        {dayName}
+                      </Text>
+                    </Pressable>
+                  ))
+                )}
               </ScrollView>
               <Text
                 style={{
@@ -624,7 +930,10 @@ export default function AddIncomeForm() {
                   marginTop: 8,
                 }}
               >
-                A transação será criada automaticamente todo dia {recurrenceDay} de cada mês
+                {frequency === 'monthly'
+                  ? `A transação será criada automaticamente todo dia ${recurrenceDay} de cada mês a partir de ${startDate.toLocaleDateString("pt-BR")}`
+                  : `A transação será criada automaticamente toda ${['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][recurrenceDay]} a partir de ${startDate.toLocaleDateString("pt-BR")}`
+                }
               </Text>
             </View>
           )}

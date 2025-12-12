@@ -485,60 +485,178 @@ export default class SubscriptionController {
 
   /**
    * Valida uma compra da App Store
+   * Implementa a validação recomendada pela Apple:
+   * 1. Tenta primeiro validar na produção
+   * 2. Se receber status 21007 (sandbox receipt used in production), tenta no sandbox
    */
   private async validateAppStorePurchase(
     transactionReceipt: string,
     productId: string
   ): Promise<{ isValid: boolean; data?: any }> {
     try {
-      // Para validação real, você precisa validar com a App Store
-      // Por enquanto, vamos fazer uma validação básica
-
       // Validação básica - verificar se o receipt existe
       if (!transactionReceipt || transactionReceipt.length < 10) {
+        logger.warn("Invalid receipt: receipt is missing or too short");
         return { isValid: false };
       }
-
-      // Em produção, você deve validar com a App Store:
-      /*
-      const isProduction = process.env.NODE_ENV === 'production';
-      const verifyURL = isProduction
-        ? 'https://buy.itunes.apple.com/verifyReceipt'
-        : 'https://sandbox.itunes.apple.com/verifyReceipt';
 
       const sharedSecret = process.env.APP_STORE_SHARED_SECRET;
+      
+      // URLs de validação
+      const productionURL = 'https://buy.itunes.apple.com/verifyReceipt';
+      const sandboxURL = 'https://sandbox.itunes.apple.com/verifyReceipt';
 
-      const response = await axios.post(verifyURL, {
-        'receipt-data': transactionReceipt,
-        password: sharedSecret,
-        'exclude-old-transactions': true,
-      });
+      // Primeiro, tentar validar na produção
+      logger.info("Attempting production receipt validation", { productId });
+      
+      try {
+        const productionResponse = await axios.post(productionURL, {
+          'receipt-data': transactionReceipt,
+          password: sharedSecret,
+          'exclude-old-transactions': true,
+        }, {
+          timeout: 10000, // 10 second timeout
+        });
 
-      const { status, receipt } = response.data;
+        const { status, receipt } = productionResponse.data;
 
-      if (status !== 0) {
+        // Status 0 = sucesso
+        if (status === 0) {
+          logger.info("Production receipt validation successful", { productId });
+          
+          // Verificar se o produto está no receipt
+          const inAppPurchases = receipt.in_app || [];
+          const latestReceiptInfo = receipt.latest_receipt_info || [];
+          
+          // Verificar tanto em in_app quanto em latest_receipt_info
+          const allPurchases = [...inAppPurchases, ...latestReceiptInfo];
+          const purchase = allPurchases.find(
+            (p: any) => p.product_id === productId
+          );
+
+          if (purchase) {
+            logger.info("Product found in receipt", { 
+              productId, 
+              transactionId: purchase.transaction_id,
+              purchaseDate: purchase.purchase_date_ms 
+            });
+            return {
+              isValid: true,
+              data: purchase
+            };
+          } else {
+            logger.warn("Product not found in receipt", { productId });
+            return { isValid: false };
+          }
+        }
+
+        // Status 21007 = sandbox receipt usado em produção
+        // Neste caso, tentar validar no sandbox
+        if (status === 21007) {
+          logger.info("Sandbox receipt detected in production, retrying with sandbox", { productId });
+          
+          const sandboxResponse = await axios.post(sandboxURL, {
+            'receipt-data': transactionReceipt,
+            password: sharedSecret,
+            'exclude-old-transactions': true,
+          }, {
+            timeout: 10000,
+          });
+
+          const { status: sandboxStatus, receipt: sandboxReceipt } = sandboxResponse.data;
+
+          if (sandboxStatus === 0) {
+            logger.info("Sandbox receipt validation successful", { productId });
+            
+            // Verificar se o produto está no receipt
+            const inAppPurchases = sandboxReceipt.in_app || [];
+            const latestReceiptInfo = sandboxReceipt.latest_receipt_info || [];
+            
+            const allPurchases = [...inAppPurchases, ...latestReceiptInfo];
+            const purchase = allPurchases.find(
+              (p: any) => p.product_id === productId
+            );
+
+            if (purchase) {
+              logger.info("Product found in sandbox receipt", { 
+                productId, 
+                transactionId: purchase.transaction_id,
+                purchaseDate: purchase.purchase_date_ms 
+              });
+              return {
+                isValid: true,
+                data: purchase
+              };
+            } else {
+              logger.warn("Product not found in sandbox receipt", { productId });
+              return { isValid: false };
+            }
+          } else {
+            logger.warn("Sandbox validation failed", { 
+              productId, 
+              status: sandboxStatus 
+            });
+            return { isValid: false };
+          }
+        }
+
+        // Outros status codes indicam erro
+        logger.warn("Production validation failed with status", { 
+          productId, 
+          status 
+        });
+        return { isValid: false };
+
+      } catch (networkError: any) {
+        logger.error("Network error during receipt validation", {
+          productId,
+          error: networkError.message,
+          code: networkError.code,
+        });
+        
+        // Se for erro de rede, tentar sandbox como fallback
+        try {
+          logger.info("Retrying with sandbox due to network error", { productId });
+          
+          const sandboxResponse = await axios.post(sandboxURL, {
+            'receipt-data': transactionReceipt,
+            password: sharedSecret,
+            'exclude-old-transactions': true,
+          }, {
+            timeout: 10000,
+          });
+
+          const { status: sandboxStatus, receipt: sandboxReceipt } = sandboxResponse.data;
+
+          if (sandboxStatus === 0) {
+            const inAppPurchases = sandboxReceipt.in_app || [];
+            const latestReceiptInfo = sandboxReceipt.latest_receipt_info || [];
+            const allPurchases = [...inAppPurchases, ...latestReceiptInfo];
+            const purchase = allPurchases.find(
+              (p: any) => p.product_id === productId
+            );
+
+            if (purchase) {
+              logger.info("Product found in sandbox receipt (fallback)", { productId });
+              return {
+                isValid: true,
+                data: purchase
+              };
+            }
+          }
+        } catch (sandboxError) {
+          logger.error("Sandbox fallback also failed", {
+            productId,
+            error: sandboxError instanceof Error ? sandboxError.message : String(sandboxError),
+          });
+        }
+
         return { isValid: false };
       }
-
-      // Verificar se o produto está no receipt
-      const inAppPurchases = receipt.in_app || [];
-      const purchase = inAppPurchases.find(
-        (p: any) => p.product_id === productId
-      );
-
-      return {
-        isValid: !!purchase,
-        data: purchase
-      };
-      */
-
-      // Por enquanto, retornar true para permitir testes
-      // REMOVER ISSO EM PRODUÇÃO e implementar validação real acima
-      logger.warn("App Store purchase validation not fully implemented - using basic check");
-      return { isValid: true };
     } catch (error) {
       logger.error("Error validating App Store purchase", {
-        error: error as Error["message"]
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
       });
       return { isValid: false };
     }

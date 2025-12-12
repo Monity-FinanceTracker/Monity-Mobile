@@ -652,16 +652,38 @@ docker logs monity-mobile-backend
 
 ### Unable to Connect via SSH
 
-1. **Verify security group**:
-   - Ensure port 22 is open from your IP
+**For comprehensive SSH troubleshooting, see [SSH_TROUBLESHOOTING.md](SSH_TROUBLESHOOTING.md)**
 
-2. **Check key permissions**:
+Quick fixes:
+
+1. **Run the SSH verification script**:
    ```bash
-   chmod 400 monity-mobile-backend-key.pem
+   ./verify-ssh.sh production
    ```
 
-3. **Verify instance is running**:
+2. **Most common issue - Public key not in authorized_keys**:
+   ```bash
+   # Extract public key
+   ssh-keygen -y -f monity-mobile-backend-key.pem
+
+   # Add to EC2 (via EC2 Instance Connect)
+   echo "PUBLIC_KEY" >> ~/.ssh/authorized_keys
+   chmod 600 ~/.ssh/authorized_keys
+   ```
+
+3. **Verify security group**:
+   - Ensure port 22 is open from your IP
+
+4. **Check key permissions**:
+   ```bash
+   chmod 600 monity-mobile-backend-key.pem
+   ```
+
+5. **Verify instance is running**:
    - EC2 Dashboard → Instance state should be "running"
+
+6. **Test GitHub Actions SSH**:
+   - Go to Actions → "Test SSH Connection" → Run workflow
 
 ### High Memory Usage
 

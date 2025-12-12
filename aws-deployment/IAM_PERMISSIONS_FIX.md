@@ -146,3 +146,5 @@ This script:
 3. ⏳ Test `deploy.sh` after permissions are added
 4. ⏳ Set up GitHub Actions for automated deployments
 
+
+

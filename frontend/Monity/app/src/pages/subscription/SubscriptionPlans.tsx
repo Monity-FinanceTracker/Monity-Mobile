@@ -6,6 +6,8 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  Linking,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -21,6 +23,7 @@ import {
   Star,
   Zap,
   CreditCard,
+  ExternalLink,
 } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
 import { COLORS } from "../../constants/colors";
@@ -100,6 +103,24 @@ export default function SubscriptionPlans() {
       style: "currency",
       currency: "BRL",
     }).format(price);
+  };
+
+  const handleTermsPress = () => {
+    // User will provide the actual URL
+    const termsUrl = "https://monity-finance.com/terms"; // TODO: Replace with actual URL
+    Linking.openURL(termsUrl).catch(err => {
+      console.error('Failed to open terms URL:', err);
+      Alert.alert('Erro', 'Não foi possível abrir os Termos de Uso');
+    });
+  };
+
+  const handlePrivacyPress = () => {
+    // User will provide the actual URL
+    const privacyUrl = "https://monity-finance.com/privacy"; // TODO: Replace with actual URL
+    Linking.openURL(privacyUrl).catch(err => {
+      console.error('Failed to open privacy URL:', err);
+      Alert.alert('Erro', 'Não foi possível abrir a Política de Privacidade');
+    });
   };
 
   const isCurrentPlan = (planId: string) => {
@@ -197,6 +218,11 @@ export default function SubscriptionPlans() {
                     <View className="items-end">
                       <Text className="text-text-primary text-xl font-bold">
                         {formatPrice(plan.price)}
+                        {plan.id === "premium" && (
+                          <Text className="text-text-primary text-sm font-normal">
+                            /mês
+                          </Text>
+                        )}
                       </Text>
                       {plan.popular && (
                         <View className="bg-accent px-2 py-1 rounded-full mt-1">
@@ -316,6 +342,37 @@ export default function SubscriptionPlans() {
               </View>
             </View>
           </Card>
+
+          {/* Terms and Privacy Links */}
+          <View className="mt-6 mb-6">
+            <View className="flex-row items-center justify-center gap-4">
+              <TouchableOpacity
+                onPress={handleTermsPress}
+                className="flex-row items-center gap-1"
+              >
+                <Text
+                  className="text-accent text-sm"
+                  style={{ textDecorationLine: "underline" }}
+                >
+                  Termos de Uso
+                </Text>
+                <ExternalLink size={14} color={COLORS.accent} />
+              </TouchableOpacity>
+              <Text className="text-text-primary text-sm">•</Text>
+              <TouchableOpacity
+                onPress={handlePrivacyPress}
+                className="flex-row items-center gap-1"
+              >
+                <Text
+                  className="text-accent text-sm"
+                  style={{ textDecorationLine: "underline" }}
+                >
+                  Política de Privacidade
+                </Text>
+                <ExternalLink size={14} color={COLORS.accent} />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

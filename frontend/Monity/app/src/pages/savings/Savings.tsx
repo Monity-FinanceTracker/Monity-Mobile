@@ -16,6 +16,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Card from "../../components/molecules/Card";
 import { COLORS } from "../../constants/colors";
 import { apiService, Balance } from "../../services/apiService";
+import { useAuth } from "../../context/AuthContext";
 import {
   Plus,
   ArrowLeft,
@@ -25,6 +26,8 @@ import {
   Wallet,
   Trash2,
   Calendar,
+  Crown,
+  Target,
 } from "lucide-react-native";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh";
 import { triggerHaptic } from "../../utils/haptics";
@@ -41,6 +44,7 @@ interface SavingsGoal {
 export default function Savings() {
   const colors = COLORS;
   const navigation = useNavigation();
+  const { user } = useAuth();
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   const [balance, setBalance] = useState<Balance | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -55,6 +59,11 @@ export default function Savings() {
   const [amount, setAmount] = useState("");
   const [useBalance, setUseBalance] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  const subscriptionTier = user?.subscriptionTier || "free";
+  const isPremium = subscriptionTier === "premium";
+  const FREE_TIER_GOAL_LIMIT = 3;
+  const isLimited = !isPremium && savingsGoals.length >= FREE_TIER_GOAL_LIMIT;
 
   const formatCurrency = (value: number | undefined | null) => {
     if (value === undefined || value === null || isNaN(value)) {
@@ -100,6 +109,21 @@ export default function Savings() {
   });
 
   const handleCreateGoal = async () => {
+    if (isLimited) {
+      Alert.alert(
+        "Limite Atingido",
+        `Usuários gratuitos podem criar até ${FREE_TIER_GOAL_LIMIT} metas de economia. Assine o Premium para criar metas ilimitadas!`,
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Assinar Premium",
+            onPress: () => navigation.navigate("SubscriptionPlans" as never),
+          },
+        ]
+      );
+      return;
+    }
+
     if (!newGoal.goal_name || !newGoal.target_amount || !newGoal.target_date) {
       Alert.alert("Erro", "Por favor, preencha todos os campos");
       return;
@@ -361,11 +385,27 @@ export default function Savings() {
             <Pressable
               onPress={() => {
                 triggerHaptic();
-                setShowCreateModal(true);
+                if (isLimited) {
+                  Alert.alert(
+                    "Limite Atingido",
+                    `Usuários gratuitos podem criar até ${FREE_TIER_GOAL_LIMIT} metas. Assine o Premium para criar metas ilimitadas!`,
+                    [
+                      { text: "Cancelar", style: "cancel" },
+                      {
+                        text: "Assinar Premium",
+                        onPress: () => navigation.navigate("SubscriptionPlans" as never),
+                      },
+                    ]
+                  );
+                } else {
+                  setShowCreateModal(true);
+                }
               }}
-              className="w-10 h-10 bg-accent rounded-full items-center justify-center"
+              className={`w-10 h-10 rounded-full items-center justify-center ${
+                isLimited ? "bg-card-bg" : "bg-accent"
+              }`}
             >
-              <Plus size={20} color="#191E29" />
+              <Plus size={20} color={isLimited ? colors.textSecondary : "#191E29"} />
             </Pressable>
           </View>
 
@@ -388,12 +428,32 @@ export default function Savings() {
               <Pressable
                 onPress={() => {
                   triggerHaptic();
-                  setShowCreateModal(true);
+                  if (isLimited) {
+                    Alert.alert(
+                      "Limite Atingido",
+                      `Usuários gratuitos podem criar até ${FREE_TIER_GOAL_LIMIT} metas. Assine o Premium para criar metas ilimitadas!`,
+                      [
+                        { text: "Cancelar", style: "cancel" },
+                        {
+                          text: "Assinar Premium",
+                          onPress: () => navigation.navigate("SubscriptionPlans" as never),
+                        },
+                      ]
+                    );
+                  } else {
+                    setShowCreateModal(true);
+                  }
                 }}
-                className="bg-accent px-6 py-3 rounded-xl"
+                className={`px-6 py-3 rounded-xl ${
+                  isLimited ? "bg-card-bg border border-accent" : "bg-accent"
+                }`}
               >
-                <Text className="text-[#191E29] font-semibold">
-                  Criar Poupança
+                <Text
+                  className={`font-semibold ${
+                    isLimited ? "text-accent" : "text-[#191E29]"
+                  }`}
+                >
+                  {isLimited ? "Assinar Premium" : "Criar Poupança"}
                 </Text>
               </Pressable>
             </View>
@@ -441,6 +501,15 @@ export default function Savings() {
                             {progress.toFixed(0)}%
                           </Text>
                         </View>
+                        {/* Target Date Info */}
+                        {goal.target_date && (
+                          <View className="flex-row items-center gap-1 mt-2">
+                            <Target size={12} color={colors.textSecondary} />
+                            <Text className="text-text-secondary text-xs">
+                              Meta: {formatDate(goal.target_date)}
+                            </Text>
+                          </View>
+                        )}
                       </View>
 
                       {/* Action Buttons */}
@@ -493,9 +562,36 @@ export default function Savings() {
         </View>
       </ScrollView>
 
+      {/* Premium Limit Banner */}
+      {isLimited && savingsGoals.length > 0 && (
+        <View className="px-6 pb-4">
+          <Card className="p-4 bg-accent/10 border border-accent">
+            <View className="flex-row items-center gap-3">
+              <Crown size={24} color={colors.accent} />
+              <View className="flex-1">
+                <Text className="text-text-primary font-semibold">
+                  Limite de Metas Atingido
+                </Text>
+                <Text className="text-text-secondary text-xs mt-1">
+                  Assine o Premium para criar metas ilimitadas
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => navigation.navigate("SubscriptionPlans" as never)}
+                className="bg-accent px-4 py-2 rounded-lg"
+              >
+                <Text className="text-[#191E29] font-semibold text-xs">
+                  Assinar
+                </Text>
+              </Pressable>
+            </View>
+          </Card>
+        </View>
+      )}
+
       {/* Create Goal Modal */}
       <Modal
-        visible={showCreateModal}
+        visible={showCreateModal && !isLimited}
         transparent={true}
         animationType="slide"
         onRequestClose={() => setShowCreateModal(false)}

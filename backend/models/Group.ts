@@ -118,7 +118,7 @@ export default class Group {
 
     // Fetch group expenses separately
     const { data: basicExpenses, error: expensesError } = await supabaseAdmin
-      .from(Group.GROUP_TABLE)
+      .from("group_expenses")
       .select("id, description, amount, paid_by, created_at")
       .eq("group_id", id);
 
@@ -192,6 +192,10 @@ export default class Group {
           description: decrypt(expense.description),
         })
       );
+      // Also add as 'expenses' for frontend compatibility
+      decryptedData.expenses = decryptedData.group_expenses;
+    } else {
+      decryptedData.expenses = [];
     }
 
     // Calculate total spending and member statistics
@@ -213,6 +217,8 @@ export default class Group {
   }
 
   async findByUser(userId: string) {
+    const { logger } = require("../utils/logger");
+    
     const { data, error } = await supabaseAdmin
       .from(Group.MEMBERS_TABLE)
       .select(
@@ -234,21 +240,48 @@ export default class Group {
     const groups = data.map((item: any) => item.groups);
     const decryptedGroups = decryptObject(Group.GROUP_TABLE, groups);
 
-    // Add spending summary and member count for each group
+    // Add spending summary, member count, and actual arrays for each group
     const enrichedGroups = await Promise.all(
       decryptedGroups.map(async (group: any) => {
         try {
-          // Get member count
-          const { data: memberCount } = await supabaseAdmin
+          // Get group members (similar to getById)
+          const { data: memberIds, error: memberIdsError } = await supabaseAdmin
             .from(Group.MEMBERS_TABLE)
-            .select("user_id", { count: "exact" })
+            .select("user_id")
             .eq("group_id", group.id);
 
-          // Get total spending and expense count
-          const { data: expenses } = await supabaseAdmin
-            .from(Group.GROUP_TABLE)
-            .select("amount, created_at")
+          let members: any[] = [];
+          if (!memberIdsError && memberIds && memberIds.length > 0) {
+            const userIds = memberIds.map((m: any) => m.user_id);
+            const { data: profiles, error: profilesError } = await supabaseAdmin
+              .from("profiles")
+              .select("id, name, email")
+              .in("id", userIds);
+
+            if (!profilesError && profiles) {
+              members = memberIds
+                .map((member: any) => ({
+                  user_id: member.user_id,
+                  profiles: profiles.find((p: any) => p.id === member.user_id),
+                }))
+                .filter((m: any) => m.profiles);
+            }
+          }
+
+          // Get expenses (expenses are stored in group_expenses table with group_id field)
+          const { data: basicExpenses, error: expensesError } = await supabaseAdmin
+            .from("group_expenses")
+            .select("id, description, amount, paid_by, created_at")
             .eq("group_id", group.id);
+
+          let expenses: any[] = [];
+          if (!expensesError && basicExpenses && basicExpenses.length > 0) {
+            // Decrypt expense descriptions
+            expenses = basicExpenses.map((expense: any) => ({
+              ...expense,
+              description: decrypt(expense.description),
+            }));
+          }
 
           const totalSpent =
             expenses?.reduce(
@@ -257,6 +290,7 @@ export default class Group {
             ) || 0;
 
           const expenseCount = expenses?.length || 0;
+          const memberCountNum = members?.length || 0;
 
           // Get unsettled amount
           const { data: unsettledShares } = await supabaseAdmin
@@ -284,12 +318,14 @@ export default class Group {
             : group.created_at;
 
           // Calculate average spending per member
-          const memberCountNum = memberCount?.length || 0;
           const avgSpentPerMember =
             memberCountNum > 0 ? totalSpent / memberCountNum : 0;
 
           return {
             ...group,
+            // Include actual arrays for frontend
+            group_members: members || [],
+            expenses: expenses || [],
             // Frontend expects camelCase
             memberCount: memberCountNum,
             totalSpent: totalSpent,
@@ -304,9 +340,12 @@ export default class Group {
             last_activity: lastActivity,
           };
         } catch (error) {
-          console.error(`Error enriching group ${group.id}:`, error);
+          logger.error(`Error enriching group ${group.id}:`, error);
           return {
             ...group,
+            // Include empty arrays on error
+            group_members: [],
+            expenses: [],
             // Frontend expects camelCase
             memberCount: 0,
             totalSpent: 0,

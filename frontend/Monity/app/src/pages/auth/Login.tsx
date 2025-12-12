@@ -10,11 +10,13 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  Linking,
 } from "react-native";
 import { Image as ExpoImage } from 'expo-image';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
 import * as Font from "expo-font";
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useAuth } from "../../context/AuthContext";
 import { COLORS } from "../../constants/colors";
 import { Images } from "../../assets/images";
@@ -37,7 +39,8 @@ export default function Login({
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [fontLoaded, setFontLoaded] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
+  const { login, loginWithGoogle, loginWithApple } = useAuth();
 
   React.useEffect(() => {
     const loadFont = async () => {
@@ -51,6 +54,11 @@ export default function Login({
       }
     };
     loadFont();
+
+    // Check if Apple Authentication is available
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
+    }
   }, []);
 
   const handleSubmit = async () => {
@@ -98,6 +106,37 @@ export default function Login({
     } finally {
       setSocialLoading(null);
     }
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      setError("");
+      setSocialLoading("apple");
+      await loginWithApple();
+      // O AuthContext já atualiza o usuário, então a navegação acontecerá automaticamente
+    } catch (err: any) {
+      // Don't show error if user cancelled
+      if (err.code === 'ERR_CANCELED' || err.message?.includes('cancel')) {
+        setError("");
+      } else {
+        const errorMessage = err.message || "Erro ao fazer login com Apple";
+        setError(errorMessage);
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleTermsPress = () => {
+    // User will provide the actual URL
+    const termsUrl = "https://monity-finance.com/terms"; 
+    Linking.openURL(termsUrl).catch(err => console.error('Failed to open terms URL:', err));
+  };
+
+  const handlePrivacyPress = () => {
+    // User will provide the actual URL
+    const privacyUrl = "https://monity-finance.com/privacy"; 
+    Linking.openURL(privacyUrl).catch(err => console.error('Failed to open privacy URL:', err));
   };
 
 
@@ -179,6 +218,16 @@ export default function Login({
                   )}
                 </TouchableOpacity>
 
+                {/* Apple Button - Only show on iOS if available */}
+                {Platform.OS === 'ios' && appleAuthAvailable && (
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                    cornerRadius={12}
+                    style={{ width: '100%', height: 50 }}
+                    onPress={handleAppleSignIn}
+                  />
+                )}
               </View>
 
               {/* Divider with "or" */}
@@ -360,8 +409,18 @@ export default function Login({
                 style={{ color: COLORS.textPrimary, lineHeight: 18 }}
               >
                 Ao continuar, você concorda com os{" "}
-                <Text style={{ textDecorationLine: "underline" }}>
-                  direitos e termos de privacidade
+                <Text 
+                  style={{ textDecorationLine: "underline" }}
+                  onPress={handleTermsPress}
+                >
+                  Termos de Uso
+                </Text>
+                {" "}e{" "}
+                <Text 
+                  style={{ textDecorationLine: "underline" }}
+                  onPress={handlePrivacyPress}
+                >
+                  Política de Privacidade
                 </Text>
               </Text>
 

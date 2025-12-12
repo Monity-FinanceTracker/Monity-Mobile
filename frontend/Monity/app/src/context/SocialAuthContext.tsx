@@ -2,6 +2,8 @@ import React, { createContext, useContext, useCallback, useState, useMemo } from
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { Platform } from 'react-native';
 import { supabase } from '../config/supabase';
 import { apiService } from '../services/apiService';
 
@@ -18,6 +20,7 @@ interface SocialAuthContextValue {
   isAuthenticating: boolean;
   error: string | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -361,6 +364,77 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
     }
   }, [extractAuthParams, exchangeCodeForSession, saveSession]);
 
+  // Apple Sign In
+  const signInWithApple = useCallback(async () => {
+    // Only available on iOS
+    if (Platform.OS !== 'ios') {
+      throw new Error('Sign in with Apple is only available on iOS');
+    }
+
+    setIsAuthenticating(true);
+    setError(null);
+
+    try {
+      console.log('🍎 Iniciando login com Apple...');
+
+      // Check if Apple Authentication is available
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      if (!isAvailable) {
+        throw new Error('Sign in with Apple não está disponível neste dispositivo');
+      }
+
+      // Request Apple authentication
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      console.log('✅ Credencial Apple obtida:', {
+        user: credential.user,
+        email: credential.email,
+        fullName: credential.fullName,
+        identityToken: credential.identityToken ? 'present' : 'missing',
+      });
+
+      if (!credential.identityToken) {
+        throw new Error('Token de identidade não recebido da Apple');
+      }
+
+      // Sign in with Supabase using the identity token
+      const { data, error: supabaseError } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+        nonce: credential.nonce || undefined,
+      });
+
+      if (supabaseError) {
+        throw new Error(`Erro ao autenticar com Apple: ${supabaseError.message}`);
+      }
+
+      if (!data.session) {
+        throw new Error('Sessão não criada após autenticação com Apple');
+      }
+
+      console.log('✅ Sessão criada com sucesso via Apple!');
+      await saveSession(data.session);
+    } catch (err: any) {
+      // Don't show error if user cancelled
+      if (err.code === 'ERR_CANCELED' || err.message?.includes('cancel')) {
+        console.log('ℹ️ Autenticação com Apple cancelada pelo usuário');
+        setError(null);
+        return;
+      }
+
+      const errorMessage = err.message || 'Erro ao fazer login com Apple';
+      console.error('❌ Erro no login com Apple:', errorMessage);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, [saveSession]);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -371,9 +445,10 @@ export function SocialAuthProvider({ children }: { children: React.ReactNode }) 
       isAuthenticating,
       error,
       signInWithGoogle,
+      signInWithApple,
       clearError,
     }),
-    [isAuthenticating, error, signInWithGoogle, clearError]
+    [isAuthenticating, error, signInWithGoogle, signInWithApple, clearError]
   );
 
   return <SocialAuthContext.Provider value={value}>{children}</SocialAuthContext.Provider>;
