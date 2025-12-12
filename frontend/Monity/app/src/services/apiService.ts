@@ -320,13 +320,19 @@ class ApiService {
   async register(
     email: string,
     password: string,
-    name?: string
+    name?: string,
+    referralCode?: string
   ): Promise<ApiResponse<{ user: User; session: any }>> {
+    const body: any = { email, password, name };
+    if (referralCode) {
+      body.referralCode = referralCode;
+    }
+    
     const response = await this.request<{ user: User; session: any }>(
       "/auth/register",
       {
         method: "POST",
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify(body),
       }
     );
 

@@ -433,7 +433,6 @@ export default function Profile() {
               <View className="gap-6">
                 <Pressable
                   onPress={() => {
-                    // @ts-ignore - navigation type issue
                     navigation.navigate("NotificationSettings");
                   }}
                   className="flex-row items-center justify-between"

@@ -50,7 +50,10 @@ export default function AddExpenseForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceDay, setRecurrenceDay] = useState<number>(() => new Date().getDate());
-  
+  const [frequency, setFrequency] = useState<'monthly' | 'weekly'>('monthly');
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+
   // AI Categorization state
   const [categorySuggestions, setCategorySuggestions] = useState<Array<{
     category: string;
@@ -258,6 +261,8 @@ export default function AddExpenseForm() {
           typeId: 1, // 1 = expense
           recurrenceDay: Number(recurrenceDay), // Ensure it's a number
           isFavorite: isFavorite === true,
+          frequency: frequency,
+          startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
         };
 
         console.log("Saving recurring expense:", recurringTransactionData);
@@ -740,7 +745,137 @@ export default function AddExpenseForm() {
             </Pressable>
           </View>
 
-          {/* Dia de Recorrência - Mostrar apenas se isRecurring for true */}
+          {/* Frequência - Mostrar apenas se isRecurring for true */}
+          {isRecurring && (
+            <View className="mb-4">
+              <Text
+                style={{
+                  color: colors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: "600",
+                  marginBottom: 8,
+                }}
+              >
+                Frequência *
+              </Text>
+              <View className="flex-row gap-3">
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    setFrequency('monthly');
+                    if (recurrenceDay > 31) {
+                      setRecurrenceDay(1);
+                    }
+                  }}
+                  className={`flex-1 px-4 py-3 rounded-xl items-center justify-center ${
+                    frequency === 'monthly'
+                      ? "bg-accent"
+                      : "bg-card-bg border border-border-default"
+                  }`}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: frequency === 'monthly' ? "#191E29" : colors.textGray,
+                      fontWeight: frequency === 'monthly' ? "600" : "normal",
+                    }}
+                  >
+                    Mensal
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    setFrequency('weekly');
+                    if (recurrenceDay > 6) {
+                      setRecurrenceDay(0);
+                    }
+                  }}
+                  className={`flex-1 px-4 py-3 rounded-xl items-center justify-center ${
+                    frequency === 'weekly'
+                      ? "bg-accent"
+                      : "bg-card-bg border border-border-default"
+                  }`}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: frequency === 'weekly' ? "#191E29" : colors.textGray,
+                      fontWeight: frequency === 'weekly' ? "600" : "normal",
+                    }}
+                  >
+                    Semanal
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {/* Data de Início - Mostrar apenas se isRecurring for true */}
+          {isRecurring && (
+            <View className="mb-4">
+              <Text
+                style={{
+                  color: colors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: "600",
+                  marginBottom: 8,
+                }}
+              >
+                Data de Início
+              </Text>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setShowStartDatePicker(true);
+                }}
+                className="bg-card-bg border border-border-default rounded-xl px-4 py-3 flex-row items-center justify-between"
+              >
+                <View className="flex-row items-center gap-2">
+                  <Calendar size={20} color={colors.textPrimary} />
+                  <Text style={{ color: colors.textPrimary, fontSize: 14 }}>
+                    {startDate.toLocaleDateString("pt-BR")}
+                  </Text>
+                </View>
+              </Pressable>
+              {showStartDatePicker && (
+                <>
+                  <DateTimePicker
+                    value={startDate}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    minimumDate={new Date()}
+                    onChange={(event, selectedDateValue) => {
+                      if (Platform.OS === "android") {
+                        setShowStartDatePicker(false);
+                        if (event.type === "set" && selectedDateValue) {
+                          setStartDate(selectedDateValue);
+                        }
+                      } else {
+                        // iOS
+                        if (selectedDateValue) {
+                          setStartDate(selectedDateValue);
+                        }
+                      }
+                    }}
+                    locale="pt-BR"
+                  />
+                  {Platform.OS === "ios" && (
+                    <Pressable
+                      onPress={() => setShowStartDatePicker(false)}
+                      className="bg-accent rounded-xl p-3 mt-3"
+                    >
+                      <Text style={{ color: "#191E29", fontWeight: "600", fontSize: 16, textAlign: "center" }}>
+                        Concluído
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
+          )}
+
+          {/* Dia de Recorrência/Semana - Mostrar apenas se isRecurring for true */}
           {isRecurring && (
             <View className="mb-6">
               <Text
@@ -751,37 +886,64 @@ export default function AddExpenseForm() {
                   marginBottom: 8,
                 }}
               >
-                Dia de Recorrência *
+                {frequency === 'monthly' ? 'Dia de Recorrência *' : 'Dia da Semana *'}
               </Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 8, paddingRight: 8 }}
               >
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                  <Pressable
-                    key={day}
-                    onPress={() => {
-                      triggerHaptic();
-                      setRecurrenceDay(day);
-                    }}
-                    className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
-                      recurrenceDay === day
-                        ? "bg-accent"
-                        : "bg-card-bg border border-border-default"
-                    }`}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        color: recurrenceDay === day ? "#191E29" : colors.textGray,
-                        fontWeight: recurrenceDay === day ? "600" : "normal",
+                {frequency === 'monthly' ? (
+                  Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                    <Pressable
+                      key={day}
+                      onPress={() => {
+                        triggerHaptic();
+                        setRecurrenceDay(day);
                       }}
+                      className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
+                        recurrenceDay === day
+                          ? "bg-accent"
+                          : "bg-card-bg border border-border-default"
+                      }`}
                     >
-                      {day}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: recurrenceDay === day ? "#191E29" : colors.textGray,
+                          fontWeight: recurrenceDay === day ? "600" : "normal",
+                        }}
+                      >
+                        {day}
+                      </Text>
+                    </Pressable>
+                  ))
+                ) : (
+                  ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((dayName, index) => (
+                    <Pressable
+                      key={index}
+                      onPress={() => {
+                        triggerHaptic();
+                        setRecurrenceDay(index);
+                      }}
+                      className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
+                        recurrenceDay === index
+                          ? "bg-accent"
+                          : "bg-card-bg border border-border-default"
+                      }`}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: recurrenceDay === index ? "#191E29" : colors.textGray,
+                          fontWeight: recurrenceDay === index ? "600" : "normal",
+                        }}
+                      >
+                        {dayName}
+                      </Text>
+                    </Pressable>
+                  ))
+                )}
               </ScrollView>
               <Text
                 style={{
@@ -790,7 +952,10 @@ export default function AddExpenseForm() {
                   marginTop: 8,
                 }}
               >
-                A transação será criada automaticamente todo dia {recurrenceDay} de cada mês
+                {frequency === 'monthly'
+                  ? `A transação será criada automaticamente todo dia ${recurrenceDay} de cada mês a partir de ${startDate.toLocaleDateString("pt-BR")}`
+                  : `A transação será criada automaticamente toda ${['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][recurrenceDay]} a partir de ${startDate.toLocaleDateString("pt-BR")}`
+                }
               </Text>
             </View>
           )}

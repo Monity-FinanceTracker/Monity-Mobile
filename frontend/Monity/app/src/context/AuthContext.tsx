@@ -218,6 +218,27 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         }
       }
     }
+
+    // Handle referral link: monity://auth/callback/r/{code}
+    if (parsed.path && parsed.path.startsWith('auth/callback/r/')) {
+      const referralCode = parsed.path.replace('auth/callback/r/', '').trim();
+      
+      if (referralCode) {
+        console.log('✅ Referral link detected:', referralCode);
+        
+        try {
+          // Store referral code in AsyncStorage to be used during signup
+          await AsyncStorage.setItem('pending_referral_code', referralCode);
+          console.log('✅ Referral code stored:', referralCode);
+          
+          // If user is not logged in, navigate to signup screen
+          // The referral code will be applied during registration
+          // Note: Navigation will be handled by the app's routing logic
+        } catch (error) {
+          console.error('❌ Failed to store referral code:', error);
+        }
+      }
+    }
   };
 
   const login = useCallback(async (email: string, password: string) => {
@@ -251,7 +272,20 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
   const signup = useCallback(
     async (email: string, password: string, name?: string) => {
       try {
-        const response = await apiService.register(email, password, name);
+        // Check for pending referral code from deep link
+        let referralCode: string | null = null;
+        try {
+          referralCode = await AsyncStorage.getItem('pending_referral_code');
+          if (referralCode) {
+            console.log('📎 Using referral code from deep link:', referralCode);
+            // Clear the stored referral code after retrieving it
+            await AsyncStorage.removeItem('pending_referral_code');
+          }
+        } catch (error) {
+          console.error('Error retrieving referral code:', error);
+        }
+
+        const response = await apiService.register(email, password, name, referralCode || undefined);
         if (response.success && response.data) {
           // Return email for confirmation page - don't try to login automatically
           // User needs to confirm email first

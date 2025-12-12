@@ -150,7 +150,44 @@ export default class NotificationController {
         .eq('user_id', userId)
         .single();
 
+      // If table doesn't exist or no preferences found, return defaults
       if (error) {
+        // Check if it's a "table doesn't exist" error
+        if (error.code === '42P01') {
+          logger.warn('user_notification_preferences table does not exist. Please run migration.');
+          // Return default preferences
+          res.status(200).json({
+            preferences: {
+              email_enabled: true,
+              push_enabled: true,
+              in_app_enabled: true,
+              daily_reminder: true,
+              weekly_insights: true,
+              goal_reminders: true,
+              preferred_language: 'pt-BR',
+              preferred_time: '09:00:00'
+            }
+          });
+          return;
+        }
+        
+        // If it's a "no rows" error, return defaults
+        if (error.code === 'PGRST116') {
+          res.status(200).json({
+            preferences: {
+              email_enabled: true,
+              push_enabled: true,
+              in_app_enabled: true,
+              daily_reminder: true,
+              weekly_insights: true,
+              goal_reminders: true,
+              preferred_language: 'pt-BR',
+              preferred_time: '09:00:00'
+            }
+          });
+          return;
+        }
+        
         logger.error('Error fetching notification preferences:', error);
         res.status(500).json({ error: 'Failed to fetch preferences' });
         return;
@@ -164,7 +201,8 @@ export default class NotificationController {
           daily_reminder: true,
           weekly_insights: true,
           goal_reminders: true,
-          preferred_language: 'pt-BR'
+          preferred_language: 'pt-BR',
+          preferred_time: '09:00:00'
         }
       });
     } catch (error: any) {
@@ -214,11 +252,21 @@ export default class NotificationController {
       }
 
       // Check if preferences exist
-      const { data: existing } = await this.supabase
+      const { data: existing, error: checkError } = await this.supabase
         .from('user_notification_preferences')
         .select('user_id')
         .eq('user_id', userId)
         .single();
+
+      // Handle table doesn't exist error
+      if (checkError && checkError.code === '42P01') {
+        logger.warn('user_notification_preferences table does not exist. Please run migration.');
+        res.status(503).json({ 
+          error: 'Notification preferences table not available. Please contact support.',
+          requiresMigration: true
+        });
+        return;
+      }
 
       if (existing) {
         // Update existing preferences

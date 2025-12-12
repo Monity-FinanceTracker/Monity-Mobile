@@ -107,23 +107,41 @@ export default class InvestmentCalculatorController {
 
       // Increment usage count for free users
       if (subscriptionTier === "free") {
-        await InvestmentCalculator.incrementUsage(userId);
+        try {
+          await InvestmentCalculator.incrementUsage(userId);
+        } catch (error: any) {
+          logger.warn("Failed to increment usage count", {
+            userId,
+            error: error.message,
+          });
+          // Don't fail the calculation if usage tracking fails
+        }
       }
 
-      // Save simulation for premium users
+      // Save simulation for premium users (non-blocking)
       if (subscriptionTier === "premium") {
-        await InvestmentCalculator.saveSimulation(userId, {
-          initialInvestment,
-          contributionAmount,
-          contributionFrequency,
-          annualInterestRate,
-          goalDate,
-          finalValue: calculation.finalValue,
-          totalContributions: calculation.totalContributions,
-          totalInterest: calculation.totalInterest,
-          roiPercentage: calculation.roiPercentage,
-          metadata: { viewType },
-        });
+        try {
+          await InvestmentCalculator.saveSimulation(userId, {
+            initialInvestment,
+            contributionAmount,
+            contributionFrequency,
+            annualInterestRate,
+            goalDate,
+            finalValue: calculation.finalValue,
+            totalContributions: calculation.totalContributions,
+            totalInterest: calculation.totalInterest,
+            roiPercentage: calculation.roiPercentage,
+            metadata: { viewType },
+          });
+        } catch (error: any) {
+          logger.error("Failed to save simulation", {
+            userId,
+            error: error.message,
+            stack: error.stack,
+          });
+          // Don't fail the calculation if simulation save fails
+          // The calculation results are still valid and should be returned
+        }
       }
 
       // Get updated usage
@@ -295,5 +313,6 @@ export default class InvestmentCalculatorController {
     }
   }
 }
+
 
 

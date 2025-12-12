@@ -18,6 +18,7 @@ import AddIncomeForm from "../pages/expenses/AddIncomeForm";
 import Categories from "../pages/categories/Categories";
 import Overview from "../pages/overview/Overview";
 import Profile from "../pages/profile/Profile";
+import NotificationSettings from "../pages/profile/NotificationSettings";
 import Chat from "../pages/chat/Chat";
 import SubscriptionPlans from "../pages/subscription/SubscriptionPlans";
 import Savings from "../pages/savings/Savings";
@@ -64,6 +65,7 @@ export type RootStackParamList = {
   GroupDetail: { groupId: string };
   CashFlowCalendar: undefined;
   InvestmentCalculator: undefined;
+  NotificationSettings: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -360,28 +362,45 @@ function Gate() {
   const { user, isInitializing } = useAuth();
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [onboardingChecked, setOnboardingChecked] = React.useState(false);
+  const lastCheckedUserIdRef = React.useRef<string | null>(null);
 
-  // Check onboarding status when user logs in
+  // Check onboarding status from database when user logs in
+  // This relies on the database field onboarding_completed to guarantee it only shows once
   React.useEffect(() => {
     const checkOnboarding = async () => {
-      if (user && !onboardingChecked) {
+      // Only check if we have a user and haven't checked for this user yet
+      if (user?.id && lastCheckedUserIdRef.current !== user.id) {
         try {
           const response = await import("../services/apiService").then(m => 
             m.apiService.getOnboardingProgress()
           );
           if (response.success && response.data) {
-            setShowOnboarding(!response.data.onboarding_completed);
+            // Rely entirely on database field - this is the source of truth
+            const isCompleted = response.data.onboarding_completed === true;
+            setShowOnboarding(!isCompleted);
+            lastCheckedUserIdRef.current = user.id;
+          } else {
+            // If API call fails, default to not showing onboarding
+            // User can manually access onboarding if needed
+            setShowOnboarding(false);
           }
         } catch (error) {
           console.error("Error checking onboarding:", error);
+          // On error, don't show onboarding - rely on database as source of truth
+          setShowOnboarding(false);
         } finally {
           setOnboardingChecked(true);
         }
+      } else if (!user) {
+        // Reset when user logs out
+        lastCheckedUserIdRef.current = null;
+        setShowOnboarding(false);
+        setOnboardingChecked(false);
       }
     };
 
     checkOnboarding();
-  }, [user, onboardingChecked]);
+  }, [user?.id]); // Only depend on user.id, not the whole user object
 
   // Only show loading during initial bootstrap, not during login/signup
   if (isInitializing) {
@@ -398,11 +417,44 @@ function Gate() {
   }
 
   // Show onboarding wizard if needed
+  // This is controlled by the database field onboarding_completed
   if (user && showOnboarding && onboardingChecked) {
     return (
       <OnboardingWizard
-        onComplete={() => setShowOnboarding(false)}
-        onSkip={() => setShowOnboarding(false)}
+        onComplete={async () => {
+          // The backend will set onboarding_completed = true in the database
+          // Next time the user logs in, the check will see it's completed
+          setShowOnboarding(false);
+          // Refresh onboarding status from database to confirm it's saved
+          try {
+            const response = await import("../services/apiService").then(m => 
+              m.apiService.getOnboardingProgress()
+            );
+            if (response.success && response.data?.onboarding_completed) {
+              // Database confirms it's completed - update ref to prevent re-checking
+              lastCheckedUserIdRef.current = user.id;
+            }
+          } catch (error) {
+            console.error("Error refreshing onboarding status:", error);
+          }
+        }}
+        onSkip={async () => {
+          // The backend will set onboarding_completed = true in the database
+          // Next time the user logs in, the check will see it's completed
+          setShowOnboarding(false);
+          // Refresh onboarding status from database to confirm it's saved
+          try {
+            const response = await import("../services/apiService").then(m => 
+              m.apiService.getOnboardingProgress()
+            );
+            if (response.success && response.data?.onboarding_completed) {
+              // Database confirms it's completed - update ref to prevent re-checking
+              lastCheckedUserIdRef.current = user.id;
+            }
+          } catch (error) {
+            console.error("Error refreshing onboarding status:", error);
+          }
+        }}
       />
     );
   }
@@ -428,6 +480,7 @@ function Gate() {
           <RootStack.Screen name="GroupDetail" component={GroupDetail} />
           <RootStack.Screen name="CashFlowCalendar" component={CashFlowCalendar} />
           <RootStack.Screen name="InvestmentCalculator" component={InvestmentCalculator} />
+          <RootStack.Screen name="NotificationSettings" component={NotificationSettings} />
         </>
       ) : (
         <>

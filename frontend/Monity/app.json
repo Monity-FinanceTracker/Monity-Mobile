@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.widechain.monity",
-      "buildNumber": "20",
+      "buildNumber": "21",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "https",
@@ -26,6 +26,15 @@
           "http"
         ],
         "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "localhost": {
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
+        },
         "UIBackgroundModes": [
           "remote-notification"
         ],
@@ -87,11 +96,10 @@
           }
         }
       ],
-      "expo-apple-authentication",
-      "react-native-iap"
+      "expo-apple-authentication"
     ],
     "extra": {
-      "apiUrl": "http://192.168.96.164:3001/api/v1",
+      "apiUrl": "http://192.168.18.86:3001/api/v1",
       "supabaseUrl": "https://eeubnmpetzhjcludrjwz.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldWJubXBldHpoamNsdWRyand6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0OTk1NTMsImV4cCI6MjA3ODg1OTU1M30.dh3tAwapLq2nt10OOlBXW-XCX0pOKehQMDckk-Ox0K4",
       "geminiApiKey": "AIzaSyCLD8msQ9K6std1kLSymu1re81ZXc61zps",

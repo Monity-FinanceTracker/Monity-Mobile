@@ -11,24 +11,23 @@ export default class InvestmentCalculator {
    */
   static async getMonthlyUsage(userId: string) {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
+    // Create date for first day of current month (YYYY-MM-01)
+    const monthDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthDateStr = monthDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
     const { data, error } = await supabaseAdmin
       .from(TABLE_NAME)
       .select("*")
-      .eq("user_id", userId)
-      .eq("year", year)
-      .eq("month", month)
+      .eq("userId", userId)
+      .eq("month", monthDateStr)
       .single();
 
     if (error) {
       if (error.code === "PGRST116") {
         // No record found, return default
         return {
-          user_id: userId,
-          year,
-          month,
+          userId: userId,
+          month: monthDateStr,
           simulation_count: 0,
         };
       }
@@ -43,8 +42,9 @@ export default class InvestmentCalculator {
    */
   static async incrementUsage(userId: string) {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
+    // Create date for first day of current month (YYYY-MM-01)
+    const monthDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthDateStr = monthDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
     // Try to get existing record
     const existing = await this.getMonthlyUsage(userId);
@@ -55,11 +55,10 @@ export default class InvestmentCalculator {
         .from(TABLE_NAME)
         .insert([
           {
-            user_id: userId,
-            year,
-            month,
+            userId: userId,
+            month: monthDateStr,
             simulation_count: 1,
-            updated_at: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           },
         ])
         .select()
@@ -76,11 +75,10 @@ export default class InvestmentCalculator {
         .from(TABLE_NAME)
         .update({
           simulation_count: existing.simulation_count + 1,
-          updated_at: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
-        .eq("user_id", userId)
-        .eq("year", year)
-        .eq("month", month)
+        .eq("userId", userId)
+        .eq("month", monthDateStr)
         .select()
         .single();
 
@@ -96,20 +94,55 @@ export default class InvestmentCalculator {
    * Save simulation for premium users
    */
   static async saveSimulation(userId: string, simulationData: any) {
+    const {
+      initialInvestment,
+      contributionAmount,
+      contributionFrequency,
+      annualInterestRate,
+      goalDate,
+      finalValue,
+      totalContributions,
+      totalInterest,
+      roiPercentage,
+      metadata = {}
+    } = simulationData;
+
+    const insertData = {
+      userId: userId,
+      initial_investment: initialInvestment,
+      contribution_amount: contributionAmount,
+      contribution_frequency: contributionFrequency,
+      annual_interest_rate: annualInterestRate,
+      goal_date: goalDate,
+      final_value: finalValue,
+      total_contributions: totalContributions,
+      total_interest: totalInterest,
+      roi_percentage: roiPercentage,
+      metadata,
+      created_at: new Date().toISOString(),
+    };
+
     const { data, error } = await supabaseAdmin
       .from(SIMULATIONS_TABLE)
-      .insert([
-        {
-          user_id: userId,
-          ...simulationData,
-          created_at: new Date().toISOString(),
-        },
-      ])
+      .insert([insertData])
       .select()
       .single();
 
     if (error) {
-      throw new Error(`Error saving simulation: ${error.message}`);
+      // Log detailed error information for debugging
+      const logger = require("../utils/logger").logger;
+      logger.error("Error saving investment simulation", {
+        userId,
+        error: error.message,
+        errorCode: error.code,
+        errorDetails: error.details,
+        insertData: {
+          ...insertData,
+          metadata: typeof insertData.metadata === 'object' ? JSON.stringify(insertData.metadata) : insertData.metadata,
+        },
+      });
+      
+      throw new Error(`Error saving simulation: ${error?.message || 'Unknown error'}`);
     }
 
     return data;
@@ -122,7 +155,7 @@ export default class InvestmentCalculator {
     const { data, error } = await supabaseAdmin
       .from(SIMULATIONS_TABLE)
       .select("*")
-      .eq("user_id", userId)
+      .eq("userId", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -140,7 +173,7 @@ export default class InvestmentCalculator {
       .from(SIMULATIONS_TABLE)
       .delete()
       .eq("id", simulationId)
-      .eq("user_id", userId)
+      .eq("userId", userId)
       .select()
       .single();
 
@@ -151,5 +184,6 @@ export default class InvestmentCalculator {
     return data;
   }
 }
+
 
 

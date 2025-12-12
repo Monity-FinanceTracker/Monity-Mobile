@@ -8,9 +8,11 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { COLORS } from "../../constants/colors";
 import { apiService, Transaction } from "../../services/apiService";
 import {
@@ -20,6 +22,7 @@ import {
   Trash2,
   TrendingUp,
   TrendingDown,
+  Calendar,
 } from "lucide-react-native";
 import { triggerHaptic } from "../../utils/haptics";
 
@@ -27,17 +30,28 @@ export default function RecurringTransactions() {
   const navigation = useNavigation();
   const colors = COLORS;
   const [recurringTransactions, setRecurringTransactions] = useState<
-    (Transaction & { recurrenceDay?: number })[]
+    (Transaction & {
+      recurrenceDay?: number;
+      frequency?: string;
+      startDate?: string;
+    })[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] = useState<
-    (Transaction & { recurrenceDay?: number }) | null
+    (Transaction & {
+      recurrenceDay?: number;
+      frequency?: string;
+      startDate?: string;
+    }) | null
   >(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editRecurrenceDay, setEditRecurrenceDay] = useState<number>(1);
+  const [editFrequency, setEditFrequency] = useState<'monthly' | 'weekly'>('monthly');
+  const [editStartDate, setEditStartDate] = useState<Date>(new Date());
+  const [showEditStartDatePicker, setShowEditStartDatePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const loadRecurringTransactions = async () => {
@@ -94,7 +108,7 @@ export default function RecurringTransactions() {
     if (!selectedTransaction) return;
     triggerHaptic();
     setShowActionModal(false);
-    
+
     // Populate edit fields with current transaction data
     setEditName(selectedTransaction.description || selectedTransaction.title || "");
     const amount = Math.abs(selectedTransaction.amount || 0);
@@ -103,6 +117,14 @@ export default function RecurringTransactions() {
       maximumFractionDigits: 2,
     }));
     setEditRecurrenceDay(selectedTransaction.recurrenceDay || new Date().getDate());
+    setEditFrequency((selectedTransaction.frequency as 'monthly' | 'weekly') || 'monthly');
+    if (selectedTransaction.startDate) {
+      const dateStr = selectedTransaction.startDate.split('T')[0];
+      const [year, month, day] = dateStr.split('-').map(Number);
+      setEditStartDate(new Date(year, month - 1, day));
+    } else {
+      setEditStartDate(new Date());
+    }
     setShowEditModal(true);
   };
 
@@ -122,6 +144,8 @@ export default function RecurringTransactions() {
         description: editName,
         amount: selectedTransaction.type === "expense" ? -numericAmount : numericAmount,
         recurrenceDay: editRecurrenceDay,
+        frequency: editFrequency,
+        startDate: editStartDate.toISOString().split('T')[0],
       };
 
       const response = await apiService.updateRecurringTransaction(
@@ -244,10 +268,18 @@ export default function RecurringTransactions() {
               <View className="flex-row items-center gap-1">
                 <Repeat size={14} color={colors.textSecondary} />
                 <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                  Dia {transaction.recurrenceDay || "N/A"}
+                  {transaction.frequency === 'weekly'
+                    ? `${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][transaction.recurrenceDay || 0]}`
+                    : `Dia ${transaction.recurrenceDay || "N/A"}`
+                  } • {transaction.frequency === 'weekly' ? 'Semanal' : 'Mensal'}
                 </Text>
               </View>
             </View>
+            {transaction.startDate && (
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                Desde: {new Date(transaction.startDate).toLocaleDateString("pt-BR")}
+              </Text>
+            )}
           </View>
         </View>
       </Pressable>
@@ -355,8 +387,16 @@ export default function RecurringTransactions() {
                 {selectedTransaction?.description || selectedTransaction?.title}
               </Text>
               <Text style={{ color: colors.textGray, fontSize: 14 }}>
-                Dia {selectedTransaction?.recurrenceDay || "N/A"} de cada mês
+                {selectedTransaction?.frequency === 'weekly'
+                  ? `Toda ${['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][selectedTransaction?.recurrenceDay || 0]}`
+                  : `Dia ${selectedTransaction?.recurrenceDay || "N/A"} de cada mês`
+                }
               </Text>
+              {selectedTransaction?.startDate && (
+                <Text style={{ color: colors.textGray, fontSize: 12 }}>
+                  Desde: {new Date(selectedTransaction.startDate).toLocaleDateString("pt-BR")}
+                </Text>
+              )}
             </View>
 
             <Pressable
@@ -493,7 +533,132 @@ export default function RecurringTransactions() {
                 </View>
               </View>
 
-              {/* Dia de Recorrência */}
+              {/* Frequência */}
+              <View className="mb-4">
+                <Text
+                  style={{
+                    color: colors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: "600",
+                    marginBottom: 8,
+                  }}
+                >
+                  Frequência *
+                </Text>
+                <View className="flex-row gap-3">
+                  <Pressable
+                    onPress={() => {
+                      triggerHaptic();
+                      setEditFrequency('monthly');
+                      if (editRecurrenceDay > 31) {
+                        setEditRecurrenceDay(1);
+                      }
+                    }}
+                    className={`flex-1 px-4 py-3 rounded-xl items-center justify-center ${
+                      editFrequency === 'monthly'
+                        ? "bg-accent"
+                        : "bg-card-bg border border-border-default"
+                    }`}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: editFrequency === 'monthly' ? "#191E29" : colors.textGray,
+                        fontWeight: editFrequency === 'monthly' ? "600" : "normal",
+                      }}
+                    >
+                      Mensal
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      triggerHaptic();
+                      setEditFrequency('weekly');
+                      if (editRecurrenceDay > 6) {
+                        setEditRecurrenceDay(0);
+                      }
+                    }}
+                    className={`flex-1 px-4 py-3 rounded-xl items-center justify-center ${
+                      editFrequency === 'weekly'
+                        ? "bg-accent"
+                        : "bg-card-bg border border-border-default"
+                    }`}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: editFrequency === 'weekly' ? "#191E29" : colors.textGray,
+                        fontWeight: editFrequency === 'weekly' ? "600" : "normal",
+                      }}
+                    >
+                      Semanal
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Data de Início */}
+              <View className="mb-4">
+                <Text
+                  style={{
+                    color: colors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: "600",
+                    marginBottom: 8,
+                  }}
+                >
+                  Data de Início
+                </Text>
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    setShowEditStartDatePicker(true);
+                  }}
+                  className="bg-card-bg border border-border-default rounded-xl px-4 py-3 flex-row items-center justify-between"
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Calendar size={20} color={colors.textPrimary} />
+                    <Text style={{ color: colors.textPrimary, fontSize: 14 }}>
+                      {editStartDate.toLocaleDateString("pt-BR")}
+                    </Text>
+                  </View>
+                </Pressable>
+                {showEditStartDatePicker && (
+                  <>
+                    <DateTimePicker
+                      value={editStartDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={(event, selectedDateValue) => {
+                        if (Platform.OS === "android") {
+                          setShowEditStartDatePicker(false);
+                          if (event.type === "set" && selectedDateValue) {
+                            setEditStartDate(selectedDateValue);
+                          }
+                        } else {
+                          // iOS
+                          if (selectedDateValue) {
+                            setEditStartDate(selectedDateValue);
+                          }
+                        }
+                      }}
+                      locale="pt-BR"
+                    />
+                    {Platform.OS === "ios" && (
+                      <Pressable
+                        onPress={() => setShowEditStartDatePicker(false)}
+                        className="bg-accent rounded-xl p-3 mt-3"
+                      >
+                        <Text style={{ color: "#191E29", fontWeight: "600", fontSize: 16, textAlign: "center" }}>
+                          Concluído
+                        </Text>
+                      </Pressable>
+                    )}
+                  </>
+                )}
+              </View>
+
+              {/* Dia de Recorrência/Semana */}
               <View className="mb-6">
                 <Text
                   style={{
@@ -503,37 +668,64 @@ export default function RecurringTransactions() {
                     marginBottom: 8,
                   }}
                 >
-                  Dia de Recorrência *
+                  {editFrequency === 'monthly' ? 'Dia de Recorrência *' : 'Dia da Semana *'}
                 </Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{ gap: 8, paddingRight: 8 }}
                 >
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                    <Pressable
-                      key={day}
-                      onPress={() => {
-                        triggerHaptic();
-                        setEditRecurrenceDay(day);
-                      }}
-                      className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
-                        editRecurrenceDay === day
-                          ? "bg-accent"
-                          : "bg-card-bg border border-border-default"
-                      }`}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color: editRecurrenceDay === day ? "#191E29" : colors.textGray,
-                          fontWeight: editRecurrenceDay === day ? "600" : "normal",
+                  {editFrequency === 'monthly' ? (
+                    Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                      <Pressable
+                        key={day}
+                        onPress={() => {
+                          triggerHaptic();
+                          setEditRecurrenceDay(day);
                         }}
+                        className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
+                          editRecurrenceDay === day
+                            ? "bg-accent"
+                            : "bg-card-bg border border-border-default"
+                        }`}
                       >
-                        {day}
-                      </Text>
-                    </Pressable>
-                  ))}
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            color: editRecurrenceDay === day ? "#191E29" : colors.textGray,
+                            fontWeight: editRecurrenceDay === day ? "600" : "normal",
+                          }}
+                        >
+                          {day}
+                        </Text>
+                      </Pressable>
+                    ))
+                  ) : (
+                    ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((dayName, index) => (
+                      <Pressable
+                        key={index}
+                        onPress={() => {
+                          triggerHaptic();
+                          setEditRecurrenceDay(index);
+                        }}
+                        className={`px-4 py-2 rounded-lg items-center justify-center min-w-[48px] ${
+                          editRecurrenceDay === index
+                            ? "bg-accent"
+                            : "bg-card-bg border border-border-default"
+                        }`}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            color: editRecurrenceDay === index ? "#191E29" : colors.textGray,
+                            fontWeight: editRecurrenceDay === index ? "600" : "normal",
+                          }}
+                        >
+                          {dayName}
+                        </Text>
+                      </Pressable>
+                    ))
+                  )}
                 </ScrollView>
               </View>
 

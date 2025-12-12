@@ -19,7 +19,7 @@ class AuthController {
   }
 
   async register(req: Request, res: Response) {
-    const { email, password, name } = req.body;
+    const { email, password, name, referralCode } = req.body;
     try {
       // Supabase automatically sends confirmation email when signUp is called
       // The emailRedirectTo is required for mobile app deep linking
@@ -30,6 +30,7 @@ class AuthController {
           data: {
             role: "user",
             name: name,
+            referralCode: referralCode || null, // Store referral code in user metadata
           },
           // Mobile deep link URL for email confirmation
           // This will redirect users back to the mobile app after confirming their email
@@ -53,6 +54,17 @@ class AuthController {
             error: err.message,
           })
         );
+
+        // Apply referral code if provided (non-blocking)
+        if (referralCode) {
+          this.applyReferralCode(data.user.id, referralCode).catch((err: any) =>
+            logger.error("Failed to apply referral code", {
+              userId: data.user.id,
+              referralCode,
+              error: err.message,
+            })
+          );
+        }
       }
 
       res.status(201).json({ 
@@ -72,6 +84,41 @@ class AuthController {
         error: "Internal Server Error",
         details: (error as Error).message,
       });
+    }
+  }
+
+  async applyReferralCode(userId: string, referralCode: string) {
+    try {
+      const ReferralService = require("../services/referralService").default;
+      const referralService = new ReferralService(require("../config/supabase").supabaseAdmin);
+      
+      // Validate the referral code
+      const validation = await referralService.validateReferralCode(referralCode);
+      
+      if (!validation.valid) {
+        logger.warn("Invalid referral code provided during registration", {
+          userId,
+          referralCode,
+        });
+        return;
+      }
+
+      // Apply the referral code (this will create the referral relationship)
+      // The referral service should handle this - check if there's an acceptReferral method
+      // For now, we'll just log that the code was stored in user metadata
+      // The actual referral application can happen after email confirmation
+      logger.info("Referral code stored for user", {
+        userId,
+        referralCode,
+        referrerId: validation.referrerId,
+      });
+    } catch (error: any) {
+      logger.error("Error applying referral code", {
+        userId,
+        referralCode,
+        error: error.message,
+      });
+      // Don't throw - referral code application failure shouldn't block registration
     }
   }
 

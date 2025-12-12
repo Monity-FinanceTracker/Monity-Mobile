@@ -7,10 +7,12 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { LineChart } from "react-native-gifted-charts";
 import { COLORS } from "../../constants/colors";
 import { apiService } from "../../services/apiService";
 import { useAuth } from "../../context/AuthContext";
@@ -581,23 +583,81 @@ export default function InvestmentCalculator() {
             </Card>
           )}
 
-          {/* Growth Chart Placeholder */}
+          {/* Growth Chart */}
           {growthData.length > 0 && (
             <Card className="mb-4">
               <View className="p-4">
                 <Text className="text-text-primary text-lg font-semibold mb-4">
                   Projeção de Crescimento
                 </Text>
-                <View className="bg-card-bg rounded-xl p-6 items-center justify-center min-h-[200px]">
-                  <Text className="text-text-secondary text-center mb-2">
-                    Gráfico de crescimento
-                  </Text>
-                  <Text className="text-text-secondary text-xs text-center">
-                    {growthData.length} pontos de dados
-                  </Text>
-                  <Text className="text-text-secondary text-xs text-center mt-2">
-                    (Integração com biblioteca de gráficos pendente)
-                  </Text>
+                <View className="bg-card-bg rounded-xl p-4" style={{ overflow: 'hidden' }}>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingRight: 20 }}
+                  >
+                    <LineChart
+                      data={growthData.map((point, index) => {
+                        const isFirst = index === 0;
+                        const isLast = index === growthData.length - 1;
+                        const showLabel = isFirst || isLast || index % Math.ceil(growthData.length / 6) === 0;
+                        
+                        return {
+                          value: point.total,
+                          label: showLabel 
+                            ? new Date(point.time).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+                            : '',
+                          labelTextStyle: { color: colors.textSecondary, fontSize: 10 },
+                        };
+                      })}
+                      width={Math.max(
+                        Dimensions.get('window').width - 96,
+                        growthData.length * 20
+                      )}
+                      height={220}
+                      color={colors.accent}
+                      thickness={2}
+                      hideRules={false}
+                      rulesColor={colors.borderDefault}
+                      rulesType="solid"
+                      yAxisColor={colors.borderDefault}
+                      xAxisColor={colors.borderDefault}
+                      yAxisTextStyle={{ color: colors.textSecondary, fontSize: 10 }}
+                      curved
+                      areaChart
+                      startFillColor={colors.accent}
+                      endFillColor={colors.accent}
+                      startOpacity={0.3}
+                      endOpacity={0.1}
+                      spacing={20}
+                      initialSpacing={20}
+                      endSpacing={20}
+                      noOfSections={4}
+                      maxValue={Math.max(...growthData.map(p => p.total)) * 1.1}
+                      yAxisLabelPrefix="R$ "
+                      yAxisLabelSuffix=""
+                      formatYLabel={(value) => {
+                        const num = parseFloat(value);
+                        if (num >= 1000) {
+                          return `${(num / 1000).toFixed(1)}k`;
+                        }
+                        return num.toFixed(0);
+                      }}
+                      dataPointsColor={colors.accent}
+                      dataPointsRadius={3}
+                      textShiftY={-10}
+                      textShiftX={-5}
+                      textFontSize={10}
+                      textColor={colors.textSecondary}
+                      hideDataPoints={growthData.length > 50}
+                    />
+                  </ScrollView>
+                  <View className="flex-row items-center justify-center mt-4 gap-4">
+                    <View className="flex-row items-center gap-2">
+                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: colors.accent }} />
+                      <Text className="text-text-secondary text-xs">Valor Total</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
             </Card>
@@ -607,5 +667,6 @@ export default function InvestmentCalculator() {
     </SafeAreaView>
   );
 }
+
 
 

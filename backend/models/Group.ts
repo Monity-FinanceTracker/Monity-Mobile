@@ -118,7 +118,7 @@ export default class Group {
 
     // Fetch group expenses separately
     const { data: basicExpenses, error: expensesError } = await supabaseAdmin
-      .from(Group.GROUP_TABLE)
+      .from("group_expenses")
       .select("id, description, amount, paid_by, created_at")
       .eq("group_id", id);
 
@@ -268,9 +268,9 @@ export default class Group {
             }
           }
 
-          // Get expenses (expenses are stored in groups table with group_id field)
+          // Get expenses (expenses are stored in group_expenses table with group_id field)
           const { data: basicExpenses, error: expensesError } = await supabaseAdmin
-            .from(Group.GROUP_TABLE)
+            .from("group_expenses")
             .select("id, description, amount, paid_by, created_at")
             .eq("group_id", group.id);
 

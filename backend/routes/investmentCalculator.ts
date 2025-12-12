@@ -8,26 +8,47 @@ export default (controllers: any) => {
 
   router.post(
     "/calculate",
-    (req: Request, res: Response, next: NextFunction) =>
-      investmentCalculatorController.calculateInvestment(req, res)
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await investmentCalculatorController.calculateInvestment(req, res);
+      } catch (error) {
+        next(error);
+      }
+    }
   );
   router.get(
     "/usage",
-    (req: Request, res: Response, next: NextFunction) =>
-      investmentCalculatorController.getUsage(req, res)
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await investmentCalculatorController.getUsage(req, res);
+      } catch (error) {
+        next(error);
+      }
+    }
   );
   router.get(
     "/simulations",
-    (req: Request, res: Response, next: NextFunction) =>
-      investmentCalculatorController.getSimulations(req, res)
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await investmentCalculatorController.getSimulations(req, res);
+      } catch (error) {
+        next(error);
+      }
+    }
   );
   router.delete(
     "/simulations/:id",
-    (req: Request, res: Response, next: NextFunction) =>
-      investmentCalculatorController.deleteSimulation(req, res)
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await investmentCalculatorController.deleteSimulation(req, res);
+      } catch (error) {
+        next(error);
+      }
+    }
   );
 
   return router;
 };
+
 
 

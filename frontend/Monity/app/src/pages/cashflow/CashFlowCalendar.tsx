@@ -248,6 +248,18 @@ export default function CashFlowCalendar() {
     return days;
   };
 
+  // Group days into weeks (7 days per week)
+  const getWeeks = () => {
+    const days = getDaysInMonth();
+    const weeks: Date[][] = [];
+    
+    for (let i = 0; i < days.length; i += 7) {
+      weeks.push(days.slice(i, i + 7));
+    }
+    
+    return weeks;
+  };
+
   const getDayData = (date: Date): CalendarDay | null => {
     const dateStr = date.toISOString().split("T")[0];
     return calendarData.find((d) => d.date === dateStr) || null;
@@ -269,7 +281,7 @@ export default function CashFlowCalendar() {
     );
   };
 
-  const days = getDaysInMonth();
+  const weeks = getWeeks();
   const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   return (
@@ -331,10 +343,10 @@ export default function CashFlowCalendar() {
             </View>
           </Card>
 
-          {/* Calendar Grid */}
+          {/* Week-based Calendar Cells */}
           <Card className="p-4 mb-4">
             {/* Week day headers */}
-            <View className="flex-row mb-2">
+            <View className="flex-row mb-3">
               {weekDays.map((day, index) => (
                 <View key={index} className="flex-1 items-center">
                   <Text className="text-text-secondary text-xs font-semibold">
@@ -344,45 +356,70 @@ export default function CashFlowCalendar() {
               ))}
             </View>
 
-            {/* Calendar days */}
-            <View className="flex-row flex-wrap">
-              {days.map((date, index) => {
-                const dayData = getDayData(date);
-                const isCurrent = isCurrentMonth(date);
-                const isSelected = selectedDate === date.toISOString().split("T")[0];
-                const isTodayDate = isToday(date);
+            {/* Weeks */}
+            <View className="gap-2">
+              {weeks.map((week, weekIndex) => (
+                <View key={weekIndex} className="flex-row gap-2">
+                  {week.map((date, dayIndex) => {
+                    const dayData = getDayData(date);
+                    const isCurrent = isCurrentMonth(date);
+                    const isSelected = selectedDate === date.toISOString().split("T")[0];
+                    const isTodayDate = isToday(date);
+                    const dayNumber = date.getDate();
+                    const balance = dayData?.balance || 0;
 
-                return (
-                  <Pressable
-                    key={index}
-                    onPress={() => {
-                      if (isCurrent) {
-                        handleDateSelect(date.toISOString().split("T")[0]);
-                      }
-                    }}
-                    className={`w-[14.28%] aspect-square items-center justify-center ${
-                      !isCurrent ? "opacity-30" : ""
-                    } ${isSelected ? "bg-accent/20 rounded-lg" : ""}`}
-                  >
-                    <Text
-                      className={`text-sm ${
-                        isTodayDate
-                          ? "text-accent font-bold"
-                          : isCurrent
-                          ? "text-text-primary"
-                          : "text-text-secondary"
-                      }`}
-                    >
-                      {date.getDate()}
-                    </Text>
-                    {dayData && dayData.scheduledTransactions.length > 0 && (
-                      <View className="absolute bottom-1">
-                        <View className="w-1.5 h-1.5 bg-accent rounded-full" />
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
+                    return (
+                      <Pressable
+                        key={`${weekIndex}-${dayIndex}`}
+                        onPress={() => {
+                          if (isCurrent) {
+                            handleDateSelect(date.toISOString().split("T")[0]);
+                          }
+                        }}
+                        className={`flex-1 aspect-square items-center justify-center rounded-xl border ${
+                          !isCurrent 
+                            ? "opacity-30 border-border-default/30" 
+                            : isSelected
+                            ? "bg-accent/20 border-accent"
+                            : "bg-card-bg border-border-default"
+                        } ${isTodayDate ? "border-accent border-2" : ""}`}
+                      >
+                        {/* Day number (key) - prominently displayed */}
+                        <Text
+                          className={`text-lg font-bold mb-1 ${
+                            isTodayDate
+                              ? "text-accent"
+                              : isCurrent
+                              ? "text-text-primary"
+                              : "text-text-secondary"
+                          }`}
+                        >
+                          {dayNumber}
+                        </Text>
+                        
+                        {/* Balance amount (value) - smaller, colored */}
+                        {isCurrent && (
+                          <Text
+                            className={`text-xs font-semibold ${
+                              balance >= 0 ? "text-success" : "text-error"
+                            }`}
+                            numberOfLines={1}
+                          >
+                            {formatCurrency(Math.abs(balance))}
+                          </Text>
+                        )}
+                        
+                        {/* Indicator for scheduled transactions */}
+                        {dayData && dayData.scheduledTransactions.length > 0 && (
+                          <View className="absolute top-1 right-1">
+                            <View className="w-2 h-2 bg-accent rounded-full" />
+                          </View>
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ))}
             </View>
           </Card>
 
@@ -726,5 +763,6 @@ export default function CashFlowCalendar() {
     </SafeAreaView>
   );
 }
+
 
 
