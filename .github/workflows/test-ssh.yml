@@ -1,0 +1,99 @@
+name: Test SSH Connection
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test SSH Connection
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          # Save SSH key
+          if [[ "$EC2_SSH_KEY" != -----* ]]; then
+            echo "$EC2_SSH_KEY" | base64 -d > ec2_key.pem
+          else
+            printf '%s\n' "$EC2_SSH_KEY" > ec2_key.pem
+          fi
+          chmod 600 ec2_key.pem
+
+          echo "=========================================="
+          echo "   SSH Connection Test"
+          echo "=========================================="
+          echo ""
+
+          # Display key information
+          echo "=== SSH Key Information ==="
+          echo "Private key fingerprint:"
+          ssh-keygen -lf ec2_key.pem
+
+          echo ""
+          echo "Public key fingerprint (should match EC2 authorized_keys):"
+          ssh-keygen -y -f ec2_key.pem | ssh-keygen -lf -
+
+          echo ""
+          echo "Public key content:"
+          echo "---"
+          ssh-keygen -y -f ec2_key.pem
+          echo "---"
+
+          # Test connection
+          echo ""
+          echo "=== Connection Test ==="
+          echo "Target: $EC2_USER@$EC2_HOST"
+          echo ""
+
+          # Test with verbose output
+          if ssh -vvv -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+              $EC2_USER@$EC2_HOST "echo 'Connection successful'" 2>&1 | tee ssh_test.log; then
+
+            echo ""
+            echo "✅ SSH connection test PASSED"
+
+            # Get remote key info
+            echo ""
+            echo "=== Remote Configuration ==="
+            ssh -i ec2_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "
+              echo 'Hostname:' \$(hostname)
+              echo 'Uptime:' \$(uptime -p)
+              echo 'Docker version:' \$(docker --version 2>/dev/null || echo 'Not installed')
+              echo ''
+              echo 'Authorized keys fingerprints:'
+              ssh-keygen -lf ~/.ssh/authorized_keys 2>/dev/null || echo 'Could not read'
+            "
+
+            echo ""
+            echo "=========================================="
+            echo "   ✅ All tests passed!"
+            echo "=========================================="
+
+          else
+            echo ""
+            echo "❌ SSH connection test FAILED"
+            echo ""
+            echo "=== Troubleshooting ==="
+            echo ""
+            echo "Most common issue: Public key not in ~/.ssh/authorized_keys on EC2"
+            echo ""
+            echo "To fix:"
+            echo "1. Use AWS Console → EC2 → Instance Connect"
+            echo "2. In the terminal, add this public key:"
+            echo "---"
+            ssh-keygen -y -f ec2_key.pem
+            echo "---"
+            echo "3. Run these commands:"
+            echo "   echo 'PUBLIC_KEY_FROM_ABOVE' >> ~/.ssh/authorized_keys"
+            echo "   chmod 600 ~/.ssh/authorized_keys"
+            echo ""
+            echo "SSH Debug Output (last 100 lines):"
+            tail -100 ssh_test.log
+            exit 1
+          fi
+
+          # Cleanup
+          rm -f ec2_key.pem ssh_test.log
