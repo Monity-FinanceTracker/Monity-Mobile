@@ -19,7 +19,7 @@ jobs:
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_USER: ${{ secrets.EC2_USERNAME }}
         run: |
           # Save SSH key
           if [[ "$EC2_SSH_KEY" != -----* ]]; then
@@ -42,6 +42,10 @@ jobs:
           # Test SSH authentication
           echo ""
           echo "Testing SSH authentication..."
+          echo "EC2_USER: $EC2_USER"
+          echo "EC2_HOST: $EC2_HOST"
+          echo "SSH command: ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST \"echo 'test'\""
+
           if ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo '✅ SSH authentication successful'"; then
             echo "✅ Pre-flight check passed!"
           else
@@ -75,7 +79,7 @@ jobs:
       - name: Deploy to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_USER: ${{ secrets.EC2_USERNAME }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
           # Save SSH key to file with proper formatting
