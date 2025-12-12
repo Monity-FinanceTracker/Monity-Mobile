@@ -42,8 +42,7 @@ jobs:
           # Test SSH authentication
           echo ""
           echo "Testing SSH authentication..."
-          if ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-            $EC2_USER@$EC2_HOST "echo '✅ SSH authentication successful'"; then
+          if ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo '✅ SSH authentication successful'"; then
             echo "✅ Pre-flight check passed!"
           else
             echo "❌ SSH authentication failed"
