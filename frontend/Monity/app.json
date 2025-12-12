@@ -87,7 +87,8 @@
           }
         }
       ],
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "react-native-iap"
     ],
     "extra": {
       "apiUrl": "http://192.168.96.164:3001/api/v1",

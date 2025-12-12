@@ -114,3 +114,4 @@ echo "To test with authentication, set AUTH_TOKEN environment variable:"
 echo "  export AUTH_TOKEN='your-token-here'"
 echo "  ./test-features.sh"
 
+

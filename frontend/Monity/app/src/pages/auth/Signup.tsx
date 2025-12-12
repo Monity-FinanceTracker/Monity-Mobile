@@ -9,6 +9,7 @@ import {
   Platform,
   StatusBar,
   Image,
+  Linking,
 } from "react-native";
 import { Image as ExpoImage } from 'expo-image';
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -98,6 +99,16 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTermsPress = () => {
+    const termsUrl = "https://monity-finance.com/terms";
+    Linking.openURL(termsUrl).catch(err => console.error('Failed to open terms URL:', err));
+  };
+
+  const handlePrivacyPress = () => {
+    const privacyUrl = "https://monity-finance.com/privacy";
+    Linking.openURL(privacyUrl).catch(err => console.error('Failed to open privacy URL:', err));
   };
 
   const isValidEmail = (email: string) => {
@@ -385,6 +396,27 @@ export default function Signup({ onNavigateToLogin, onNavigateToEmailConfirmatio
                   </View>
                 )}
               </View>
+
+              {/* Terms and Privacy Text */}
+              <Text
+                className="text-center text-xs px-4 mt-4"
+                style={{ color: COLORS.textPrimary, lineHeight: 18 }}
+              >
+                Ao continuar, você concorda com os{" "}
+                <Text
+                  style={{ textDecorationLine: "underline" }}
+                  onPress={handleTermsPress}
+                >
+                  Termos de Uso
+                </Text>
+                {" "}e{" "}
+                <Text
+                  style={{ textDecorationLine: "underline" }}
+                  onPress={handlePrivacyPress}
+                >
+                  Política de Privacidade
+                </Text>
+              </Text>
 
               {/* Submit Button */}
               <TouchableOpacity
